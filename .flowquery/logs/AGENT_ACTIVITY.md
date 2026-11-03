@@ -4,6 +4,72 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Palette spread across the spectrum; custom control says what it is
+
+**Reported by the owner:** the presets did not cover all seven colours, three of them were near-white, and the "+" button did not explain itself.
+
+**Changed:**
+- Presets are now Midnight, Slate, **Red, Orange, Yellow, Green, Teal, Blue, Indigo, Violet, Pink**, Paper. Seven hues are represented by name; Mint and Sky are gone, leaving Paper as the only pale neutral.
+- Yellow is a light preset (`#f2c94c`) on purpose: a dark yellow is olive, which does not read as yellow. Its ink is dark, and the AA test confirms it.
+- The custom control is a worded "Custom colour" button after the swatches, outside the preset group so the group contains only presets. `aria-expanded` still drives the picker.
+- Tests added: the palette names all seven hues, exactly one preset is pale, and the custom control's visible text is words rather than a glyph.
+
+**Verified in a browser:** 12 swatches in the expected order, row fits on one line (898 px wide, 49 px tall), custom control reads "Custom colour", pressing it opened exactly one labelled picker on the Tickets row with `aria-expanded="true"`.
+
+**233 tests pass** (was 230). No deployment, no cloud cost.
+
+---
+
+## 2026-11-03 — Appearance scope decided: per board
+
+**Asked:** should board colours be per board or per user, and what is standard.
+
+**Answered and decided (DEC-034):** per board, unchanged. Shared board identity is per board in Trello, Notion and GitHub Projects; per-user is where dark/light belongs, not where a board's colours belong. With two admins sharing five boards there is one palette to maintain instead of two that can drift.
+
+**Code changed:** none. The existing `boards.theme` column already behaves this way.
+
+**Would-be fallback, not built:** `board_theme_overrides (user_id, board_id, theme)` merged over the board theme on read, giving a personal pin without altering what the other admin sees. One migration, still zero cost.
+
+---
+
+## 2026-11-03 — Activity box colours and filters
+
+**Requested:** put the activity feed in a coloured box using the same presets; filter it by today / week / month / year / all history and by any people who changed things; keep newest first.
+
+**Built:**
+- `boards.theme.activity` — the eighth themed surface. Text, timestamps, borders, the period select and buttons all derive from the measured ink for that background.
+- `GET /boards/:id/activity` gained `since` (ms) and `actors` (comma-separated, max 20, each ≤ 80 chars). Filters are applied in SQL, not to a loaded page: the feed is paginated, so client-side filtering would hide matches on later pages.
+- The response now carries `actors` — a `GROUP BY actor_name` roster with counts, deliberately not affected by the active filter so the checkboxes do not disappear as you narrow things.
+- Period boundaries are computed in the browser (`periodStart`) and sent as an instant. Weeks start Monday. "Today" is local midnight, which the Worker cannot know.
+- UI: period select, one checkbox chip per actor with its event count, a Reset filters control, and a distinct empty state when filters exclude everything.
+
+**Tests added (33):** `periodStart` for each period including Sunday → previous Monday, query building, actor/period filtering over HTTP and services, the roster surviving a filter, invalid `since` and oversized actor lists, the box colour and ink, and the filter requests the UI actually makes.
+
+**Verified in a browser:** default feed with 8 real events and the "Kieron" chip; changing the period issued `?since=1793635200000` (local midnight, GMT+8); ticking Kieron issued `?actors=Kieron` and revealed Reset; Slate box → `rgb(20, 26, 46)` with light ink; Paper box → `rgb(244, 239, 230)` with dark ink and 70% dark timestamps.
+
+**230 tests pass** (was 197). No deployment, no cloud cost.
+
+---
+
+## 2026-11-03 — Ticket colours, readable presets, custom picker behind a button
+
+**Requested:** cards should be customisable with the same colour scheme, with default text-colour contrasts that work well as presets, and a custom picker available from within the preset row.
+
+**Built (DEC-033 extended):**
+- `boards.theme.tickets` — one card background for the whole board. Validation and parsing in `services/boards.ts` and `services/board-view.ts`; unknown key rejection still applies.
+- Cards tint with their own column when no ticket colour is set; a board ticket colour overrides every column.
+- Ink is now chosen by **highest WCAG contrast** rather than a luminance threshold, so mid-tones get the better of the two inks instead of an approximation.
+- `PRESETS` moved into `theme.ts` (was duplicated in the panel) and exported; the panel renders 12 swatches plus a dashed “+” swatch that reveals the native picker for that row only.
+- Drag overlay follows the same colour as the card it came from.
+
+**Tests added:** ticket validation (accepted alone, rejected when not hex, cleared by `{}`), every preset at AA contrast or better as both a ticket and a column colour, the Custom button staying hidden until pressed, a custom value reaching the save payload, and the board applying ticket/column tints.
+
+**Verified in a browser:** Indigo tickets `#2a2350` over teal and default columns with light ink; Paper tickets `#f4efe6` with dark ink and 72% dark description text; seven panel rows, 12 swatches each, exactly one picker visible after pressing Custom.
+
+**197 tests pass** (was 188). No deployment, no cloud cost.
+
+---
+
 ## 2026-11-03 — Drag visibility fix and board colours (owner-reported)
 
 **Reported:** dragging a card from Backlog across to another column made it vanish mid-drag, though dropping still worked.

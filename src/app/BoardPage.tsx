@@ -388,6 +388,7 @@ export function BoardPage() {
               key={column.key}
               column={column}
               background={theme.columns?.[column.key]}
+              ticket={theme.tickets}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
               onAdd={() => setDrawer({ kind: 'create', status: column.key })}
             />
@@ -403,7 +404,8 @@ export function BoardPage() {
           {activeTask
             ? (() => {
                 const columnColour = theme.columns?.[activeTask.status]
-                const floating = columnColour ? cardBackground(columnColour) : undefined
+                const floating =
+                  theme.tickets ?? (columnColour ? cardBackground(columnColour) : undefined)
 
                 return (
                   <div
@@ -418,7 +420,12 @@ export function BoardPage() {
         </DragOverlay>
       </DndContext>
 
-      <ActivityFeed boardId={boardId ?? ''} refreshKey={activityKey} profiles={profiles} />
+      <ActivityFeed
+        boardId={boardId ?? ''}
+        refreshKey={activityKey}
+        profiles={profiles}
+        theme={theme}
+      />
 
       {drawer && boardId && (
         <TaskDrawer
@@ -439,33 +446,33 @@ export function BoardPage() {
 function Column({
   column,
   background,
+  ticket,
   onOpen,
   onAdd,
 }: {
   column: BoardView['columns'][number]
   background?: string
+  ticket?: string
   onOpen: (taskId: string) => void
   onAdd: () => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key })
 
-  const cardBg = background ? cardBackground(background) : undefined
+  // A board-wide ticket colour wins; otherwise cards inherit a tint of their
+  // own column so the lane reads as one palette.
+  const cardBg = ticket ?? (background ? cardBackground(background) : undefined)
 
-  const style = background
-    ? ({
-        background,
-        '--column-fg': inkFor(background),
-        '--card-bg': cardBg,
-        '--card-fg': inkFor(cardBg!),
-      } as React.CSSProperties)
-    : undefined
+  const style = {
+    ...(background ? { background, '--column-fg': inkFor(background) } : {}),
+    ...(cardBg ? { '--card-bg': cardBg, '--card-fg': inkFor(cardBg) } : {}),
+  } as React.CSSProperties
 
   return (
     <section
       ref={setNodeRef}
       className={isOver ? 'column over' : 'column'}
-      style={style}
-      data-custom={background ? 'true' : undefined}
+      style={Object.keys(style).length > 0 ? style : undefined}
+      data-custom={background || cardBg ? 'true' : undefined}
       aria-labelledby={`column-${column.key}`}
     >
       <header className="column-header">

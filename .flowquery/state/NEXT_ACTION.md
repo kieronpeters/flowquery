@@ -18,8 +18,8 @@ The full plan — exactly what is created, the commands in order, post-deploy ch
 
 Both take under a minute and both are better done before deploying:
 
-1. **Live GitHub sign-in.** Create the OAuth app, fill `.dev.vars`, sign in once on localhost.
-2. **Drag a card** across columns and within one.
+1. **Live GitHub sign-in.** ~~Create the OAuth app, fill `.dev.vars`, sign in once on localhost.~~ **Done** — the owner confirmed a live sign-in.
+2. **Drag a card** across columns and within one. **Done** — including the visibility fix; still worth a final pass before deploying.
 
 If either is broken, you want to find out on localhost rather than on a live URL.
 

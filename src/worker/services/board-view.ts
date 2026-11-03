@@ -30,6 +30,10 @@ export function parseTheme(raw: string | undefined): BoardTheme {
       theme.columns = columns
     }
 
+    if (typeof record.tickets === 'string') theme.tickets = record.tickets
+
+    if (typeof record.activity === 'string') theme.activity = record.activity
+
     return theme
   } catch {
     return {}

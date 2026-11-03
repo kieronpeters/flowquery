@@ -215,6 +215,173 @@ describe('activity feed', () => {
   })
 })
 
+describe('activity filters', () => {
+  const base = 1_800_000_000_000
+  const bob: Actor = { id: 'tok_bob', name: 'Bob', type: 'agent' }
+
+  /** Two events, 30 minutes apart, from two different actors. */
+  async function seedTwoActors() {
+    await createTask(db, {
+      boardId: BOARD,
+      body: { title: 'Owner work' },
+      actor,
+      now: base,
+    })
+    await createTask(db, {
+      boardId: BOARD,
+      body: { title: 'Agent work' },
+      actor: bob,
+      now: base + 30 * 60 * 1000,
+    })
+  }
+
+  async function page(input: Parameters<typeof readActivity>[1]) {
+    const result = await readActivity(db, input)
+    if (result.kind !== 'ok') throw new Error(`expected ok, got ${result.kind}`)
+    return result.page
+  }
+
+  it('reports who has acted, with how many events each', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50 })
+
+    expect(result.actors).toEqual([
+      { name: 'Bob', count: 1 },
+      { name: 'Owner', count: 1 },
+    ])
+  })
+
+  it('filters to one actor', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob'] })
+
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0]!.actorName).toBe('Bob')
+  })
+
+  it('filters to several actors', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob', 'Owner'] })
+
+    expect(result.events.map((event) => event.actorName).sort()).toEqual(['Bob', 'Owner'])
+  })
+
+  it('ignores a filter that matches nobody instead of returning everything', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50, actors: ['Nobody'] })
+
+    expect(result.events).toEqual([])
+    expect(result.nextBefore).toBeNull()
+  })
+
+  it('keeps the whole roster when the filter narrows the events', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob'] })
+
+    expect(result.actors.map((actor) => actor.name)).toEqual(['Bob', 'Owner'])
+  })
+
+  it('filters by a starting instant, inclusively', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50, since: base + 30 * 60 * 1000 })
+
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0]!.actorName).toBe('Bob')
+  })
+
+  it('combines the period and the people filters', async () => {
+    await seedTwoActors()
+
+    const narrowed = await page({ boardId: BOARD, limit: 50, since: base, actors: ['Owner'] })
+    expect(narrowed.events.map((event) => event.actorName)).toEqual(['Owner'])
+
+    const excluded = await page({
+      boardId: BOARD,
+      limit: 50,
+      since: base + 1,
+      actors: ['Owner'],
+    })
+    expect(excluded.events).toEqual([])
+  })
+
+  it('still pages newest first when filtered', async () => {
+    const early = 1_700_000_000_000
+
+    for (let index = 0; index < 3; index += 1) {
+      await createTask(db, {
+        boardId: BOARD,
+        body: { title: `Task ${index}` },
+        actor: bob,
+        now: early + index * 1_000,
+      })
+    }
+
+    const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob'] })
+
+    expect(result.events.map((event) => event.payload.title)).toEqual([
+      'Task 2',
+      'Task 1',
+      'Task 0',
+    ])
+  })
+
+  it('accepts a comma-separated list over HTTP and returns the roster', async () => {
+    await seedTwoActors()
+
+    const response = await call(
+      'GET',
+      `/api/v1/boards/${BOARD}/activity?actors=Owner&since=${base}`,
+    )
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as {
+      events: { actorName: string }[]
+      actors: { name: string; count: number }[]
+    }
+
+    expect(body.events.map((event) => event.actorName)).toEqual(['Owner'])
+    expect(body.actors).toHaveLength(2)
+  })
+
+  it('treats an empty actors parameter as no filter', async () => {
+    await seedTwoActors()
+
+    const response = await call('GET', `/api/v1/boards/${BOARD}/activity?actors=`)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as { events: unknown[] }
+    expect(body.events).toHaveLength(2)
+  })
+
+  it('rejects a since that is not a millisecond timestamp', async () => {
+    for (const value of ['yesterday', '-1', '1.5', '']) {
+      const query = value === '' ? 'since=' : `since=${encodeURIComponent(value)}`
+      const response = await call('GET', `/api/v1/boards/${BOARD}/activity?${query}`)
+
+      // An empty value means "not set"; anything else must be a whole number.
+      expect(response.status).toBe(value === '' ? 200 : 400)
+    }
+  })
+
+  it('rejects an unreasonable actor list', async () => {
+    const tooMany = Array.from({ length: 21 }, (_, index) => `Actor${index}`).join(',')
+    expect((await call('GET', `/api/v1/boards/${BOARD}/activity?actors=${tooMany}`)).status).toBe(
+      400,
+    )
+
+    const tooLong = 'a'.repeat(81)
+    expect((await call('GET', `/api/v1/boards/${BOARD}/activity?actors=${tooLong}`)).status).toBe(
+      400,
+    )
+  })
+})
+
 describe('deleting a task keeps its history', () => {
   it('removes task-scoped events but keeps the deletion event', async () => {
     await addComment(db, {
