@@ -1,0 +1,20 @@
+# Normalise line endings for cross-platform consistency.
+* text=auto eol=lf
+
+# Explicit types for easier diffs and Windows tooling.
+*.md   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.css  text eol=lf
+*.sql  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.woff2 binary
