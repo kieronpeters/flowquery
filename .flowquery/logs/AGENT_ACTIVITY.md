@@ -4,6 +4,30 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Drag visibility fix and board colours (owner-reported)
+
+**Reported:** dragging a card from Backlog across to another column made it vanish mid-drag, though dropping still worked.
+
+**Cause:** the dragged card was transformed in place and clipped by the board, which is a scroll container (`overflow-x: auto` makes `overflow-y` scroll too). Fixed with a `DragOverlay` portal; the source slot stays dimmed. Test added using dnd-kit's keyboard sensor.
+
+**Requested in the same session:** per-board colours for the five columns and the page background, via a settings button.
+
+**Built (DEC-033):**
+- `migrations/0003_board_theme.sql` — `boards.theme` JSON document.
+- `PUT /api/v1/boards/:boardId/theme`, human session only; the agent namespace has no equivalent.
+- Six-digit hex only; unknown keys and columns rejected.
+- Ink colour derived from luminance so pale surfaces keep readable text.
+- A malformed stored document falls back to defaults instead of breaking the board read.
+- UI: Colours panel with per-field Default and Reset all.
+
+**Verified in a browser:** set a light page and backlog colour, confirmed the ink switched to dark, confirmed persistence across a reload, then reset to defaults.
+
+**Also fixed:** the SQLite test helper hard-coded the migration list, so 0003 silently left the test schema behind. It now reads the migrations directory.
+
+**Tests:** 179 passing. No deployment, no resource, no cost.
+
+---
+
 ## 2026-11-03 — Live GitHub sign-in confirmed (owner-reported)
 
 The owner reported that they are signed in to the localhost application with a real GitHub account. This is the first live OAuth round trip; every previous verification used a stubbed provider.

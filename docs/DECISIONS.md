@@ -50,6 +50,7 @@ Statuses: **Approved** = the owner has stated it. **Proposed** = Bob recommends 
 | DEC-027 | `memory/` mirror to be removed once Git history exists | It duplicates `.flowquery/` and will drift | Yes |
 | DEC-028 | OpenCode agents to be activated by moving `opencode/agents/` → `.opencode/agents/` in M1 | OpenCode V2 discovers only the latter | Yes |
 | DEC-032 | **No TanStack Query, Tailwind or Zod.** Server state is `fetch` in component state, styling is hand-written CSS with custom properties, validation is hand-written in the service layer | Each would add a dependency and a layer of indirection without removing a real problem at this size. Revisit TanStack Query first if cache invalidation becomes fiddly | Yes, ~a day |
+| DEC-033 | **Per-board appearance**: the five column backgrounds and the page background are configurable per board, by humans only, stored as a JSON document on the board | Requested by the owner after using the app. Outside the original MVP scope, so it is recorded here rather than quietly absorbed. Bob's token has no route for it, because appearance is board administration | Yes, one migration |
 
 ## Approved — owner decisions, 3 November 2026
 
