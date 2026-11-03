@@ -200,11 +200,16 @@ export function createD1AuthStore(db: D1Database): AuthStore {
 
       try {
         const clash = await db
-          .prepare('SELECT id FROM team_profiles WHERE display_name = ? AND id <> ?')
+          .prepare('SELECT id, kind FROM team_profiles WHERE display_name = ? AND id <> ?')
           .bind(displayName, profileId)
-          .first<{ id: string }>()
+          .first<{ id: string; kind: string }>()
 
-        // Another profile already owns the name (an AI profile, typically).
+        // A human profile already carries this name: a person pre-created before
+        // their first sign-in (Abdul, for instance). Adopt it rather than
+        // creating a second "Abdul (human)" beside it.
+        if (clash?.kind === 'human') return
+
+        // A non-human profile owns the name (an AI profile, typically).
         // Disambiguate rather than steal it.
         const name = clash ? `${displayName} (human)` : displayName
 

@@ -21,8 +21,7 @@ VALUES ('usr_dev_owner', 'owner@flowquery.invalid', 'Owner', 1793664000000);
 -- ---------------------------------------------------------------------------
 
 INSERT OR IGNORE INTO team_profiles (id, display_name, role_title, kind, avatar_path) VALUES
-  ('prf_owner',      'Owner',      'Administrator',                        'human',      NULL),
-  ('prf_friend',     'Friend',     'Administrator',                        'human',      NULL),
+  ('prf_abdul',      'Abdul',      'Administrator',                        'human',      NULL),
   ('prf_bob',        'Bob',        'Engineering Manager',                  'ai',         'team/portraits/bob.png'),
   ('prf_alex',       'Alex',       'Senior Software Engineer',              'ai',         'team/portraits/alex.png'),
   ('prf_sarah',      'Sarah',      'QA & Test Automation Engineer',        'ai',         'team/portraits/sarah.png'),
