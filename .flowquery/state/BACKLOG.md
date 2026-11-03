@@ -40,8 +40,6 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 - [x] Shared session middleware extracted; task routes reuse it
 - [x] Tests for TASK-001…006, TASK-010…013; browser verification of the drawer
 
-## Awaiting approval
-
 ### M5b — Ordering and movement
 - [x] `POST /api/v1/boards/:boardId/tasks/:taskId/move`
 - [x] Pure ordering functions in `src/shared/ordering.ts`, 13 unit tests
@@ -52,8 +50,6 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 - [x] Tests for TASK-007, TASK-008, TASK-009 (10 cases)
 - [ ] Drag gesture verified by a human (automation could not complete a drop)
 
-## Awaiting approval
-
 ### M6 — Comments and activity
 - [x] `POST/GET /api/v1/boards/:boardId/tasks/:taskId/comments`
 - [x] `GET /api/v1/boards/:boardId/activity` (newest first, keyset paginated)
@@ -63,21 +59,30 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 - [x] Comments in the task drawer; board activity feed
 - [x] Tests for COM-001…003 and ACT-001…004 (21 cases)
 
+### M7 — Agent API and tokens
+- [x] Token create/list/revoke per board, shown once, SHA-256 at rest
+- [x] `/api/v1/agent/*`; board derived from the token, never from the request
+- [x] Reads: board, filtered tasks, one task, comments, activity, columns, profiles
+- [x] Writes: create, edit, move, delete tasks; add comments
+- [x] OpenAPI 3.1 at `/api/v1/openapi.json`
+- [x] Isolation suite: second board and second token; every cross-board attempt 404
+- [x] Door separation: cookie rejected on `/agent`, bearer rejected on human routes
+- [x] `FLOWQUERY_API_TOKEN` documented in the README
+- [x] Verified end to end from a shell with a UI-created token
+
 ## Awaiting approval
 
-### M7 — Agent API and tokens
-- [ ] Token create/list/revoke per board, shown once, hashed at rest
-- [ ] `/api/v1/agent/*` namespace; board derived from the token
-- [ ] Reads: board, tasks (filtered), one task, comments, activity
-- [ ] Writes: create, edit, move, delete tasks; add comments
-- [ ] OpenAPI 3.1 document served by the app
-- [ ] Isolation suite: cross-board, revoked token, namespace boundary
-- [ ] `FLOWQUERY_API_TOKEN` convention documented
+### M8 — Hardening and release preparation
+- [ ] Security headers on HTML responses; review every error shape
+- [ ] Request ids in error responses; no stack traces or internal detail
+- [ ] Rate limiting reviewed across the auth endpoints
+- [ ] Backup and restore drill on the final schema, including agent tokens
+- [ ] Performance pass: new endpoints measured against 10 ms
+- [ ] Full regression run and a written runbook (setup, backup, restore, rollback)
+- [ ] Final security review of the two doors
 
 ## Not yet authorised
 
-### M7 — Agent API and tokens (isolation tests, OpenAPI)
-### M8 — Hardening, final restore drill, performance pass
 ### M9 — Deployment (separate approval; `workers.dev`; replace placeholder database id)
 
 ## Technical debt

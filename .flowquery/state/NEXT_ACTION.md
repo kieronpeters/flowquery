@@ -1,42 +1,47 @@
 # Next Action
 
-**M6 is complete. Three things from you.**
+**M7 is complete. Bob has an API. Approve M8 to finish the build.**
 
-## 1. Two quick manual checks (still outstanding)
+## 1. Try it yourself
 
-**Drag-and-drop.** Open a board and drag a card to another column, and within a column. Automation could not complete a drag gesture; the movement *behaviour* is proven through the keyboard buttons and 113 tests, but the gesture needs a human.
+1. `npm run db:reset && npm run dev`, sign in.
+2. On a board row, click **Tokens**, create one, and copy the value — it is shown once.
+3. In a shell:
 
-**The live GitHub sign-in.** Carried since M3 and still the biggest gap. Five minutes:
+```bash
+export FLOWQUERY_API_TOKEN="fq_..."
+curl -s -H "Authorization: Bearer $FLOWQUERY_API_TOKEN" http://localhost:5173/api/v1/agent/tasks?status=backlog
+```
 
-1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
-   - Homepage URL: `http://localhost:5173`
-   - Authorization callback URL: `http://localhost:5173/api/v1/auth/callback`
-2. `cp .dev.vars.example .dev.vars`, fill in client id/secret and `AUTH_ALLOWLIST="<your id>:Kieron,<friend id>:Friend"`.
-3. `npm run db:reset && npm run dev`.
+That is the workflow the whole project was built for: you read the backlog, Bob refines it.
 
-## 2. Approve M7 — Bob's agent API
+## 2. Two manual checks still outstanding
 
-This is the milestone that makes the product do what it was built for: Bob working the backlog through an API instead of a browser.
+**Drag-and-drop** and the **live GitHub sign-in**. Both are unverified by automation and both are recorded as open in the README, phase status and backlog. The sign-in is now the last thing between you and using this for real work.
 
-- `AgentCredential` flow: create a labelled token for a board, shown once, revocable
-- Token stored as a SHA-256 hash; `last_used_at`; revocation effective immediately
-- `/api/v1/agent/*` namespace: board derived from the token, never from the request
-- Reads: board, tasks (with filters), one task, comments, activity
-- Writes: create, edit, move, delete tasks; add comments
-- OpenAPI 3.1 document served by the app
-- Isolation suite: board A's token cannot read or write board B; agent cannot reach human endpoints or board administration
-- `FLOWQUERY_API_TOKEN` convention documented for OpenCode
+## 3. Approve M8 — hardening and release preparation
 
-## The security work that matters here
+The last milestone before deployment:
 
-M7 is where two doors meet the same data. The risk is not a clever attacker; it is a forgotten `WHERE board_id = ?` or a route that trusts a board id from the body. So:
+- Security headers (CSP, nosniff, referrer policy) and a review of every response
+- Error handling: no stack traces, consistent shapes, request ids
+- Rate limiting reviewed across the auth endpoints
+- **Backup and restore drill repeated on the final schema**, including the token table
+- Performance pass with the new endpoints measured against the 10 ms budget
+- Full regression run and a written runbook (setup, backup, restore, rollback)
+- A final security review of the two doors
 
-1. The agent namespace **cannot** accept a board id from the client — the token *is* the scope.
-2. Every agent route is tested against a second board, not just the happy path.
-3. The isolation tests run on the real schema, not a fake.
+## What I will specifically look for
 
-## Not in M7
+Not "does it work" — 142 tests answer that. The questions for M8 are:
 
-Notifications (dropped). Deployment (M9, separate approval).
+1. Can any error response leak internal detail?
+2. Can a revoked token be used because of a caching or timing window?
+3. Does a restore actually produce a working board, or just matching row counts?
+4. What happens when D1 is slow or a quota is hit — does the UI degrade or break?
 
-**Current gate: owner review of M6.**
+## Not in M8
+
+Deployment (M9, separate approval). Notifications (dropped).
+
+**Current gate: owner review of M7.**

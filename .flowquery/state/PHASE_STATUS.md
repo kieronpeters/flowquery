@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M6 complete — comments and activity.
-**Next gate:** owner approval for M7 (Bob's agent API).
+**Current phase:** M7 complete — Bob's agent API.
+**Next gate:** owner approval for M8 (hardening and release preparation).
 **Last updated:** 2026-11-03.
 
 ## Phase history
@@ -17,40 +17,43 @@
 | M2 Walking skeleton | Complete | D1 schema, seeds, read-only board, CPU measurement, restore drill |
 | M3 Human authentication | Complete | GitHub OAuth + PKCE, allowlist, sessions, CSRF, rate limiting |
 | M4 Boards and dashboard | Complete | Board list, create, rename, permanent delete with cascade |
-| M5 Kanban and tasks | Complete | Task CRUD, detail drawer, ordering, drag-and-drop, keyboard moves |
-| **M6 Comments and activity** | **Complete 2026-11-03** | Append-only comments and a board activity feed |
-| M7 Agent API and tokens | Not started | Requires owner approval |
-| M8 Hardening | Not started | — |
+| M5 Kanban and tasks | Complete | Task CRUD, ordering, drag-and-drop, keyboard moves |
+| M6 Comments and activity | Complete | Append-only comments and a board activity feed |
+| **M7 Agent API and tokens** | **Complete 2026-11-03** | Board-scoped tokens, `/agent` namespace, OpenAPI, isolation suite |
+| M8 Hardening | Not started | Requires owner approval |
 | M9 Deployment | Not started | Requires explicit deployment approval |
 
-## M6 completion evidence
+## M7 completion evidence
 
 | Check | Result |
 |---|---|
 | `npm run typecheck` / `lint` / `build` | Pass |
-| `npm test` | **113 tests passed**, 9 files |
-| Comment added | `201`, attributed to the signed-in human |
-| Markup in a comment | Stored and returned verbatim as text |
-| Validation | empty, whitespace, >10 000 chars, non-string → `400` |
-| Unknown task / wrong board | `404` |
-| Comments listed | Oldest first, scoped to their task |
-| Activity on create | `task.created` with title and column |
-| Activity on priority change | `task.priority_changed` with `{from, to}` |
-| Activity on description change | `task.description_changed` with **no text** in the payload |
-| Activity on a column move | exactly one `task.moved` with `{from, to}` |
-| Activity on a reorder within a column | **no event** |
-| Activity on comment and delete | `comment.added`, `task.deleted` |
-| Deletion event survives | Written with `task_id = NULL`; task-scoped events cascade |
-| Feed ordering and paging | Newest first; `limit` + `before` cursor returns the remainder |
-| Browser: comment with `<script>` | Rendered as literal text, `window.__pwned` stayed false, no injected elements |
-| Browser: feed | "created", "commented", "moved" rendered newest-first |
+| `npm test` | **142 tests passed**, 11 files |
+| Token creation | `fq_` + 32 bytes; prefix shown; plaintext returned once |
+| Storage | SHA-256 only; a test asserts the plaintext never appears in a list response |
+| Multiple tokens per board | Yes, independently labelled |
+| Revocation | `204`; the token returns `401` on the next request |
+| Revocation through another board | `404` |
+| Agent reads its board | 200, correct board and task count |
+| Agent lists tasks | Only its own; filters for status, priority, title |
+| Cross-board read, update, move, delete, comment | **404 in every case**, and the task is unchanged |
+| Agent activity | Sees only its own board's events |
+| Agent writes | Attributed to the token label with `actorType: 'agent'` |
+| Missing / malformed / unknown token | `401`, identical response |
+| Session cookie on the agent door | `401` |
+| Bearer token on the human door | `401` |
+| Agent reaching board administration | `404` |
+| `last_used_at` | Updated on use |
+| OpenAPI 3.1 | Served at `/api/v1/openapi.json` |
+
+## End-to-end proof outside the test suite
+
+A token created in the dashboard was used from a shell to read the board, filter the backlog (3 tasks), create a task, and comment on it. The board then held 10 tasks with the new one in To Do, and activity recorded both actions as `Bob - verification [agent]`. Revoking the token from the UI made the next call return `401`.
 
 ## Design note
 
-Activity records **what changed and who changed it**, one event per real change. It deliberately does not diff field values into the feed: a description can be 20,000 characters, and `task.description_changed` carries an empty payload. Reordering within a column produces no event — that is churn, not history.
-
-Deleting a task used to erase the deletion event along with the task, because the event referenced the task it described. It is now written with a null task reference so the board keeps the fact that the task existed.
+The agent namespace contains no board parameter anywhere — no path segment, body field or query value. `boardId` is read from the credential row. Isolation is therefore structural: there is no code path that could trust a client-supplied board id, because none exists.
 
 ## Explicitly not done
 
-No agent API or tokens. No notifications. No remote repository, deployment or cost.
+No hardening pass, no deployment. No remote repository or cost.

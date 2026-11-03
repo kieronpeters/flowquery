@@ -66,7 +66,7 @@ Both resolve to the same service calls. The difference is only *how the acting i
 - Human: session cookie → `users.id` → scope = all boards.
 - Agent: `Authorization: Bearer` → `agent_tokens` lookup by hash → scope = exactly one `board_id`.
 
-Because the agent's board never comes from the request, `AGT-008` is true by construction rather than by validation.
+Because the agent's board never comes from the request, `AGT-008` is true by construction rather than by validation. Implemented in M7; the isolation suite runs every agent route against a second board.
 
 ## 5. Frontend
 

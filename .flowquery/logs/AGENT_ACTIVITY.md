@@ -4,6 +4,35 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M7 agent API and tokens (Bob, current session)
+
+**Authorised:** M7 — Bob's board-scoped API.
+
+**Performed:**
+- `repositories/agent-tokens.ts`: insert, list, revoke (sets `revoked_at`), find-active-by-hash, touch.
+- `services/agent-tokens.ts`: token generation (`fq_` + 32 bytes), label validation, stored as SHA-256.
+- `middleware/agent-auth.ts`: bearer resolution; sets `{ tokenId, boardId, label }` on the context.
+- `routes/agent.ts`: board, columns, profiles, tasks (list with filters, read, create, edit, delete, move), comments, activity.
+- `routes/tokens.ts`: human token management, registered on the board router.
+- `openapi.ts`: hand-written OpenAPI 3.1 served at `/api/v1/openapi.json`.
+- `repositories/tasks.ts` + `services/tasks.ts`: filtered task list (status, priority, assignee, title).
+- UI: `TokenPanel` on each dashboard board row — create (plaintext once), list, revoke.
+
+**Verified (actual output):**
+- 142 tests, 11 files; typecheck, lint, build clean.
+- Token stored as a hash; a list response never contains the plaintext.
+- Isolation suite with a second board and second token: cross-board read, update, move, delete and comment all return 404, and the task is unchanged.
+- Session cookie rejected on `/agent`; bearer token rejected on human routes; a revoked token returns 401 immediately.
+- From a shell, with a token created in the browser: read the board (9 tasks), filtered the backlog (3), created a task, commented as "Bob - verification", saw the board reach 10 tasks with the new one in To Do, then revoked it in the UI and got 401.
+
+**Note:** PowerShell's `Invoke-RestMethod` mangles a manually set `Cookie` header; used `curl.exe` instead. Not an application issue.
+
+**Not done:** no hardening pass, no deployment.
+
+**Outcome:** M7 complete; awaiting approval for M8.
+
+---
+
 ## 2026-11-03 — M6 comments and activity (Bob, current session)
 
 **Authorised:** M6 — comments and activity.

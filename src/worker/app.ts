@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 
 import { COLUMNS } from '../shared/columns'
 import type { Bindings } from './env'
+import { openApiDocument } from './openapi'
+import { agentRoutes } from './routes/agent'
 import { authRoutes } from './routes/auth'
 import { boardRoutes } from './routes/boards'
 import { profileRoutes } from './routes/profiles'
@@ -40,11 +42,17 @@ app.route('/api/v1/boards', boardRoutes)
 /** Assignable profiles — session required. */
 app.route('/api/v1/profiles', profileRoutes)
 
+/** The agent door. Board scope comes from the token, never from the request. */
+app.route('/api/v1/agent', agentRoutes)
+
+/** The contract, readable without the source. */
+app.get('/api/v1/openapi.json', (c) => c.json(openApiDocument))
+
 app.get('/api/v1/health', (c) =>
   c.json({
     status: 'ok',
     service: 'flowquery',
-    version: '0.0.0-m5a',
+    version: '0.0.0-m7',
     time: new Date().toISOString(),
   }),
 )

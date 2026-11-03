@@ -111,6 +111,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M7 — Agent API and tokens — M
 
+**Status: complete 2026-11-03.**
+
 **Goal:** Bob can work a board safely.
 
 - Token create/list/revoke with show-once plaintext

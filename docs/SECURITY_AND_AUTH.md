@@ -269,3 +269,18 @@ Built and tested:
 Not yet verified: **the real GitHub round trip**, because it needs the owner's OAuth app credentials and two GitHub accounts. The callback logic is covered by tests with a stubbed GitHub, and the start redirect was verified against a real dev server — but a live sign-in has not been performed. That must happen before deployment.
 
 Measured CPU for the auth path: allowlist parse 0.002 ms, SHA-256 token hash 0.035 ms, response serialisation 0.001 ms — about 0.04 ms against a 10 ms budget.
+
+## 15. Agent door — implementation notes (M7)
+
+Built and tested:
+
+- Tokens are `fq_` + 32 CSPRNG bytes, shown once, stored as SHA-256. A list endpoint returns the prefix (first 8 characters) and never the secret — asserted by a test that the plaintext does not appear in any list response.
+- Revocation sets `revoked_at` rather than deleting the row, so the board keeps a record that the credential existed. It takes effect on the next request; a test revokes mid-suite and re-uses the token to confirm 401.
+- **The agent namespace has no board parameter anywhere.** No path segment, body field or query parameter names a board: `boardId` is read from the credential row and nowhere else. This is the isolation guarantee, and it is structural rather than a check someone must remember.
+- Missing, malformed, unknown and revoked tokens all return the same `401`. The caller learns nothing about which it was.
+- A session cookie is rejected on the agent door, and a bearer token is rejected on the human door. Both are tested.
+- Agent activity is attributed to the token's label with `actorType = 'agent'`, so the board shows who did what without pretending a human did it.
+
+**Verified end to end, not just in tests:** a token created in the dashboard was used from a shell to read the board, filter the backlog, create a task and comment on it; the board showed 10 tasks with the new one in To Do; activity recorded both actions under the token's label; revoking the token from the UI made the next call return `401`.
+
+The isolation suite runs against the real schema with a second board, covering read, update, move, delete and comment attempts across boards.

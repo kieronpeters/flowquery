@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M6 complete — the collaborative layer works: comments on tasks and an append-only activity feed. **Bob's API is next** (M7). Nothing is deployed.
+**Status:** M7 complete — Bob has an API. A board-scoped token can read the board, filter the backlog, create, edit, move and delete tasks, comment, and read activity — and can reach nothing else. Nothing is deployed.
 
 ---
 
@@ -47,7 +47,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 113 tests, including real-schema tests through SQLite |
+| `npm test` | Vitest — 142 tests, including real-schema tests through SQLite |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |
@@ -94,6 +94,12 @@ Without these values, `/api/v1/auth/start` returns `503 AUTH_NOT_CONFIGURED` and
 | `GET /api/v1/boards/:id/tasks/:taskId/comments` | `200` with comments, oldest first |
 | `POST /api/v1/boards/:id/tasks/:taskId/comments` | `201`; body stored and returned as literal text |
 | `GET /api/v1/boards/:id/activity` | `200` with `{ events, nextBefore }`, newest first, keyset paginated |
+| `GET/POST /api/v1/boards/:id/tokens` | List or create agent tokens; the plaintext is returned once |
+| `DELETE /api/v1/boards/:id/tokens/:tokenId` | `204`, revocation effective immediately |
+| `GET /api/v1/agent/board` | The token's own board — 401 without a valid `Bearer` token |
+| `GET /api/v1/agent/tasks` | Filtered task list (`status`, `priority`, `assignee`, `q`, `limit`) |
+| `POST/PATCH/DELETE /api/v1/agent/tasks…` | Task writes, scoped to the token's board |
+| `GET /api/v1/openapi.json` | The contract as OpenAPI 3.1 |
 | `GET /api/v1/profiles` | `200` with the 18 assignable profiles |
 | `GET /api/v1/auth/start` | `302` to GitHub with PKCE, or `503` if unconfigured |
 | `GET /api/v1/auth/me` | Identity or `401` |
@@ -112,6 +118,24 @@ M5a was also verified in a browser: creating a task through the drawer, reopenin
 **M5b drag-and-drop is not verified by automation.** The sortable wiring is present (dnd-kit attributes and its live region are in the DOM) and the board renders under its context without errors, but automated pointer and keyboard events could not complete a drop gesture in this harness. The *movement behaviour* is verified through the drawer's move buttons, which call the same code path, plus the ordering unit tests and the move API tests. A human click-drag is still worth doing.
 
 M6 was verified in a browser: a comment containing `<script>` and `<b>` rendered as literal text with nothing executed, and the feed showed "created", "commented" and "moved" events newest-first.
+
+## Bob's API
+
+Create a token from the dashboard: **Tokens** on a board row. The plaintext is shown once.
+
+```bash
+export FLOWQUERY_API_TOKEN="fq_..."
+BASE="http://localhost:5173/api/v1/agent"
+
+curl -s -H "Authorization: Bearer $FLOWQUERY_API_TOKEN" "$BASE/board"
+curl -s -H "Authorization: Bearer $FLOWQUERY_API_TOKEN" "$BASE/tasks?status=backlog"
+curl -s -X POST -H "Authorization: Bearer $FLOWQUERY_API_TOKEN" -H 'content-type: application/json' \
+     -d '{"title":"Refine the backlog","priority":"high"}' "$BASE/tasks"
+```
+
+Every agent route derives its board from the token. There is no path or parameter through which a
+token can name another board, and the human endpoints reject a bearer token. Revoking a token takes
+effect on the next request.
 
 ## Data
 

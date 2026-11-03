@@ -177,8 +177,67 @@ export async function getActiveProfile(
     .first<ProfileRow>()
 }
 
-/** Task ids in a column, in display order. */
-export async function listColumnTaskIds(
+export type TaskFilters = {
+  status?: ColumnKey
+  priority?: string
+  /** `null` means unassigned; `undefined` means no filter. */
+  assigneeProfileId?: string | null
+  q?: string
+  limit: number
+}
+
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (character) => `\\${character}`)
+}
+
+/** Filtered task list for the agent API. Still scoped by board, always. */
+export async function listTasksWithFilters(
+  db: D1Database,
+  boardId: string,
+  filters: TaskFilters,
+): Promise<TaskRow[]> {
+  const where = ['board_id = ?']
+  const values: unknown[] = [boardId]
+
+  if (filters.status) {
+    where.push('status = ?')
+    values.push(filters.status)
+  }
+
+  if (filters.priority) {
+    where.push('priority = ?')
+    values.push(filters.priority)
+  }
+
+  if (filters.assigneeProfileId === null) {
+    where.push('assignee_profile_id IS NULL')
+  } else if (filters.assigneeProfileId) {
+    where.push('assignee_profile_id = ?')
+    values.push(filters.assigneeProfileId)
+  }
+
+  if (filters.q) {
+    where.push("title LIKE ? ESCAPE '\\'")
+    values.push(`%${escapeLike(filters.q)}%`)
+  }
+
+  values.push(filters.limit)
+
+  const { results } = await db
+    .prepare(
+      `SELECT ${TASK_COLUMNS}
+         FROM tasks
+        WHERE ${where.join(' AND ')}
+        ORDER BY status, position, created_at
+        LIMIT ?`,
+    )
+    .bind(...values)
+    .all<TaskRow>()
+
+  return results ?? []
+}
+
+/** Task ids in a column, in display order. */ export async function listColumnTaskIds(
   db: D1Database,
   boardId: string,
   status: ColumnKey,

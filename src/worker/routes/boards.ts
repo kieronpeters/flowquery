@@ -6,6 +6,7 @@ import { requireSession } from '../middleware/session'
 import { registerActivityRoutes } from './activity'
 import { registerCommentRoutes } from './comments'
 import { registerTaskRoutes } from './tasks'
+import { registerTokenRoutes } from './tokens'
 import {
   createBoard,
   deleteBoard,
@@ -136,7 +137,8 @@ boardRoutes.delete('/:boardId', async (c) => {
   return c.body(null, 204)
 })
 
-// Task, comment and activity routes share this router's session middleware.
+// Task, comment, activity and token routes share this router's session middleware.
 registerTaskRoutes(boardRoutes)
 registerCommentRoutes(boardRoutes)
 registerActivityRoutes(boardRoutes)
+registerTokenRoutes(boardRoutes)

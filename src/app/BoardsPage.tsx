@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import type { ApiError, BoardSummary } from '../shared/api-types'
+import { TokenPanel } from './TokenPanel'
 
 type LoadState =
   | { kind: 'loading' }
@@ -38,6 +39,8 @@ export function BoardsPage() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmValue, setConfirmValue] = useState('')
+
+  const [tokenBoardId, setTokenBoardId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const meResponse = await fetch('/api/v1/auth/me')
@@ -269,9 +272,21 @@ export function BoardsPage() {
                       setRenamingId(board.id)
                       setRenameValue(board.name)
                       setDeletingId(null)
+                      setTokenBoardId(null)
                     }}
                   >
                     Rename
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => {
+                      setTokenBoardId(tokenBoardId === board.id ? null : board.id)
+                      setRenamingId(null)
+                      setDeletingId(null)
+                    }}
+                  >
+                    Tokens
                   </button>
                   <button
                     className="button button-danger"
@@ -280,6 +295,7 @@ export function BoardsPage() {
                       setDeletingId(board.id)
                       setConfirmValue('')
                       setRenamingId(null)
+                      setTokenBoardId(null)
                     }}
                   >
                     Delete
@@ -323,6 +339,9 @@ export function BoardsPage() {
                     </button>
                   </div>
                 </div>
+              )}
+              {tokenBoardId === board.id && (
+                <TokenPanel boardId={board.id} onClose={() => setTokenBoardId(null)} />
               )}
             </li>
           ))}

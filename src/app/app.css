@@ -648,6 +648,115 @@ a {
   white-space: nowrap;
 }
 
+/* Agent tokens ------------------------------------------------------------ */
+
+.token-panel {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.token-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.token-note {
+  margin: 0.35rem 0 0.9rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.token-reveal {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  background: var(--accent-soft);
+}
+
+.token-reveal-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.token-value {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.token-reveal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.token-reveal-actions .button {
+  margin-top: 0;
+}
+
+.token-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.token-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--surface-raised);
+}
+
+.token-row.revoked {
+  opacity: 0.55;
+}
+
+.token-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.token-label {
+  font-size: 0.88rem;
+  font-weight: 550;
+}
+
+.token-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.token-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.token-form .button {
+  margin-top: 0;
+}
+
 /* Task drawer ------------------------------------------------------------- */
 
 .add-task {

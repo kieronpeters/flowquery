@@ -147,7 +147,7 @@ describe('GET /api/v1/health', () => {
 
     const body = (await response.json()) as { status: string; version: string }
     expect(body.status).toBe('ok')
-    expect(body.version).toBe('0.0.0-m5a')
+    expect(body.version).toBe('0.0.0-m7')
   })
 })
 

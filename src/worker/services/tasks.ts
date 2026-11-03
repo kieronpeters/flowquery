@@ -5,7 +5,7 @@ import { COLUMN_KEYS, isColumnKey, type ColumnKey } from '../../shared/columns'
 import type { TaskRow } from '../domain/types'
 import { randomId } from '../lib/ids'
 import { activityStatement, type ActivityEventInput } from '../repositories/activity'
-import { getBoardById } from '../repositories/boards'
+import { getBoardById, listActiveProfiles } from '../repositories/boards'
 import {
   deleteTask,
   getActiveProfile,
@@ -13,6 +13,7 @@ import {
   guardedMove,
   insertTask,
   listColumnTaskIds,
+  listTasksWithFilters,
   nextPosition,
   renumberColumn,
   updateTask,
@@ -400,6 +401,87 @@ async function recordChanges(
   }
 
   for (const event of events) await recordActivity(db, event)
+}
+
+export type ListResult =
+  { kind: 'ok'; tasks: TaskDto[]; truncated: boolean } | { kind: 'invalid'; message: string }
+
+export const TASK_LIST_DEFAULT_LIMIT = 50
+export const TASK_LIST_MAX_LIMIT = 100
+export const SEARCH_MAX_BYTES = 40
+
+/**
+ * Filtered task list for the agent API.
+ *
+ * Descriptions are truncated (DEC-025) and the response says so, so Bob knows
+ * to fetch a single task when the full text matters.
+ */
+export async function listTasks(
+  db: D1Database,
+  input: {
+    boardId: string
+    query: {
+      status?: string
+      priority?: string
+      assignee?: string
+      q?: string
+      limit?: string
+    }
+  },
+): Promise<ListResult> {
+  let limit = TASK_LIST_DEFAULT_LIMIT
+  if (input.query.limit !== undefined && input.query.limit !== '') {
+    const parsed = Number(input.query.limit)
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > TASK_LIST_MAX_LIMIT) {
+      return { kind: 'invalid', message: `limit must be 1-${TASK_LIST_MAX_LIMIT}.` }
+    }
+    limit = parsed
+  }
+
+  let status: ColumnKey | undefined
+  if (input.query.status) {
+    const parsed = validateStatus(input.query.status)
+    if (!parsed.ok) return { kind: 'invalid', message: parsed.message }
+    status = parsed.value
+  }
+
+  let priority: string | undefined
+  if (input.query.priority) {
+    const parsed = validatePriority(input.query.priority)
+    if (!parsed.ok) return { kind: 'invalid', message: parsed.message }
+    priority = parsed.value
+  }
+
+  let assigneeProfileId: string | null | undefined
+  if (input.query.assignee === 'none' || input.query.assignee === 'unassigned') {
+    assigneeProfileId = null
+  } else if (input.query.assignee) {
+    assigneeProfileId = input.query.assignee
+  }
+
+  let q: string | undefined
+  if (input.query.q) {
+    // D1 caps a LIKE pattern at 50 bytes; the wildcards need room too.
+    if (new TextEncoder().encode(input.query.q).length > SEARCH_MAX_BYTES) {
+      return { kind: 'invalid', message: `q must be ${SEARCH_MAX_BYTES} bytes or fewer.` }
+    }
+    q = input.query.q
+  }
+
+  const [rows, profiles] = await Promise.all([
+    listTasksWithFilters(db, input.boardId, { status, priority, assigneeProfileId, q, limit }),
+    listActiveProfiles(db),
+  ])
+
+  const profileMap = new Map(profiles.map((profile) => [profile.id, profile]))
+
+  return {
+    kind: 'ok',
+    tasks: rows.map((row) =>
+      toTaskDto(row, profileMap.get(row.assignee_profile_id ?? ''), { truncate: true }),
+    ),
+    truncated: rows.length === limit,
+  }
 }
 
 export async function removeTask(

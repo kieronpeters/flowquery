@@ -2,8 +2,8 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M6 complete — comments and activity. Awaiting owner approval for M7 (Bob's agent API).
-**Implementation authorised:** M1–M6 (complete). M7 onward: no.
+**Current phase:** M7 complete — Bob's agent API. Awaiting owner approval for M8 (hardening).
+**Implementation authorised:** M1–M7 (complete). M8 onward: no.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
 **Deployment:** None
@@ -41,7 +41,7 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (**113 tests**), `build`, `format:check` all pass.
+- `typecheck`, `lint`, `test` (**142 tests**), `build`, `format:check` all pass.
 - D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
 - Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
 - Board management implemented: list, create, rename, permanent delete with typed-name confirmation; cascade verified against the real schema.
@@ -50,6 +50,10 @@ Register: `docs/DECISIONS.md`.
 - Comments implemented: append-only, text-only, attributed to the acting human.
 - Activity implemented: append-only board feed, newest first, keyset paginated; one event per real change (no event for reordering within a column).
 - The `task.deleted` event is written with a null task reference so it survives the cascade — otherwise deleting a task would erase the record that it existed.
+- Agent API implemented: board-scoped tokens (`fq_` + 32 bytes, SHA-256 at rest, shown once, revoked via `revoked_at`), `/api/v1/agent/*` with reads, writes, comments and activity, and an OpenAPI 3.1 document at `/api/v1/openapi.json`.
+- **The agent namespace has no board parameter at all** — scope comes from the token row. Isolation is structural, not a check.
+- Isolation suite: a second board plus a second token proves read, update, move, delete and comment attempts across boards all return 404, and that a session cookie and a bearer token cannot cross doors.
+- Verified end to end outside the test suite: created a token in the dashboard, used it from a shell to read the board, filter the backlog, create a task and comment, then revoked it and confirmed 401.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
 - Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.
@@ -94,13 +98,12 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: none, and none authorised.
 
-## Known gaps carried into M7
+## Known gaps carried into M8
 
 - **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
 - **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
-- No agent API or tokens (M7) — Bob cannot reach the board yet.
-- No task list endpoint with filters (needed for M7).
-- Activity writes are best-effort: a failed insert is logged, not retried, and does not fail the user's action. Accepted trade-off, stated in the handoff.
+- Activity writes are best-effort: a failed insert is logged, not retried, and does not fail the user's action.
+- No human task list endpoint with filters (the agent namespace has one; the board view covers the UI).
 - Seeded placeholder user (`usr_dev_owner`) should be removed once real OAuth users exist.
 - `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
 - `repository/SETUP_QUESTIONS.md` predates the current plan; reconcile or mark historical.

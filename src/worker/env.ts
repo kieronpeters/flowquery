@@ -19,5 +19,11 @@ export type AppEnv = {
   Bindings: Bindings
   Variables: {
     user: UserRecord
+    agent: {
+      tokenId: string
+      /** The only board this credential can reach. */
+      boardId: string
+      label: string
+    }
   }
 }
