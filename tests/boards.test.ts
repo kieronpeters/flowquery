@@ -252,8 +252,8 @@ describe('DELETE /api/v1/boards/:boardId', () => {
     expect(await countRows(db, 'activity_events')).toBe(0)
     expect(await countRows(db, 'agent_tokens')).toBe(0)
 
-    // Unrelated data survives: 18 seeded profiles, and both users (the seeded
-    // development owner and the one created by signing in).
+    // Unrelated data survives: 17 seeded profiles plus the human created when
+    // signing in, and both users (the seeded development owner and that human).
     expect(await countRows(db, 'team_profiles')).toBe(18)
     expect(await countRows(db, 'users')).toBe(2)
   })

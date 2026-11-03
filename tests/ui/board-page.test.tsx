@@ -263,6 +263,37 @@ describe('BoardPage', () => {
     expect(backlog.style.getPropertyValue('--card-fg')).toBe('#0b1020')
   })
 
+  it('offers a touch drag handle on every card', async () => {
+    mockApi()
+    renderBoard()
+
+    const handle = await screen.findByRole('button', { name: 'Drag Card one' })
+
+    // The handle must be its own control, not nested inside the card button,
+    // or tapping it would open the task instead of starting a drag.
+    expect(handle.tagName).toBe('BUTTON')
+    expect(handle.closest('button')).toBe(handle)
+    expect(handle.className).toContain('card-handle')
+  })
+
+  it('switches columns with the tab bar', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    const backlog = screen.getByRole('button', { name: 'Backlog' })
+    const review = screen.getByRole('button', { name: 'Review' })
+
+    expect(backlog.getAttribute('aria-pressed')).toBe('true')
+    expect(review.getAttribute('aria-pressed')).toBe('false')
+
+    await userEvent.click(review)
+
+    expect(review.getAttribute('aria-pressed')).toBe('true')
+    expect(backlog.getAttribute('aria-pressed')).toBe('false')
+  })
+
   it('gives the activity box its own surface', async () => {
     mockApi({ theme: { activity: '#141a2e' } })
     renderBoard()

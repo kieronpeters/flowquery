@@ -2,7 +2,8 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useDroppable,
   useSensor,
@@ -92,6 +93,21 @@ function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
       <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
         <CardBody task={task} />
       </button>
+
+      {/*
+        Touch drag handle. On a phone, dragging has to start somewhere the
+        browser will not treat as a scroll, so this is the only element with
+        `touch-action: none`. It is hidden on devices with a mouse, where the
+        whole card already drags.
+      */}
+      <button
+        className="card-handle"
+        type="button"
+        aria-label={`Drag ${task.title}`}
+        {...listeners}
+      >
+        ⠿
+      </button>
     </li>
   )
 }
@@ -107,11 +123,19 @@ export function BoardPage() {
   // instead of being clipped by the column or board scroll container.
   const [activeTask, setActiveTask] = useState<TaskDto | null>(null)
   const [showTheme, setShowTheme] = useState(false)
+  // Which column a phone is showing. Desktop ignores it: every column is
+  // visible there and the tab bar is hidden by CSS.
+  const [activeColumn, setActiveColumn] = useState<ColumnKey>('backlog')
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Mouse: a few pixels of movement starts the drag, as before.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Touch: a short hold starts the drag, so a swipe still scrolls the page.
+    // Without this, every finger movement on a card was interpreted as a drag
+    // and the board could not be scrolled on a phone at all.
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -351,8 +375,8 @@ export function BoardPage() {
         <div>
           <h1>{board.name}</h1>
           <p className="lede">
-            {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag a card, or open it
-            and use the move buttons
+            {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag to reorder, or open
+            a card to edit it
           </p>
         </div>
         <button
@@ -382,11 +406,26 @@ export function BoardPage() {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveTask(null)}
       >
+        <div className="board-tabs" role="group" aria-label="Choose a column">
+          {columns.map((column) => (
+            <button
+              key={column.key}
+              className="board-tab"
+              type="button"
+              aria-pressed={column.key === activeColumn}
+              onClick={() => setActiveColumn(column.key)}
+            >
+              {column.name}
+            </button>
+          ))}
+        </div>
+
         <div className="board">
           {columns.map((column) => (
             <Column
               key={column.key}
               column={column}
+              active={column.key === activeColumn}
               background={theme.columns?.[column.key]}
               ticket={theme.tickets}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
@@ -445,12 +484,14 @@ export function BoardPage() {
 
 function Column({
   column,
+  active,
   background,
   ticket,
   onOpen,
   onAdd,
 }: {
   column: BoardView['columns'][number]
+  active?: boolean
   background?: string
   ticket?: string
   onOpen: (taskId: string) => void
@@ -473,6 +514,7 @@ function Column({
       className={isOver ? 'column over' : 'column'}
       style={Object.keys(style).length > 0 ? style : undefined}
       data-custom={background || cardBg ? 'true' : undefined}
+      data-active={active ? 'true' : undefined}
       aria-labelledby={`column-${column.key}`}
     >
       <header className="column-header">

@@ -284,8 +284,14 @@ describe('GET /api/v1/profiles', () => {
 
     expect(response.status).toBe(200)
     const body = (await response.json()) as { profiles: { id: string; kind: string }[] }
+    // 17 seeded profiles (Abdul plus 16 agents) and the human created when the test signed in.
     expect(body.profiles).toHaveLength(18)
     expect(body.profiles.some((profile) => profile.kind === 'contractor')).toBe(true)
+
+    // The signed-in human is assignable, and humans sort ahead of the AI
+    // profiles so a person is never buried under a dozen specialists.
+    expect(body.profiles[0]!.kind).toBe('human')
+    expect(body.profiles.filter((profile) => profile.kind === 'human').length).toBeGreaterThan(0)
   })
 
   it('requires a session', async () => {

@@ -26,7 +26,7 @@ npm run dev                        # http://localhost:5173
 | Command | Effect |
 |---|---|
 | `npm run dev` | Local app on 5173 |
-| `npm test` | 149 tests (unit, route, real-schema) |
+| `npm test` | The full suite: unit, route, real-schema and UI |
 | `npm run typecheck` / `npm run lint` / `npm run build` | Quality gates |
 | `npm run bench` | CPU measurement for board and auth paths |
 | `npm run db:migrate:local` | Apply migrations only |
@@ -34,6 +34,24 @@ npm run dev                        # http://localhost:5173
 | `npm run db:reset` | **Delete local data**, migrate, seed |
 | `npm run preflight` | Deployment guard: placeholder id, headers, build, secrets |
 | `npm run deploy` | Build → preflight → deploy (needs Cloudflare auth and approval) |
+
+### Agent token for the current session
+
+An agent authenticates with a board-scoped bearer token; there is no agent
+login. The token is created once in the UI (Boards → Tokens), shown once, and
+stored only as a SHA-256 hash. For work in this repository it is kept in
+`.agent-token` at the project root, which is **git-ignored**:
+
+```powershell
+Get-Content .agent-token    # never commit, never paste into chat
+```
+
+To rotate: revoke the token in the same panel, create a new one, overwrite
+`.agent-token`. Revocation takes effect on the next request, so a leaked token
+is dead within seconds.
+
+Never put a token in a commit, a log, a screenshot, a URL, or a chat message.
+The only safe copy is the file above and the agent's own environment.
 
 `db:reset` is destructive and local-only. It never touches a remote database.
 

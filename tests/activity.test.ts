@@ -241,15 +241,35 @@ describe('activity filters', () => {
     return result.page
   }
 
-  it('reports who has acted, with how many events each', async () => {
+  it('lists humans and anyone who acted, not sixteen idle agents', async () => {
     await seedTwoActors()
 
     const result = await page({ boardId: BOARD, limit: 50 })
+    const counts = new Map(result.actors.map((actor) => [actor.name, actor.count]))
 
-    expect(result.actors).toEqual([
-      { name: 'Bob', count: 1 },
-      { name: 'Owner', count: 1 },
-    ])
+    // Humans are always offered, whether or not they have done anything yet.
+    expect(counts.get('Abdul')).toBe(0)
+
+    // Agents appear once they act: Bob has events.
+    expect(counts.get('Bob')).toBe(1)
+
+    // And an agent who has never acted stays out of the way.
+    expect(counts.has('Alex')).toBe(false)
+
+    // Whoever acted most recently sorts first; people with no events sort last.
+    expect(result.actors[0]!.name).toBe('Bob')
+  })
+
+  it('keeps events whose actor no longer matches a profile', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50 })
+    const counts = new Map(result.actors.map((actor) => [actor.name, actor.count]))
+
+    // 'Owner' is not a profile in this database. The events are still real, so
+    // the filter has to be able to reach them — otherwise a renamed person's
+    // history becomes invisible and unfilterable.
+    expect(counts.get('Owner')).toBe(1)
   })
 
   it('filters to one actor', async () => {
@@ -282,8 +302,11 @@ describe('activity filters', () => {
     await seedTwoActors()
 
     const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob'] })
+    const names = result.actors.map((actor) => actor.name)
 
-    expect(result.actors.map((actor) => actor.name)).toEqual(['Bob', 'Owner'])
+    // The filter narrows events, not the list of people you can filter by.
+    expect(names).toContain('Bob')
+    expect(names).toContain('Abdul')
   })
 
   it('filters by a starting instant, inclusively', async () => {
@@ -346,7 +369,8 @@ describe('activity filters', () => {
     }
 
     expect(body.events.map((event) => event.actorName)).toEqual(['Owner'])
-    expect(body.actors).toHaveLength(2)
+    expect(body.actors.some((actor) => actor.name === 'Bob')).toBe(true)
+    expect(body.actors.some((actor) => actor.name === 'Abdul')).toBe(true)
   })
 
   it('treats an empty actors parameter as no filter', async () => {

@@ -16,16 +16,19 @@ export function createMemoryAuthStore(): AuthStore & {
   users: Map<string, UserRecord>
   identities: Map<string, IdentityRecord>
   sessions: Map<string, SessionRecord>
+  profiles: Map<string, { userId: string; displayName: string }>
 } {
   const users = new Map<string, UserRecord>()
   const identities = new Map<string, IdentityRecord>()
   const sessions = new Map<string, SessionRecord>()
+  const profiles = new Map<string, { userId: string; displayName: string }>()
   const attempts: { key: string; at: number }[] = []
 
   return {
     users,
     identities,
     sessions,
+    profiles,
 
     async findIdentity(provider, subject) {
       for (const identity of identities.values()) {
@@ -55,6 +58,9 @@ export function createMemoryAuthStore(): AuthStore & {
     async touchIdentity(identityId, at) {
       const identity = identities.get(identityId)
       if (identity) identities.set(identityId, { ...identity, lastUsedAt: at })
+    },
+    async ensureHumanProfile({ userId, displayName }) {
+      profiles.set(`prf_user_${userId}`, { userId, displayName })
     },
     async createSession(input) {
       sessions.set(input.tokenHash, { ...input, lastSeenAt: input.createdAt })

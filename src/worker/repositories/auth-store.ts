@@ -56,6 +56,15 @@ export interface AuthStore {
   }): Promise<void>
   touchIdentity(identityId: string, at: number): Promise<void>
 
+  /**
+   * Makes a signed-in human assignable.
+   *
+   * Assignees come from `team_profiles`, which is where `kind` lives. A human
+   * account is not a profile until this runs, so without it a person can sign
+   * in, own boards, and still be impossible to assign a task to.
+   */
+  ensureHumanProfile(input: { userId: string; displayName: string }): Promise<void>
+
   createSession(input: {
     id: string
     userId: string
@@ -177,6 +186,48 @@ export function createD1AuthStore(db: D1Database): AuthStore {
         .prepare('UPDATE auth_identities SET last_used_at = ? WHERE id = ?')
         .bind(at, identityId)
         .run()
+    },
+
+    /**
+     * Creates or refreshes the human's assignable profile.
+     *
+     * Deliberately swallows failures: a naming collision must never stop
+     * somebody signing in. The worst case is that they are not assignable
+     * until the name is resolved, which is recoverable; a failed login is not.
+     */
+    async ensureHumanProfile({ userId, displayName }) {
+      const profileId = `prf_user_${userId}`
+
+      try {
+        const clash = await db
+          .prepare('SELECT id, kind FROM team_profiles WHERE display_name = ? AND id <> ?')
+          .bind(displayName, profileId)
+          .first<{ id: string; kind: string }>()
+
+        // A human profile already carries this name: a person pre-created before
+        // their first sign-in (Abdul, for instance). Adopt it rather than
+        // creating a second "Abdul (human)" beside it.
+        if (clash?.kind === 'human') return
+
+        // A non-human profile owns the name (an AI profile, typically).
+        // Disambiguate rather than steal it.
+        const name = clash ? `${displayName} (human)` : displayName
+
+        await db
+          .prepare(
+            `INSERT INTO team_profiles (id, display_name, role_title, kind, avatar_path, active)
+             VALUES (?, ?, 'Administrator', 'human', NULL, 1)
+             ON CONFLICT(id) DO UPDATE SET
+               display_name = excluded.display_name,
+               role_title = excluded.role_title,
+               kind = 'human',
+               active = 1`,
+          )
+          .bind(profileId, name)
+          .run()
+      } catch {
+        // See the comment above: never block sign-in for a profile sync.
+      }
     },
 
     async createSession(input) {

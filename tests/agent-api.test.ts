@@ -241,6 +241,7 @@ describe('bob can do the job', () => {
       'review',
       'done',
     ])
+    // 17 seeded profiles (Abdul plus 16 agents) and the human created when the test signed in.
     expect(profiles.profiles).toHaveLength(18)
   })
 })

@@ -58,7 +58,8 @@ a {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  /* Keep clear of the notch in landscape and the rounded corners. */
+  padding: 1rem max(1.5rem, env(safe-area-inset-right)) 1rem max(1.5rem, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
   background: rgba(11, 16, 32, 0.85);
   position: sticky;
@@ -72,13 +73,6 @@ a {
   font-size: 1.05rem;
   text-decoration: none;
   color: var(--text);
-}
-
-.phase {
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .page {
@@ -127,7 +121,7 @@ a {
 /* Board ------------------------------------------------------------------ */
 
 .board-page {
-  padding: 1.75rem 1.5rem 3rem;
+  padding: 1.75rem 1.5rem calc(3rem + env(safe-area-inset-bottom));
 }
 
 .board-heading {
@@ -268,14 +262,90 @@ a {
   color: var(--muted);
 }
 
+/* Column tabs, phones only ------------------------------------------------ */
+
+.board-tabs {
+  display: none;
+}
+
 @media (max-width: 640px) {
+  /*
+   * One column at a time, chosen from a tab bar. A horizontally scrolling strip
+   * of 85vw columns was awkward: you could only see one, and the next one was
+   * off-screen exactly when you wanted to drag a card into it.
+   */
+  .board-tabs {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .board-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .board-tab[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
   .board {
-    scroll-snap-type: x mandatory;
+    display: block;
+    overflow: visible;
   }
 
   .column {
-    flex-basis: 85vw;
-    scroll-snap-align: start;
+    display: none;
+  }
+
+  .column[data-active='true'] {
+    display: block;
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  /* Reclaim the padding the desktop layout can afford, but keep clear of the
+     home indicator and the rounded screen edges. */
+  .board-page {
+    padding: 1rem max(0.75rem, env(safe-area-inset-left)) calc(2rem + env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-right));
+  }
+
+  .board-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  /* The milestone label is gone, so there is nothing to hide here. */
+
+  /* Sixteen swatches and a button per row do not fit side by side. */
+  .theme-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .theme-label {
+    flex-basis: auto;
+  }
+
+  /* 44px is the smallest comfortable touch target. */
+  .button,
+  .add-task {
+    min-height: 2.75rem;
   }
 }
 
@@ -670,11 +740,56 @@ a {
 /* Drag and drop ----------------------------------------------------------- */
 
 .card-item {
-  touch-action: none;
+  position: relative;
+  /*
+   * Deliberately NOT `touch-action: none`. That was set on every card, so a
+   * finger that landed on a card could not scroll the page - and since cards
+   * fill most of a column, the board was unscrollable on a phone. Only the
+   * drag handle opts out of touch scrolling now.
+   */
 }
 
 .card-item.dragging {
   opacity: 0.35;
+}
+
+/* Touch-only drag handle ------------------------------------------------ */
+
+.card-handle {
+  display: none;
+}
+
+@media (hover: none) {
+  .card-handle {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .card-handle:active {
+    color: var(--text);
+    cursor: grabbing;
+  }
+
+  /* Keep the title clear of the handle. */
+  .card {
+    padding-right: 2.6rem;
+    -webkit-touch-callout: none;
+  }
 }
 
 /* The card that follows the cursor while dragging. */
@@ -772,29 +887,63 @@ a {
 
 .activity {
   margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
+  padding: 0.35rem 1.15rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  color: var(--activity-fg, var(--text));
 }
 
 /*
- * A themed activity box replaces the hairline rule with a full surface, so the
- * section reads as a panel rather than a continuation of the page.
+ * A themed box swaps the surface for the board's chosen colour. The ink comes
+ * from the inline --activity-fg, so every rule below reads from one variable.
  */
 .activity[data-custom='true'] {
-  padding: 1.15rem 1.25rem 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--activity-fg) 24%, transparent);
-  border-radius: 0.75rem;
-  color: var(--activity-fg);
+  border-color: color-mix(in srgb, var(--activity-fg) 24%, transparent);
 }
 
-.activity-head {
+.activity-heading {
+  margin: 0;
+}
+
+/* The whole bar is the control: a chevron alone is a small target on a phone. */
+.activity-toggle {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.activity-toggle:hover .activity-chevron {
+  color: var(--activity-fg, var(--text));
+}
+
+.activity-chevron {
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.activity[data-custom='true'] .activity-chevron {
+  color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
+}
+
+.activity-body {
+  padding-bottom: 1.15rem;
 }
 
 .activity-order {
+  margin-left: auto;
   font-size: 0.75rem;
   color: var(--muted);
 }
@@ -909,6 +1058,61 @@ a {
   color: color-mix(in srgb, var(--activity-fg) 60%, transparent);
 }
 
+/* Numbered pages, walked forward as they are loaded ---------------------- */
+
+.activity-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.activity-page {
+  min-width: 2.1rem;
+  padding: 0.32rem 0.55rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--activity-fg, var(--text));
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.activity-page:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.activity-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-page[aria-current='page'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.activity[data-custom='true'] .activity-page {
+  border-color: color-mix(in srgb, var(--activity-fg) 30%, transparent);
+}
+
+.activity[data-custom='true'] .activity-page[aria-current='page'] {
+  background: color-mix(in srgb, var(--activity-fg) 20%, transparent);
+  color: var(--activity-fg);
+}
+
+.activity-gap {
+  padding: 0 0.15rem;
+  color: var(--muted);
+}
+
+.activity[data-custom='true'] .activity-gap {
+  color: color-mix(in srgb, var(--activity-fg) 60%, transparent);
+}
+
 .activity[data-custom='true'] .button {
   border-color: color-mix(in srgb, var(--activity-fg) 32%, transparent);
   background: transparent;
@@ -967,6 +1171,66 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.token-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Agent access page ------------------------------------------------------ */
+
+.stack-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 26rem;
+  margin: 1.25rem 0 0;
+}
+
+.stack-form .button {
+  margin-top: 0;
+  align-self: flex-start;
+}
+
+.agent-result {
+  margin-top: 1.5rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.agent-board-name {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.agent-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.agent-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.agent-facts dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agent-facts dd {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .token-note {
@@ -1084,6 +1348,10 @@ a {
 .drawer-backdrop {
   position: fixed;
   inset: 0;
+  /* dvh tracks the visible area as mobile browser toolbars slide in and out;
+     100% of the layout viewport can hide the drawer's own buttons behind
+     Safari's bottom bar. */
+  height: 100dvh;
   background: rgba(4, 7, 16, 0.6);
   backdrop-filter: blur(2px);
   display: flex;
@@ -1097,7 +1365,7 @@ a {
   overflow-y: auto;
   background: var(--surface);
   border-left: 1px solid var(--border);
-  padding: 1.25rem 1.35rem 2rem;
+  padding: 1.25rem 1.35rem calc(2rem + env(safe-area-inset-bottom));
   box-shadow: -20px 0 40px rgba(0, 0, 0, 0.35);
 }
 

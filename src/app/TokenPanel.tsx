@@ -117,9 +117,14 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
     <div className="token-panel" role="group" aria-label="Agent tokens">
       <div className="token-panel-header">
         <h3 className="section-heading">Agent tokens</h3>
-        <button className="button button-quiet inline" type="button" onClick={onClose}>
-          Close
-        </button>
+        <div className="token-panel-actions">
+          <a className="button button-quiet inline" href="/agent">
+            Test a token
+          </a>
+          <button className="button button-quiet inline" type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
 
       <p className="token-note">

@@ -191,6 +191,35 @@ describe('sign-in service', () => {
     expect(store.sessions.size).toBe(2)
   })
 
+  it('makes the signed-in human assignable, using the allowlist name', async () => {
+    const store = createMemoryAuthStore()
+
+    const result = await completeSignIn({
+      store,
+      allowlist: parseAllowlist(ALLOWLIST),
+      profile,
+      now: 1_000,
+    })
+
+    // Assignees come from team_profiles; without this row a person can sign in
+    // and still be impossible to assign a task to.
+    expect(store.profiles.size).toBe(1)
+
+    const [profileRow] = [...store.profiles.values()]
+    expect(profileRow!.userId).toBe(result.user.id)
+    expect(profileRow!.displayName).toBe('Kieron')
+  })
+
+  it('refreshes the profile name on a later sign-in', async () => {
+    const store = createMemoryAuthStore()
+    const allowlist = parseAllowlist(ALLOWLIST)
+
+    await completeSignIn({ store, allowlist, profile, now: 1_000 })
+    await completeSignIn({ store, allowlist, profile, now: 2_000 })
+
+    expect(store.profiles.size).toBe(1)
+  })
+
   it('resolves a session and slides the expiry forward', async () => {
     const store = createMemoryAuthStore()
     const { token } = await completeSignIn({

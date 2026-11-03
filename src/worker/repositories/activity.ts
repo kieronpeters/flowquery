@@ -131,10 +131,19 @@ export async function listBoardActivity(
 }
 
 /**
- * Everyone who has acted on the board, with how much they did.
+ * The people who can be filtered on: every human, plus anyone who has actually
+ * acted on this board.
  *
- * Grouped by name because that is what the feed shows and what the filter
- * matches; a name shared by two accounts still means "their activity".
+ * Three groups, deliberately:
+ *  - humans always, because a two-person team wants to pick either of them
+ *    whether or not they have done anything yet;
+ *  - agents only once they have events, because sixteen idle chips reading 0
+ *    are noise;
+ *  - any actor whose name no longer matches a profile. Names are frozen on the
+ *    event, so a renamed account would otherwise leave unfilterable history.
+ *
+ * Ordered by most recent event, because "who changed something lately" is the
+ * question the filter is usually asked. People with no events sort last.
  */
 export async function listActivityActors(
   db: D1Database,
@@ -142,16 +151,35 @@ export async function listActivityActors(
 ): Promise<{ name: string; count: number }[]> {
   const { results } = await db
     .prepare(
-      `SELECT actor_name, COUNT(*) AS event_count
-         FROM activity_events
-        WHERE board_id = ?
-        GROUP BY actor_name
-        ORDER BY event_count DESC, actor_name ASC`,
-    )
-    .bind(boardId)
-    .all<{ actor_name: string; event_count: number }>()
+      `SELECT name, SUM(event_count) AS event_count, MAX(last_at) AS last_at
+         FROM (
+           SELECT p.display_name AS name,
+                  COUNT(a.id) AS event_count,
+                  MAX(a.created_at) AS last_at
+             FROM team_profiles p
+             LEFT JOIN activity_events a
+               ON a.board_id = ? AND a.actor_name = p.display_name
+            WHERE p.active = 1
+            GROUP BY p.id
+           HAVING p.kind = 'human' OR COUNT(a.id) > 0
 
-  return (results ?? []).map((row) => ({ name: row.actor_name, count: row.event_count }))
+           UNION ALL
+
+           SELECT a.actor_name AS name,
+                  COUNT(*) AS event_count,
+                  MAX(a.created_at) AS last_at
+             FROM activity_events a
+            WHERE a.board_id = ?
+              AND a.actor_name NOT IN (SELECT display_name FROM team_profiles WHERE active = 1)
+            GROUP BY a.actor_name
+         )
+        GROUP BY name
+        ORDER BY (MAX(last_at) IS NULL) ASC, MAX(last_at) DESC, name ASC`,
+    )
+    .bind(boardId, boardId)
+    .all<{ name: string; event_count: number; last_at: number | null }>()
+
+  return (results ?? []).map((row) => ({ name: row.name, count: row.event_count }))
 }
 
 function safeParse(value: string): Record<string, unknown> {
