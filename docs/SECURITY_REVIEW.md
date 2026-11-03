@@ -56,6 +56,9 @@ The isolation guarantee is structural: **the agent namespace has no board parame
 | A `task.deleted` event was removed by the cascade that removed the task, so deletion left no trace | medium | Written with a null task reference (M6) |
 | The create-board form could submit twice in one frame and create duplicates | low | Ref guard, not state (M4) |
 | The CSP existed in two places with no guarantee they agreed | low | A test compares `_headers` to the Worker constant (M8) |
+| **The `_headers` file was structurally invalid** — `/* … */` is not a comment in that format; `/*` is a URL pattern, so the file would have applied headers to the wrong block or none at all | **high** | Rewritten with `#` comments and one `/*` rule; tests now assert the structure, not just the strings (M8) |
+
+The last one is worth dwelling on. The first attempt at fixing the missing CSP *was itself broken*, and the drift test passed because it searched for the policy string rather than checking that the file was a valid rule. A test that asserts content but not structure gives false confidence — the same class of mistake as a fake database that returns rows for any query.
 
 ## 5. Accepted risks
 

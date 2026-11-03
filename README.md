@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M8 complete — hardened and release-ready. 149 tests, a verified restore drill, security headers on both the API and the static document, and a written runbook. **Nothing is deployed.**
+**Status:** M8 complete — hardened and release-ready. 152 tests, a verified restore drill, security headers on both the API and the static document, and a written runbook. **Nothing is deployed**; the deployment plan is written and awaits approval.
 
 ---
 
@@ -23,6 +23,7 @@ Two human administrators share a dashboard listing every board. Each board has f
 | 7 | [`.flowquery/state/PROJECT_STATE.md`](.flowquery/state/PROJECT_STATE.md) | Where the project actually is |
 | 8 | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | Setup, backup, restore, incidents |
 | 9 | [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md) | What was checked, what was found, what is accepted |
+| 10 | [`docs/DEPLOYMENT_PLAN.md`](docs/DEPLOYMENT_PLAN.md) | The M9 plan — not authorised, not executed |
 
 ## What is settled
 
@@ -49,7 +50,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 149 tests, including real-schema tests through SQLite |
+| `npm test` | Vitest — 152 tests, including real-schema tests through SQLite |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |

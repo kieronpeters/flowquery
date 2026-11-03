@@ -7,10 +7,21 @@ import { CSP } from '../src/worker/middleware/security'
 /**
  * Hardening checks.
  *
- * The last test is the interesting one: the SPA document is served by the asset
- * layer, not the Worker, so its headers live in `public/_headers`. Two copies of
- * a security policy drift; this asserts they do not.
+ * The last group matters more than it looks: the SPA document is served by the
+ * asset layer, not the Worker, so its headers live in `public/_headers`. That
+ * file has its own syntax — a URL pattern line followed by indented headers —
+ * and a file that is structurally wrong applies to nothing while still looking
+ * correct. These tests check the structure, not just the strings.
  */
+
+const headersFile = (): string =>
+  readFileSync(new URL('../public/_headers', import.meta.url), 'utf8')
+
+const meaningfulLines = (): string[] =>
+  headersFile()
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .filter((line) => !line.trim().startsWith('#'))
 
 describe('response headers', () => {
   it('sets the security headers on API responses', async () => {
@@ -61,22 +72,37 @@ describe('response headers', () => {
 })
 
 describe('static asset headers', () => {
-  it('match the Worker policy exactly', () => {
-    const file = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8')
+  it('starts every rule block with a URL pattern', () => {
+    const first = meaningfulLines()[0]
 
-    const line = file
-      .split(/\r?\n/)
-      .map((entry) => entry.trim())
-      .find((entry) => entry.toLowerCase().startsWith('content-security-policy:'))
-
-    expect(line).toBeTruthy()
-    const value = line!.slice(line!.indexOf(':') + 1).trim()
-
-    expect(value).toBe(CSP)
+    expect(first).toBe('/*')
   })
 
-  it('includes the other hardening headers for assets', () => {
-    const file = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8')
+  it('indents every header line under its pattern', () => {
+    const lines = meaningfulLines()
+    const headerLines = lines.filter((line) => line.includes(':') && !line.startsWith('/'))
+
+    expect(headerLines.length).toBeGreaterThanOrEqual(6)
+    for (const line of headerLines) {
+      expect(line.startsWith(' ') || line.startsWith('\t')).toBe(true)
+    }
+  })
+
+  it('uses # for comments, since /* would be read as a URL pattern', () => {
+    expect(headersFile()).not.toContain('*/')
+  })
+
+  it('carries the same policy as the Worker', () => {
+    const line = meaningfulLines().find((entry) =>
+      entry.trim().toLowerCase().startsWith('content-security-policy:'),
+    )
+
+    expect(line).toBeTruthy()
+    expect(line!.trim().slice('content-security-policy:'.length).trim()).toBe(CSP)
+  })
+
+  it('includes the other hardening headers', () => {
+    const file = headersFile()
 
     expect(file).toMatch(/X-Content-Type-Options: nosniff/)
     expect(file).toMatch(/Referrer-Policy: no-referrer/)

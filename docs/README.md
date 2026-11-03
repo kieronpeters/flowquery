@@ -21,6 +21,7 @@ Read in this order. Each document has exactly one job; where two seem to overlap
 | 12 | `AGENTS.md` | Engineering rules for agents working in this repository | Process |
 | 13 | `RUNBOOK.md` | Setup, backup, restore, incident procedures, deployment checklist | Operational |
 | 14 | `SECURITY_REVIEW.md` | The M8 review: checks, findings, accepted risks | Review |
+| 15 | `DEPLOYMENT_PLAN.md` | M9: what would be created, the exact commands, rollback. **Not authorised.** | Plan |
 
 ## Superseded
 

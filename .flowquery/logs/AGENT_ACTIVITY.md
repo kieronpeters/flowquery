@@ -4,6 +4,23 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Deployment readiness check (Bob, current session)
+
+**Authorised:** nothing new. The owner said "continue", which does not constitute approval to create cloud resources, so no resource was created.
+
+**Performed:**
+- `wrangler whoami`: **not authenticated** — deployment is impossible from this machine until the owner runs `npx wrangler login`.
+- `wrangler deploy --dry-run`: bundles 151.18 KiB, reads 6 static files, reports the `env.DB` binding. No upload, no account needed.
+- `docs/DEPLOYMENT_PLAN.md`: what would be created, exact commands, post-deploy verification, rollback.
+
+**Found and fixed:** the `_headers` file from M8 was structurally invalid. In that format `/*` is a URL pattern, not a comment opener, so my `/* … */` comment blocks meant the policy was attached to the wrong block or none at all. The SPA document would still have shipped without a CSP. Rewritten with `#` comments and a single `/*` rule; the tests now assert structure (first rule line, indented headers, no `*/`) instead of merely finding the policy string.
+
+**Tests:** 152 passing (3 new structural tests).
+
+**Not done:** no deployment, no database, no Worker, no domain, no cost.
+
+---
+
 ## 2026-11-03 — M8 hardening and release preparation (Bob, current session)
 
 **Authorised:** M8 — hardening.

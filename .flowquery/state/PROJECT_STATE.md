@@ -2,7 +2,7 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M8 complete — hardened and release-ready. Awaiting owner approval for M9 (deployment).
+**Current phase:** M8 complete — hardened and release-ready. M9 (deployment) is planned but **not authorised**, and currently impossible: wrangler is not authenticated.
 **Implementation authorised:** M1–M8 (complete). M9: not authorised.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
@@ -41,7 +41,7 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (**149 tests**), `build`, `format:check` all pass.
+- `typecheck`, `lint`, `test` (**152 tests**), `build`, `format:check` all pass.
 - D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
 - Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
 - Board management implemented: list, create, rename, permanent delete with typed-name confirmation; cascade verified against the real schema.
@@ -59,6 +59,8 @@ Register: `docs/DECISIONS.md`.
 - `npm run bench` now covers the agent task list: 50 tasks map + serialise in 0.137 ms.
 - `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
 - `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
+- Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
+- **Deployment is blocked on three things only the owner can provide:** `wrangler login`, a production GitHub OAuth app, and explicit approval. Plan: `docs/DEPLOYMENT_PLAN.md`.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
 - Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.
@@ -107,6 +109,7 @@ Remote: none, and none authorised.
 
 - **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
 - **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
+- **The static `_headers` file has never been exercised in production.** It is structurally valid per the docs and covered by structural tests, but the asset layer's behaviour only exists when deployed.
 - Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.
 - Activity writes are best-effort by design.
 - Seeded placeholder user (`usr_dev_owner`) must not exist in a production database.
