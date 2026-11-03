@@ -165,8 +165,12 @@ export function ActivityFeed({
         setCursors([first.nextBefore])
         setRoster(first.actors)
       })
-      .catch(() => {
-        if (!cancelled) setError('Activity could not be loaded.')
+      .catch((cause: unknown) => {
+        if (cancelled) return
+        // Carry the reason into the message: "could not be loaded" alone is
+        // useless when it happens on somebody else's screen.
+        const detail = cause instanceof Error && cause.message ? ` (${cause.message})` : ''
+        setError(`Activity could not be loaded${detail}.`)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

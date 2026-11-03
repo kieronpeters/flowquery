@@ -182,6 +182,18 @@ describe('ActivityFeed', () => {
     expect(screen.getByText('Bob (agent)')).toBeTruthy()
   })
 
+  it('says why the feed failed, not just that it did', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ error: { code: 'INTERNAL' } }, { status: 500 })),
+    )
+
+    renderFeed()
+    await openFeed()
+
+    expect(await screen.findByText(/Activity could not be loaded \(HTTP 500\)/)).toBeTruthy()
+  })
+
   it('lists everyone who has acted as a checkbox', async () => {
     mockApi()
     renderFeed()

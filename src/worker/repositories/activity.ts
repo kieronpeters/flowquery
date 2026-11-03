@@ -131,10 +131,15 @@ export async function listBoardActivity(
 }
 
 /**
- * Everyone who has acted on the board, with how much they did.
+ * The people who can be filtered on: everyone assignable on the board.
  *
- * Grouped by name because that is what the feed shows and what the filter
- * matches; a name shared by two accounts still means "their activity".
+ * This used to list only actors who already had events, which meant a board
+ * with one active person showed one checkbox — and an agent who had never acted
+ * was invisible. It now lists the board's people and counts their events, so
+ * the roster is stable and the count tells you who is active.
+ *
+ * Ordered by most recent event, because "who changed something lately" is the
+ * question the filter is usually asked. People with no events sort last.
  */
 export async function listActivityActors(
   db: D1Database,
@@ -142,16 +147,20 @@ export async function listActivityActors(
 ): Promise<{ name: string; count: number }[]> {
   const { results } = await db
     .prepare(
-      `SELECT actor_name, COUNT(*) AS event_count
-         FROM activity_events
-        WHERE board_id = ?
-        GROUP BY actor_name
-        ORDER BY event_count DESC, actor_name ASC`,
+      `SELECT p.display_name AS name,
+              COUNT(a.id) AS event_count,
+              MAX(a.created_at) AS last_at
+         FROM team_profiles p
+         LEFT JOIN activity_events a
+           ON a.board_id = ? AND a.actor_name = p.display_name
+        WHERE p.active = 1
+        GROUP BY p.id
+        ORDER BY (MAX(a.created_at) IS NULL) ASC, MAX(a.created_at) DESC, p.display_name ASC`,
     )
     .bind(boardId)
-    .all<{ actor_name: string; event_count: number }>()
+    .all<{ name: string; event_count: number; last_at: number | null }>()
 
-  return (results ?? []).map((row) => ({ name: row.actor_name, count: row.event_count }))
+  return (results ?? []).map((row) => ({ name: row.name, count: row.event_count }))
 }
 
 function safeParse(value: string): Record<string, unknown> {

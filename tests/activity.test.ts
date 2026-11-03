@@ -241,15 +241,23 @@ describe('activity filters', () => {
     return result.page
   }
 
-  it('reports who has acted, with how many events each', async () => {
+  it('lists the board people with their event counts', async () => {
     await seedTwoActors()
 
     const result = await page({ boardId: BOARD, limit: 50 })
 
-    expect(result.actors).toEqual([
-      { name: 'Bob', count: 1 },
-      { name: 'Owner', count: 1 },
-    ])
+    const counts = new Map(result.actors.map((actor) => [actor.name, actor.count]))
+
+    // Bob is an agent profile, so his events are counted against it.
+    expect(counts.get('Bob')).toBe(1)
+
+    // Everyone assignable appears, even with nothing to their name yet: a
+    // filter list that hides people until they act is not a filter list.
+    expect(counts.get('Abdul')).toBe(0)
+    expect(result.actors.length).toBeGreaterThan(15)
+
+    // Whoever acted most recently sorts first; people with no events sort last.
+    expect(result.actors[0]!.name).toBe('Bob')
   })
 
   it('filters to one actor', async () => {
@@ -282,8 +290,11 @@ describe('activity filters', () => {
     await seedTwoActors()
 
     const result = await page({ boardId: BOARD, limit: 50, actors: ['Bob'] })
+    const names = result.actors.map((actor) => actor.name)
 
-    expect(result.actors.map((actor) => actor.name)).toEqual(['Bob', 'Owner'])
+    // The filter narrows events, not the list of people you can filter by.
+    expect(names).toContain('Bob')
+    expect(names).toContain('Abdul')
   })
 
   it('filters by a starting instant, inclusively', async () => {
@@ -346,7 +357,8 @@ describe('activity filters', () => {
     }
 
     expect(body.events.map((event) => event.actorName)).toEqual(['Owner'])
-    expect(body.actors).toHaveLength(2)
+    expect(body.actors.length).toBeGreaterThan(15)
+    expect(body.actors.some((actor) => actor.name === 'Bob')).toBe(true)
   })
 
   it('treats an empty actors parameter as no filter', async () => {
