@@ -58,7 +58,8 @@ a {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  /* Keep clear of the notch in landscape and the rounded corners. */
+  padding: 1rem max(1.5rem, env(safe-area-inset-right)) 1rem max(1.5rem, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
   background: rgba(11, 16, 32, 0.85);
   position: sticky;
@@ -127,7 +128,7 @@ a {
 /* Board ------------------------------------------------------------------ */
 
 .board-page {
-  padding: 1.75rem 1.5rem 3rem;
+  padding: 1.75rem 1.5rem calc(3rem + env(safe-area-inset-bottom));
 }
 
 .board-heading {
@@ -279,9 +280,11 @@ a {
     scroll-snap-align: start;
   }
 
-  /* Reclaim the padding the desktop layout can afford. */
+  /* Reclaim the padding the desktop layout can afford, but keep clear of the
+     home indicator and the rounded screen edges. */
   .board-page {
-    padding: 1rem 0.75rem 2rem;
+    padding: 1rem max(0.75rem, env(safe-area-inset-left)) calc(2rem + env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-right));
   }
 
   .board-heading h1 {
@@ -1161,6 +1164,10 @@ a {
 .drawer-backdrop {
   position: fixed;
   inset: 0;
+  /* dvh tracks the visible area as mobile browser toolbars slide in and out;
+     100% of the layout viewport can hide the drawer's own buttons behind
+     Safari's bottom bar. */
+  height: 100dvh;
   background: rgba(4, 7, 16, 0.6);
   backdrop-filter: blur(2px);
   display: flex;
@@ -1174,7 +1181,7 @@ a {
   overflow-y: auto;
   background: var(--surface);
   border-left: 1px solid var(--border);
-  padding: 1.25rem 1.35rem 2rem;
+  padding: 1.25rem 1.35rem calc(2rem + env(safe-area-inset-bottom));
   box-shadow: -20px 0 40px rgba(0, 0, 0, 0.35);
 }
 
