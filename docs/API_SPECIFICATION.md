@@ -57,15 +57,16 @@ Provider-agnostic by design, so AUTH-01 can change without breaking the contract
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/auth/start` | Begins sign-in. `302` to the provider, or `200` if the chosen mechanism needs no redirect. Sets a short-lived, signed `state` cookie. |
-| `GET` | `/auth/callback` | Provider callback. Verifies `state`, resolves or creates the allow-listed user, creates a session, sets the cookie, redirects to `/boards`. |
-| `POST` | `/auth/signup` | Registration completion for mechanisms that need it. `400` if the identity is not on the allowlist. |
+| `GET` | `/auth/start` | Begins sign-in. Sets a short-lived signed `state` cookie (with the PKCE verifier) and `302`s to the provider. Optional `?next=` for a post-login destination, restricted to relative paths. |
+| `GET` | `/auth/callback` | Provider callback. Verifies `state`, exchanges the code, checks the allowlist by immutable numeric id, creates or matches the user, sets the session cookie, redirects to `/boards`. |
 | `POST` | `/auth/logout` | Deletes the session row and clears the cookie. `204`. |
-| `GET` | `/auth/me` | Returns the current human identity, or `401`. |
+| `GET` | `/auth/me` | Current human identity, or `401`. |
 
-Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, 30-day absolute expiry with idle refresh.
+There is **no separate sign-up endpoint**. With GitHub OAuth, the first successful sign-in of an allowlisted account creates the user; a second endpoint would be a place for the allowlist check to be forgotten. The `/signup` page explains this and links to the same flow.
 
-**Sign-up restriction is enforced server-side** by an allowlist (`AUTH-001`). A non-allow-listed identity receives `403 FORBIDDEN` with the message "This FlowQuery instance is private." No account, no session, no board data.
+Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, 30-day sliding expiry.
+
+**Registration restriction is enforced server-side** at the callback (`AUTH-001`). A non-allow-listed identity is redirected to `/login?error=not_allowed` and receives no session. No account, no board data.
 
 ## 4. Boards (human)
 
@@ -79,7 +80,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M2):** `GET /boards/{boardId}` is implemented and **temporarily unauthenticated** because human sessions arrive in M3. No other board endpoint exists yet, and nothing is deployed. The authorisation rules in §10 are the target state, not the current one.
+> **Implementation status (M3):** `GET /boards/{boardId}` now requires a human session and returns `401` otherwise. `GET /boards`, `POST`, `PATCH`, `DELETE` and all token endpoints remain unimplemented (M4 and M7).
 
 ## 5. Agent tokens (human)
 

@@ -53,6 +53,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M3 — Human authentication — M
 
+**Status: complete 2026-11-03** (pending the owner's real GitHub credentials for a live sign-in test).
+
 **Goal:** the two humans can sign in securely inside the CPU budget.
 
 - Implement the owner's AUTH-01 choice behind the `AuthProvider` seam

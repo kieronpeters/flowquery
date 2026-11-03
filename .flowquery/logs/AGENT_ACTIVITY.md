@@ -4,6 +4,39 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M3 human authentication (Bob, current session)
+
+**Authorised:** M3 only — human authentication.
+
+**Performed:**
+- `migrations/0002_auth_attempts.sql` for rate-limit counters.
+- `auth/github.ts`: OAuth client with PKCE S256, token exchange, `/user` and `/user/emails`, verified-email requirement.
+- `auth/allowlist.ts`: numeric-id allowlist, fail-closed on empty or malformed input.
+- `auth/cookies.ts`: `__Host-` session and state cookies, plus open-redirect-safe `next` handling.
+- `services/auth.ts`: sign-in, session resolution with sliding expiry, sign-out.
+- `repositories/auth-store.ts`: interface + D1 implementation; all auth SQL isolated.
+- `routes/auth.ts`: start, callback, me, logout.
+- `app.ts`: Origin guard on state-changing requests; board reads now require a session.
+- UI: `/login`, `/signup`, `/boards` placeholder; board page redirects to `/login` on 401.
+- `benchmarks/auth.ts`; `npm run bench` now covers both paths.
+
+**Verified (actual output):**
+- `db:reset` applied `0001_init.sql` and `0002_auth_attempts.sql`.
+- Unsigned `GET /api/v1/boards/brd_demo` → **401**; `/auth/me` → **401**.
+- `GET /auth/start` → 302 to `github.com/login/oauth/authorize` with `client_id`, `scope=read:user user:email`, `code_challenge_method=S256`, 43-char challenge, 39-char state, correct `redirect_uri`.
+- State cookie flags: `HttpOnly; Secure; SameSite=Lax; Path=/`.
+- Browser: `/boards/brd_demo` while signed out redirected to `/login?next=%2Fboards%2Fbrd_demo`, login page rendered, **0 console errors**; `/signup` rendered.
+- Tests: **33 passed** across 3 files, including allowlist rejection creating no user/session, state mismatch never calling GitHub, session hashed at rest, expiry, sign-out invalidation, cross-origin POST → 403.
+- Bench: allowlist 0.002 ms, SHA-256 0.035 ms, response JSON 0.001 ms.
+
+**Not verified:** a live GitHub round trip — requires the owner's OAuth app credentials and two GitHub accounts. Recorded as a prerequisite in `NEXT_ACTION.md`.
+
+**Not done:** no task mutations, no dashboard, no agent API, no remote, no deployment.
+
+**Outcome:** M3 complete pending owner review and a live sign-in.
+
+---
+
 ## 2026-11-03 — M2 walking skeleton (Bob, current session)
 
 **Authorised:** M2 only — D1 schema, seeds, read-only board, measurement.

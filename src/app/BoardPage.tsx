@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { BoardView, TaskDto } from '../shared/api-types'
 
@@ -53,6 +53,7 @@ function TaskCard({ task }: { task: TaskDto }) {
 
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
+  const navigate = useNavigate()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
 
   useEffect(() => {
@@ -63,6 +64,12 @@ export function BoardPage() {
 
     fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`)
       .then(async (response) => {
+        if (response.status === 401) {
+          if (!cancelled) {
+            navigate(`/login?next=${encodeURIComponent(`/boards/${boardId}`)}`, { replace: true })
+          }
+          return null
+        }
         if (response.status === 404) {
           if (!cancelled) setState({ kind: 'not-found' })
           return null
@@ -85,7 +92,7 @@ export function BoardPage() {
     return () => {
       cancelled = true
     }
-  }, [boardId])
+  }, [boardId, navigate])
 
   if (state.kind === 'loading') {
     return (

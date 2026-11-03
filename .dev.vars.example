@@ -1,0 +1,18 @@
+# Local development secrets and configuration.
+#
+# Copy to `.dev.vars` and fill in. `.dev.vars` is git-ignored and must never be
+# committed, pasted into a prompt, or shared.
+#
+# GitHub OAuth app: https://github.com/settings/developers
+#   Homepage URL:               http://localhost:5173
+#   Authorization callback URL: http://localhost:5173/api/v1/auth/callback
+#
+# Numeric user ids: https://api.github.com/users/<username>  ->  "id"
+
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# <immutable-github-numeric-id>:<display name>, comma separated.
+# DEC-031: the numeric id is the identity key. Usernames and emails are display
+# data only and are deliberately NOT accepted here.
+AUTH_ALLOWLIST=

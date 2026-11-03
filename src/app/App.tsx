@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { BoardPage } from './BoardPage'
+import { BoardsPage } from './BoardsPage'
 import { HomePage } from './HomePage'
+import { LoginPage } from './LoginPage'
+import { SignupPage } from './SignupPage'
 
 export function App() {
   return (
@@ -10,11 +13,14 @@ export function App() {
         <a className="brand" href="/">
           FlowQuery
         </a>
-        <span className="phase">M2 · read-only preview</span>
+        <span className="phase">M3 · private preview</span>
       </header>
 
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/boards" element={<BoardsPage />} />
         <Route path="/boards/:boardId" element={<BoardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

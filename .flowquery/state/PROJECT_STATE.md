@@ -2,8 +2,8 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M2 complete — walking skeleton. Awaiting owner approval for M3.
-**Implementation authorised:** M1–M2 (complete). M3 onward: no.
+**Current phase:** M3 complete — human authentication. Awaiting owner review and a live sign-in test before M4.
+**Implementation authorised:** M1–M3 (complete). M4 onward: no.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
 **Deployment:** None
@@ -41,11 +41,13 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (11 tests), `build`, `format:check` all pass.
-- D1 bound locally; `0001_init.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
+- `typecheck`, `lint`, `test` (**33 tests**), `build`, `format:check` all pass.
+- D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
+- Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
+- Board reads require a session; unauthenticated requests return 401.
 - Read path proven end to end: SPA → `/api/v1/boards/brd_demo` → service → repository → D1 → rendered board with five columns.
 - Export → total state loss → import restored identical data with foreign keys intact.
-- Board view CPU-bound work measured at 0.032 ms for 9 tasks, 1.44 ms for 500.
+- Measured: board view 0.032 ms at 9 tasks, 1.457 ms at 500; auth path ~0.04 ms.
 - OpenCode discovers Bob as primary and 15 specialists as subagents.
 - `npm audit --omit=dev` reports 0 vulnerabilities.
 
@@ -56,8 +58,9 @@ Proven running locally:
 - Single Worker serving the SPA and `/api/v1`; static assets with `not_found_handling: single-page-application` and `run_worker_first: ["/api/*"]` only.
 - Hono router; React 19 + TypeScript strict; Vitest; shared types in `src/shared/`.
 - D1 bound and migrated; repository → service → route layering in place.
-- Two API namespaces still to come: human session (M3) and agent token (M7), sharing the existing service layer.
-- **Known temporary compromise:** `GET /api/v1/boards/:boardId` is unauthenticated until M3. No deployment may happen before M3.
+- Human authentication in place behind an `AuthProvider`-style seam: GitHub client, allowlist, session service, auth store interface with a D1 implementation.
+- Agent API namespace (M7) still to come; it will reuse the same service layer with the board taken from the token.
+- **Not yet verified:** a live GitHub round trip — needs the owner's OAuth app credentials and two GitHub accounts.
 
 Details: `docs/ARCHITECTURE.md`, `docs/DATABASE_DESIGN.md`, `docs/API_SPECIFICATION.md`.
 
@@ -81,11 +84,12 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: none, and none authorised.
 
-## Known gaps carried into M3
+## Known gaps carried into M4
 
-- Authentication does not exist; the board read endpoint is temporarily open (local only).
-- `/login`, `/signup`, `/agent`, `/boards` routes are not built; `/` is a temporary landing page that will become the dashboard in M4.
-- No mutations: tasks cannot be created, edited, moved or deleted yet.
+- **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
+- `/boards` is a placeholder; the real dashboard is M4.
+- No mutations: tasks cannot be created, edited, moved or deleted yet (M5).
+- Seeded placeholder user (`usr_dev_owner`) should be removed once real OAuth users exist.
 - `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
 - `repository/SETUP_QUESTIONS.md` predates the current plan; reconcile or mark historical.
 - `memory/` mirror is neutralised but still present; delete once history is comfortable.

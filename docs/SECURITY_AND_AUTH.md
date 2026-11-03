@@ -218,11 +218,13 @@ Deliberately small, because the credentials are unguessable:
 
 | Secret | Local | Deployed |
 |---|---|---|
+| `GITHUB_CLIENT_ID` | `.dev.vars` | Worker variable |
 | `GITHUB_CLIENT_SECRET` | `.dev.vars` | `wrangler secret put` |
-| `SESSION_SIGNING_KEY` | `.dev.vars` | `wrangler secret put` |
-| `AUTH_ALLOWLIST` (not secret, but configuration) | `.dev.vars` | Worker variable |
+| `AUTH_ALLOWLIST` (configuration, not a secret) | `.dev.vars` | Worker variable |
 
-`.dev.vars` is git-ignored **before** the first commit. No secret is ever printed to a log; error handlers redact `Authorization` and `Cookie` headers before logging, and logs are reviewed for this in M8.
+There is **no session signing key**, and that is deliberate: sessions are opaque random tokens stored server-side as SHA-256 hashes. Nothing is signed, so there is nothing to rotate except the sessions themselves (delete the rows). This is simpler and more revocable than a signed cookie.
+
+`.dev.vars.example` documents the required variables. `.dev.vars` is git-ignored **before** the first commit. No secret is ever printed to a log; error handlers log the error name only, never request bodies, cookies or headers.
 
 ## 11. Backups and recovery
 
@@ -251,3 +253,19 @@ Nothing here is theoretical: permanent deletion (DEC-007) means backups are the 
 4. **Passkeys remain unvalidated** on this platform; if AUTH-01 later switches to Option C, the CPU and library-support questions must be answered with a spike before committing.
 5. **`memory/` and stale documents** were a real risk this session; the mitigations are the superseded markers and the single decision register, not technical controls.
 6. **Two humans is a small sample.** The design assumes trusted colleagues, not adversarial users among the account holders. If that assumption changes, this document needs revisiting — not just a new role.
+
+## 14. Implementation status (M3)
+
+Built and tested:
+
+- `GET /auth/start` with a state cookie and PKCE (S256); `GET /auth/callback`; `GET /auth/me`; `POST /auth/logout`.
+- Allowlist keyed on the immutable GitHub numeric id, refreshed display name and email on each sign-in (DEC-031).
+- Sessions: opaque 256-bit token, SHA-256 at rest, `__Host-fq_session` cookie with `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, 30-day sliding expiry.
+- Sign-out deletes the session row, so the cookie is worthless afterwards.
+- CSRF: `Origin` check on state-changing requests.
+- Rate limiting: 10 attempts per minute per IP on the auth endpoints, stored in `auth_attempts`.
+- Board reads require a session; unauthenticated requests get `401`.
+
+Not yet verified: **the real GitHub round trip**, because it needs the owner's OAuth app credentials and two GitHub accounts. The callback logic is covered by tests with a stubbed GitHub, and the start redirect was verified against a real dev server — but a live sign-in has not been performed. That must happen before deployment.
+
+Measured CPU for the auth path: allowlist parse 0.002 ms, SHA-256 token hash 0.035 ms, response serialisation 0.001 ms — about 0.04 ms against a 10 ms budget.

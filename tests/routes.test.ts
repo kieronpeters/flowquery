@@ -1,27 +1,29 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import { describe, expect, it } from 'vitest'
 
-import type { BoardRow, ProfileRow, TaskRow } from '../src/worker/domain/types'
 import { app } from '../src/worker/app'
+import type { BoardRow, ProfileRow, TaskRow } from '../src/worker/domain/types'
 
 /**
- * Minimal D1 stand-in.
+ * Minimal D1 stand-in for routing tests.
  *
- * The repository layer issues three distinguishable statements; this fake
- * routes on the table name and returns configured rows. It exists so the HTTP
- * contract can be tested without a running database. Real SQL behaviour is
- * verified separately against local D1 (see README / M2 handoff).
+ * Routes now resolve a session before returning board data, so the fixture
+ * includes a session and its user. It routes on the table name in the
+ * statement; real SQL behaviour is verified against local D1 separately.
  */
 type Fixture = {
   board: BoardRow | null
   tasks: TaskRow[]
   profiles: ProfileRow[]
+  session?: Record<string, unknown> | null
+  user?: Record<string, unknown> | null
 }
 
 type FakeStatement = {
   bind: (...args: unknown[]) => FakeStatement
   first: () => Promise<unknown>
   all: () => Promise<{ results: unknown[] }>
+  run: () => Promise<{ success: boolean }>
 }
 
 function fakeDb(fixture: Fixture): D1Database {
@@ -32,16 +34,29 @@ function fakeDb(fixture: Fixture): D1Database {
         ? fixture.board
           ? [fixture.board]
           : []
-        : source.includes('from tasks')
-          ? fixture.tasks
-          : source.includes('from team_profiles')
-            ? fixture.profiles
-            : []
+        : source.includes('from sessions')
+          ? fixture.session === undefined
+            ? [session]
+            : fixture.session
+              ? [fixture.session]
+              : []
+          : source.includes('from users')
+            ? fixture.user === undefined
+              ? [user]
+              : fixture.user
+                ? [fixture.user]
+                : []
+            : source.includes('from tasks')
+              ? fixture.tasks
+              : source.includes('from team_profiles')
+                ? fixture.profiles
+                : []
 
       const statement: FakeStatement = {
         bind: () => statement,
         first: async () => rows[0] ?? null,
         all: async () => ({ results: rows }),
+        run: async () => ({ success: true }),
       }
 
       return statement
@@ -51,12 +66,31 @@ function fakeDb(fixture: Fixture): D1Database {
   return db as unknown as D1Database
 }
 
+const now = 1793664000000
+
 const board: BoardRow = {
   id: 'brd_test',
   name: 'Test Board',
   created_by: 'usr_test',
-  created_at: 1793664000000,
-  updated_at: 1793664000000,
+  created_at: now,
+  updated_at: now,
+}
+
+const session = {
+  id: 'ses_test',
+  user_id: 'usr_test',
+  token_hash: 'hash',
+  created_at: now,
+  expires_at: now + 86_400_000,
+  last_seen_at: now,
+}
+
+const user = {
+  id: 'usr_test',
+  email: 'tester@example.com',
+  display_name: 'Tester',
+  created_at: now,
+  last_login_at: now,
 }
 
 const profiles: ProfileRow[] = [
@@ -82,8 +116,8 @@ const tasks: TaskRow[] = [
     assignee_profile_id: null,
     due_date: null,
     version: 1,
-    created_at: 1793664002000,
-    updated_at: 1793664002000,
+    created_at: now + 2000,
+    updated_at: now + 2000,
   },
   {
     id: 'tsk_1',
@@ -96,15 +130,16 @@ const tasks: TaskRow[] = [
     assignee_profile_id: 'prf_alex',
     due_date: '2026-11-20',
     version: 1,
-    created_at: 1793664001000,
-    updated_at: 1793664001000,
+    created_at: now + 1000,
+    updated_at: now + 1000,
   },
 ]
 
 const env = (fixture: Fixture) => ({ DB: fakeDb(fixture) }) as never
+const withSession = { headers: { cookie: '__Host-fq_session=test-token' } }
 
 describe('GET /api/v1/health', () => {
-  it('reports ok as JSON', async () => {
+  it('reports ok as JSON without requiring a session', async () => {
     const response = await app.request('/api/v1/health')
 
     expect(response.status).toBe(200)
@@ -112,7 +147,7 @@ describe('GET /api/v1/health', () => {
 
     const body = (await response.json()) as { status: string; version: string }
     expect(body.status).toBe('ok')
-    expect(body.version).toBe('0.0.0-m2')
+    expect(body.version).toBe('0.0.0-m3')
   })
 })
 
@@ -134,15 +169,23 @@ describe('GET /api/v1/columns', () => {
 })
 
 describe('GET /api/v1/boards/:boardId', () => {
-  it('returns the board view with tasks ordered by position', async () => {
+  it('requires a session', async () => {
     const response = await app.request(
       '/api/v1/boards/brd_test',
       undefined,
-      env({
-        board,
-        tasks,
-        profiles,
-      }),
+      env({ board, tasks, profiles, session: null, user: null }),
+    )
+
+    expect(response.status).toBe(401)
+    const body = (await response.json()) as { error: { code: string } }
+    expect(body.error.code).toBe('UNAUTHENTICATED')
+  })
+
+  it('returns the board view with tasks ordered by position', async () => {
+    const response = await app.request(
+      '/api/v1/boards/brd_test',
+      withSession,
+      env({ board, tasks, profiles }),
     )
 
     expect(response.status).toBe(200)
@@ -168,7 +211,7 @@ describe('GET /api/v1/boards/:boardId', () => {
   it('returns 404 for an unknown board', async () => {
     const response = await app.request(
       '/api/v1/boards/brd_missing',
-      undefined,
+      withSession,
       env({ board: null, tasks: [], profiles: [] }),
     )
 

@@ -199,6 +199,23 @@ Sources: `https://simplewebauthn.dev/docs/packages/server`, `https://www.w3.org/
 
 **What this does not tell us:** local workerd tooling exposes span *duration* but not CPU time, so an end-to-end CPU figure requires a deployed Worker. That measurement is deferred to M9 and is recorded as such in §9.
 
+### 8.3 Authentication path
+
+**Purpose:** confirm the sign-in code path is not CPU-bound. The expensive parts of the callback are network calls to GitHub, which is I/O and excluded from the budget.
+
+**Method:** `npm run bench` (`benchmarks/auth.ts`), same machine, 300 iterations after warm-up.
+
+**Actual output:**
+
+```text
+operation                              median        p95
+allowlist parse (2 entries)          0.0021 ms   0.0047 ms
+session token hash (SHA-256)         0.0346 ms   0.0702 ms
+sign-in response JSON                0.0008 ms   0.0014 ms
+```
+
+**Interpretation:** ~0.04 ms total, roughly 0.4% of the budget. Authentication is not a performance risk on this platform; the constraint that shaped it was the impossibility of password hashing within 10 ms, not the cost of what replaced it.
+
 ## 9. Not verified
 
 | Item | Why it matters | When to resolve |

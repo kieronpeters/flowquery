@@ -1,37 +1,37 @@
 # Next Action
 
-**M2 is complete. Waiting on the owner to review it and approve M3.**
+**M3 is complete. Two things are needed from you before M4.**
 
-## What I need from you
+## 1. Perform a live sign-in test
 
-1. **Look at it.** `npm run db:reset`, then `npm run dev`, then open `http://localhost:5173`. You should see the demo board with nine tasks across five columns.
-2. **Confirm M2 is acceptable**, then **approve M3 only** (human authentication).
+This is the only part of M3 that could not be verified without your credentials. It takes about five minutes:
 
-## Prerequisites for M3 that only you can supply
+1. Create a GitHub OAuth app (Settings → Developer settings → OAuth Apps):
+   - Homepage URL: `http://localhost:5173`
+   - Authorization callback URL: `http://localhost:5173/api/v1/auth/callback`
+2. `cp .dev.vars.example .dev.vars`, then fill in:
+   - `GITHUB_CLIENT_ID`
+   - `GITHUB_CLIENT_SECRET`
+   - `AUTH_ALLOWLIST="<your numeric id>:Kieron,<friend numeric id>:Friend"`
+3. `npm run db:reset && npm run dev`
+4. Open `http://localhost:5173/boards/brd_demo` → you should be redirected to `/login` → "Continue with GitHub" → back to the board.
 
-M3 implements GitHub OAuth, so it needs real credentials and identities:
+Expected: you land on the board, `/api/v1/auth/me` shows your name, sign-out returns you to `/`. If anything fails, the URL will contain `/login?error=…` and I will know exactly which stage rejected it.
 
-| Item | What it is | Cost |
-|---|---|---|
-| GitHub OAuth app | Created by you at GitHub → Settings → Developer settings → OAuth Apps. Callback URL: `http://localhost:5173/api/v1/auth/callback` | Free |
-| Client ID and secret | From that app. The secret goes in `.dev.vars`, never in Git | Free |
-| Your GitHub numeric user ID | The `id` field from `https://api.github.com/users/<your-username>` | Free |
-| Your friend's GitHub numeric user ID | Same method | Free |
+## 2. Approve M4
 
-I will not ask you for a password, and no payment details are involved anywhere in this milestone.
+M4 turns `/boards` into a real dashboard:
 
-## If M3 is approved, it will do
+- `GET /api/v1/boards` (list, newest first)
+- `POST /api/v1/boards` (create)
+- `PATCH /api/v1/boards/:id` (rename)
+- `DELETE /api/v1/boards/:id` with typed-name confirmation and full cascade
+- Dashboard UI replacing the placeholder, with create, rename and delete flows
+- Landing page behaviour for signed-in users
+- Tests for `BOARD-001`…`BOARD-007`, including cascade completeness
 
-- `AuthProvider` seam with a GitHub implementation: `/auth/start`, `/auth/callback`, `/auth/logout`, `/auth/me`.
-- Server-side allowlist keyed on immutable numeric IDs (DEC-031); non-listed identities get `403` and no session.
-- `sessions` table, `__Host-` cookie, 30-day expiry with idle refresh, sign-out invalidating the row.
-- Origin check on mutating requests; login rate limiting.
-- `/login` and `/signup` pages; `/boards` requires a session; the board read endpoint becomes authenticated.
-- Tests for `AUTH-001`…`AUTH-011`, including a non-allow-listed identity and an expired session.
-- Measured CPU cost of the callback against the 10 ms budget.
+## Not in M4
 
-## Not in M3
+Task editing, drag-and-drop (M5), comments and activity (M6), the agent API (M7).
 
-Board creation and the dashboard (M4), task mutations (M5), comments and activity (M6), the agent API (M7).
-
-**Current gate: owner review of M2.**
+**Current gate: owner review of M3 and a live sign-in.**

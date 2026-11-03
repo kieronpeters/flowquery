@@ -88,9 +88,9 @@ Notes:
 
 ## 6. Authentication seam
 
-The mechanism is open decision AUTH-01. **Recommendation: GitHub OAuth with a server-side allowlist** — the only option verified to cost nothing, require no payment details, no domain and no email service, while keeping the agent door simple. Cloudflare Access and passkeys are documented alternatives with real caveats. Analysis: `SECURITY_AND_AUTH.md` §4.
+Decided (AUTH-01): **GitHub OAuth with a server-side allowlist**, keyed on the immutable GitHub numeric id. Implemented at M3. Cloudflare Access and passkeys were documented alternatives and rejected — see `SECURITY_AND_AUTH.md` §4.
 
-The architecture isolates the mechanism behind one interface so the decision does not ripple:
+The mechanism sits behind one interface so it stays replaceable:
 
 ```ts
 interface AuthProvider {

@@ -269,3 +269,69 @@ a {
     scroll-snap-align: start;
   }
 }
+
+/* Auth pages -------------------------------------------------------------- */
+
+.page-narrow {
+  max-width: 36rem;
+}
+
+.button-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b1020;
+  font-weight: 600;
+}
+
+.button-primary:hover {
+  filter: brightness(1.08);
+}
+
+.button-quiet {
+  background: transparent;
+  margin-top: 2.5rem;
+  color: var(--muted);
+}
+
+.alert {
+  margin: 1.25rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(242, 119, 122, 0.45);
+  background: rgba(242, 119, 122, 0.12);
+  color: #ffd9da;
+  font-size: 0.9rem;
+}
+
+.card-panel {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.card-panel h2 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.card-panel p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.plain-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.plain-list li + li {
+  margin-top: 0.4rem;
+}

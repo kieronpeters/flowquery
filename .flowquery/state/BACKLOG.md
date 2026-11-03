@@ -1,54 +1,47 @@
 # FlowQuery Backlog
 
-Ordered by priority. M3 onward requires owner approval per milestone.
+Ordered by priority. M4 onward requires owner approval per milestone.
 
 ## Complete
 
 ### M0 — Specification
-- [x] Audit the package; catalogue contradictions
-- [x] Consolidate the product specification to the flat board model
-- [x] Requirements, architecture, database, API, security and research documents
-- [x] Single decisions register
+- [x] Audit; consolidate to the flat board model; single decisions register
 - [x] Owner approved AUTH-01, AUTH-02, DEC-031, SCOPE-01, DEC-029, DEC-030
 
 ### M1 — Repository foundation
-- [x] Local Git on `main`; no remote
-- [x] Toolchain: TypeScript 6, Vite 8, React 19, Hono 4, Vitest 5, Wrangler 4, ESLint, Prettier
-- [x] `wrangler.jsonc` with SPA fallback and `run_worker_first: ["/api/*"]`
-- [x] OpenCode agents at `.opencode/agents/`, verified discoverable
-- [x] 2 tests; README verified from a clean clone
+- [x] Git, toolchain, structure, OpenCode agents, smoke test, clean-clone verification
 
 ### M2 — Walking skeleton
-- [x] D1 binding (local only, placeholder id)
-- [x] `migrations/0001_init.sql` — 9 tables, 9 indexes, foreign keys enforced
-- [x] `seeds/dev.sql` — 18 profiles, 1 board, 9 tasks, 1 placeholder user
-- [x] `db:migrate:local`, `db:seed:local`, `db:reset` scripts
-- [x] `GET /api/v1/columns`
-- [x] `GET /api/v1/boards/:boardId` with repository → service → route layering
-- [x] Read-only board UI replacing the M1 placeholder
-- [x] CPU measurement of the board read path (`npm run bench`)
-- [x] Export → total loss → restore drill verified
+- [x] D1 schema (`0001_init.sql`), seed data, `db:*` scripts
+- [x] Repository → service → route layering; `GET /columns`, `GET /boards/:id`
+- [x] Read-only board UI; CPU measurement; export → restore drill
+
+### M3 — Human authentication
+- [x] GitHub OAuth with PKCE (`/auth/start`, `/auth/callback`, `/auth/me`, `/auth/logout`)
+- [x] Allowlist keyed on immutable GitHub numeric id; refreshed display data
+- [x] Opaque sessions: SHA-256 at rest, `__Host-` cookie, 30-day sliding expiry
+- [x] Sign-out deletes the server-side session
+- [x] Origin check on state-changing requests
+- [x] Rate limiting (`0002_auth_attempts.sql`)
+- [x] Board reads require a session
+- [x] 33 tests covering AUTH-001…011
+- [x] CPU measurement of the auth path
+- [x] Login and access pages; 401 redirects to `/login`
+- [ ] **Live GitHub round trip** — needs owner credentials (see NEXT_ACTION)
 
 ## Awaiting approval
 
-### M3 — Human authentication
-- [ ] `AuthProvider` seam with GitHub OAuth implementation
-- [ ] `/auth/start`, `/auth/callback`, `/auth/logout`, `/auth/me`
-- [ ] `AUTH_ALLOWLIST` keyed on immutable GitHub numeric IDs
-- [ ] Sessions: SHA-256 at rest, `__Host-` cookie, expiry, sign-out invalidation
-- [ ] Origin check on mutating requests; rate limiting
-- [ ] `/login` and `/signup` pages
-- [ ] Authenticate the board read endpoint; remove the temporary open access
-- [ ] Tests for AUTH-001…011
-- [ ] Measured CPU cost of the callback
-- [ ] **Owner prerequisite:** create the GitHub OAuth app and supply the two numeric user IDs
+### M4 — Boards and dashboard
+- [ ] `GET /api/v1/boards` (list, newest first)
+- [ ] `POST /api/v1/boards`
+- [ ] `PATCH /api/v1/boards/:id` (rename, id unchanged)
+- [ ] `DELETE /api/v1/boards/:id` with typed-name confirmation
+- [ ] Cascade delete of tasks, comments, activity and tokens in one transaction
+- [ ] Dashboard replacing the `/boards` placeholder: list, create, rename, delete
+- [ ] Landing page behaviour for signed-in humans
+- [ ] Tests for BOARD-001…007 including cascade completeness
 
 ## Not yet authorised
-
-### M4 — Boards
-- [ ] Board CRUD with typed-name delete confirmation and cascade
-- [ ] Dashboard at `/boards` replacing the temporary landing page
-- [ ] Landing page and redirects
 
 ### M5 — Kanban and tasks
 - [ ] Task CRUD, priority, assignee, due date
@@ -63,9 +56,10 @@ Ordered by priority. M3 onward requires owner approval per milestone.
 
 ## Technical debt
 
+- [ ] Remove the seeded placeholder user once real OAuth users exist
 - [ ] Trim `design/DESIGN_DIRECTION.md` to the MVP shell
 - [ ] Reconcile or mark historical `repository/SETUP_QUESTIONS.md`
 - [ ] Delete the neutralised `memory/` mirror
 - [ ] Replace the placeholder D1 `database_id` at deployment
-- [ ] Remove the seeded placeholder user when real OAuth users exist
-- [ ] Consider Vitest workers-pool integration tests once authentication adds real request context
+- [ ] Consider Vitest workers-pool tests for real SQL coverage in M5
+- [ ] Signed-in user's name in the app header (currently only on `/boards`)

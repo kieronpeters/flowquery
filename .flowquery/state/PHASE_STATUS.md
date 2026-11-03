@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M2 complete — walking skeleton.
-**Next gate:** owner approval for M3.
+**Current phase:** M3 complete — human authentication.
+**Next gate:** owner review of M3, plus a live sign-in test with real GitHub credentials.
 **Last updated:** 2026-11-03.
 
 ## Phase history
@@ -11,35 +11,37 @@
 | Initial package assembly | Complete | Project pack, team roster, concept images, early research |
 | Requirements consolidation (v1) | Complete — superseded | Organisation → project → board hierarchy; never implemented |
 | Access-control investigation | Complete — resolved by scope change | Hierarchy removed; authenticated-humans-only chosen |
-| Specification consolidation (v2) | Complete 2026-11-03 | Flat board model documented end to end; single decisions register |
+| Specification consolidation (v2) | Complete 2026-11-03 | Flat board model; single decisions register |
 | Owner review and approval | Complete 2026-11-03 | AUTH-01, AUTH-02, DEC-031, SCOPE-01, DEC-029, DEC-030 |
 | M1 Repository foundation | Complete 2026-11-03 | Git, toolchain, structure, OpenCode agents, smoke test |
-| **M2 Walking skeleton** | **Complete 2026-11-03** | D1 schema, seeds, read-only board, CPU measurement, restore drill |
-| M3 Human authentication | Not started | Requires owner approval |
-| M4–M8 | Not started | — |
+| M2 Walking skeleton | Complete 2026-11-03 | D1 schema, seeds, read-only board, CPU measurement, restore drill |
+| **M3 Human authentication** | **Complete 2026-11-03** | GitHub OAuth + PKCE, numeric-id allowlist, sessions, CSRF, rate limiting |
+| M4 Boards and dashboard | Not started | Requires owner approval |
+| M5–M8 | Not started | — |
 | M9 Deployment | Not started | Requires explicit deployment approval |
 
-## M2 completion evidence
+## M3 completion evidence
 
 | Check | Result |
 |---|---|
-| `npm run typecheck` | Pass (app + worker projects) |
+| `npm run typecheck` | Pass |
 | `npm run lint` | Pass, no findings |
-| `npm test` | **11 tests passed**, 2 files |
-| `npm run build` | Pass — worker 69 kB, client 262 kB |
-| `npm run format:check` | All files match |
-| `npm run db:reset` | Migrated 4 statements, seeded 4 statements |
-| D1 row counts | 18 profiles, 1 board, 9 tasks, 1 user |
-| `GET /api/v1/boards/brd_demo` | 200, 4.4 KB, five columns, tasks in position order |
-| `GET /api/v1/boards/does-not-exist` | 404 JSON |
-| `GET /boards/brd_demo` (deep link) | 200 HTML via SPA fallback |
-| Export → delete state → import | Data identical; `PRAGMA foreign_key_check` empty |
-| `npm run bench` | 0.032 ms at 9 tasks, 1.443 ms at 500 (CPU-bound portion) |
+| `npm test` | **33 tests passed**, 3 files |
+| `npm run build` | Pass — worker 71 kB, client 267 kB |
+| `npm run db:reset` | Both migrations applied (`0001_init.sql`, `0002_auth_attempts.sql`) |
+| `GET /api/v1/boards/brd_demo` unsigned | `401 UNAUTHENTICATED` |
+| `GET /api/v1/auth/start` | `302` → `github.com/login/oauth/authorize` with `client_id`, `scope=read:user user:email`, `code_challenge_method=S256`, 43-char challenge, 39-char state, correct `redirect_uri` |
+| State cookie | `__Host-fq_oauth` with `HttpOnly; Secure; SameSite=Lax; Path=/` |
+| `/boards/brd_demo` in a browser, signed out | Redirects to `/login?next=%2Fboards%2Fbrd_demo`; login page renders; **0 console errors** |
+| Callback (stubbed GitHub) | Allowlisted → session issued, 302 to `/boards`; non-allowlisted → `/login?error=not_allowed`, no session, no user created |
+| Session at rest | SHA-256 hash only; token never stored |
+| Cross-origin POST | `403` |
+| Bench | allowlist 0.002 ms, SHA-256 0.035 ms, response JSON 0.001 ms |
+
+## Not verified
+
+**A live GitHub sign-in.** It requires the owner's OAuth app client id/secret and the two GitHub accounts. Everything up to and including the token exchange is exercised with a stubbed provider; the real round trip must be performed before deployment.
 
 ## Explicitly not done
 
-No authentication. No mutations (create/edit/move/delete). No board dashboard. No agent API or tokens. No comments or activity UI. No remote repository. No push. No Cloudflare resource. No deployment. No domain. No paid service.
-
-## Security note carried forward
-
-`GET /api/v1/boards/:boardId` is unauthenticated until M3. Nothing is deployed, and **M3 must complete before any deployment discussion**.
+No task mutations, no board creation/dashboard, no comments or activity UI, no agent API or tokens, no remote repository, no push, no Cloudflare resource, no deployment, no domain, no paid service.
