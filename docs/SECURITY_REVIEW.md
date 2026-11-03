@@ -98,4 +98,13 @@ One real defect was found by testing rather than by Lighthouse: the task drawer 
 
 `public/robots.txt` now disallows all crawlers, so a shared link cannot be indexed. The document previously carried only a `noindex` meta tag, and `/robots.txt` returned the SPA's HTML.
 
+### Verified in a production build
+
+Both fixes were then checked against `npm run preview` (the built Worker and assets, served by workerd), because a header file that parses is not the same as headers that arrive:
+
+- The preview reports **"Parsed 1 valid header rule"**.
+- `GET /boards/brd_demo` returns the full `Content-Security-Policy`, plus `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Cross-Origin-Opener-Policy` and `Permissions-Policy` — on the **HTML document**, which the Worker never sees.
+
+That closes the gap the M8 review left open: the policy is now proven to reach the page through the asset layer, not merely to exist in the repository. It has still not been exercised on Cloudflare's own network, which is a deployment-time check.
+
 The two remaining gaps are not weaknesses in the code — they are unverified paths, and they are listed in `NEXT_ACTION.md` rather than left implicit.

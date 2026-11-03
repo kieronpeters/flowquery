@@ -4,6 +4,33 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Scale check and header verification (Bob, current session)
+
+**Trigger:** owner said "continue". Two things I had written down as assumptions were still unverified.
+
+**1. Scale.** Loaded 509 tasks into one board (every column over 100) and measured end to end.
+
+| Measure | Result |
+|---|---|
+| JSON payload | 244 KB |
+| API response, local | 29–35 ms |
+| First contentful paint (production build) | 100 ms |
+| All 509 cards on screen | 332 ms |
+| JS heap | 9 MB |
+| Console errors | 0 |
+
+The same page in dev mode took 658 ms and 40 MB — HMR and unminified React, not the application. Recorded in `ARCHITECTURE.md` §7 with that caveat, because benchmarking in `npm run dev` and concluding the app is slow is an easy mistake.
+
+At ~500 tasks every card is in the DOM and each is a dnd-kit sortable. It works; virtualisation would be the fix beyond a few hundred tasks and is deliberately not built.
+
+**2. Static headers.** `npm run preview` (production build served by workerd) reports **"Parsed 1 valid header rule"**, and `GET /boards/brd_demo` returns the full CSP plus nosniff, referrer, frame, COOP and permissions headers **on the HTML document**. That closes the M8 gap: the policy demonstrably reaches the page through the asset layer, not just the repository.
+
+**Not verified:** the same two things on Cloudflare's own network, which is a deployment-time check.
+
+**Cleanup:** bulk tasks removed with `db:reset`; preview and dev servers stopped.
+
+---
+
 ## 2026-11-03 — Board page tests and defensive parsing (Bob, current session)
 
 **Trigger:** owner chose "keep improving"; the gap I had named last turn was the board page.

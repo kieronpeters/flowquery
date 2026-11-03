@@ -115,7 +115,7 @@ Remote: none, and none authorised.
 
 - **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
 - **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
-- **The static `_headers` file has never been exercised in production.** It is structurally valid per the docs and covered by structural tests, but the asset layer's behaviour only exists when deployed.
+- **The static `_headers` file is now verified in a production build**: `npm run preview` reports "Parsed 1 valid header rule", and the HTML document returns the full CSP and hardening headers from the asset layer. Not yet exercised on Cloudflare's own network — that is a deployment-time check.
 - Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.
 - Activity writes are best-effort by design.
 - Seeded placeholder user (`usr_dev_owner`) must not exist in a production database.

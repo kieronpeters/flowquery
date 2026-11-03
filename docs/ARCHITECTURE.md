@@ -130,6 +130,23 @@ Workers Free allows **10 ms of CPU per request**; I/O wait is not counted. What 
 
 The agent task list (50 tasks, one page) measures 0.137 ms median. At 500 tasks the CPU-bound work uses roughly 16% of the budget, which is why the 500-character description cap (DEC-025) is a safety margin rather than a necessity at this scale.
 
+### Scale check (measured end to end)
+
+A board was loaded with 509 tasks — every column over 100 — and measured against the production build:
+
+| Measure | Result |
+|---|---|
+| JSON payload | 244 KB |
+| API response, local | 29–35 ms |
+| First contentful paint | 100 ms |
+| All 509 cards on screen | 332 ms |
+| JS heap | 9 MB |
+| Console errors | 0 |
+
+**The same page in dev mode took 658 ms with a 40 MB heap.** That gap is HMR and unminified React, not the application. Only the production figures should be quoted — a lesson worth remembering before anyone benchmarks in `npm run dev` and concludes the app is slow.
+
+At this size every card is in the DOM, and each is a dnd-kit sortable. It works, but it is the first thing that would degrade: if boards routinely exceed a few hundred tasks, the answer is list virtualisation, which is deliberately not built because it complicates drag-and-drop for a case that does not occur at two-person scale.
+
 Controls:
 
 1. **Bound everything.** Title 200 chars, description 20,000 chars, comment 10,000 chars, page size ≤ 100.
