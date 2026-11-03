@@ -82,6 +82,10 @@ export async function completeSignIn(input: {
     lastLoginAt: now,
   })
 
+  // Assignees live in team_profiles. A human is not one until this runs, so
+  // without it a person can sign in and still be unassignable.
+  await store.ensureHumanProfile({ userId: user.id, displayName })
+
   const token = randomToken(32)
   const expiresAt = now + SESSION_TTL_MS
 

@@ -101,7 +101,7 @@ export async function listActiveProfiles(db: D1Database): Promise<ProfileRow[]> 
       `SELECT id, display_name, role_title, kind, avatar_path, active
          FROM team_profiles
         WHERE active = 1
-        ORDER BY kind, display_name`,
+        ORDER BY CASE kind WHEN 'human' THEN 0 WHEN 'ai' THEN 1 ELSE 2 END, display_name`,
     )
     .all<ProfileRow>()
 

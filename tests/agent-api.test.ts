@@ -241,7 +241,8 @@ describe('bob can do the job', () => {
       'review',
       'done',
     ])
-    expect(profiles.profiles).toHaveLength(18)
+    // 18 seeded profiles plus the human created when the test signed in.
+    expect(profiles.profiles).toHaveLength(19)
   })
 })
 

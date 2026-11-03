@@ -12,6 +12,16 @@ const PRIORITY_LABELS: Record<string, string> = {
   urgent: 'Urgent',
 }
 
+/**
+ * Assignees are humans, AI profiles or contractors. The label is shown beside
+ * the name so "Kieron" and "Bob" are never mistaken for the same kind of thing.
+ */
+const KIND_LABEL: Record<ProfileDto['kind'], string> = {
+  human: 'Human',
+  ai: 'AI',
+  contractor: 'Contractor',
+}
+
 type Mode = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string }
 
 export type MoveDirection = 'up' | 'down' | 'left' | 'right'
@@ -393,7 +403,7 @@ export function TaskDrawer(props: {
                   <option value="">Unassigned</option>
                   {profiles.map((profile) => (
                     <option key={profile.id} value={profile.id}>
-                      {profile.displayName} — {profile.roleTitle}
+                      {profile.displayName} · {KIND_LABEL[profile.kind]}
                     </option>
                   ))}
                 </select>
