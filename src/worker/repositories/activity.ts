@@ -131,12 +131,13 @@ export async function listBoardActivity(
 }
 
 /**
- * The people who can be filtered on: everyone assignable on the board.
+ * The people who can be filtered on: everyone assignable on the board, plus
+ * any actor whose name no longer matches a profile.
  *
- * This used to list only actors who already had events, which meant a board
- * with one active person showed one checkbox — and an agent who had never acted
- * was invisible. It now lists the board's people and counts their events, so
- * the roster is stable and the count tells you who is active.
+ * The second part matters more than it looks. Events store the actor's name as
+ * it was at the time, so a person who later renames their GitHub account keeps
+ * their old events under the old name — and without this those events would be
+ * unreachable by the filter and the roster would claim nobody had acted.
  *
  * Ordered by most recent event, because "who changed something lately" is the
  * question the filter is usually asked. People with no events sort last.
@@ -147,17 +148,31 @@ export async function listActivityActors(
 ): Promise<{ name: string; count: number }[]> {
   const { results } = await db
     .prepare(
-      `SELECT p.display_name AS name,
-              COUNT(a.id) AS event_count,
-              MAX(a.created_at) AS last_at
-         FROM team_profiles p
-         LEFT JOIN activity_events a
-           ON a.board_id = ? AND a.actor_name = p.display_name
-        WHERE p.active = 1
-        GROUP BY p.id
-        ORDER BY (MAX(a.created_at) IS NULL) ASC, MAX(a.created_at) DESC, p.display_name ASC`,
+      `SELECT name, SUM(event_count) AS event_count, MAX(last_at) AS last_at
+         FROM (
+           SELECT p.display_name AS name,
+                  COUNT(a.id) AS event_count,
+                  MAX(a.created_at) AS last_at
+             FROM team_profiles p
+             LEFT JOIN activity_events a
+               ON a.board_id = ? AND a.actor_name = p.display_name
+            WHERE p.active = 1
+            GROUP BY p.id
+
+           UNION ALL
+
+           SELECT a.actor_name AS name,
+                  COUNT(*) AS event_count,
+                  MAX(a.created_at) AS last_at
+             FROM activity_events a
+            WHERE a.board_id = ?
+              AND a.actor_name NOT IN (SELECT display_name FROM team_profiles WHERE active = 1)
+            GROUP BY a.actor_name
+         )
+        GROUP BY name
+        ORDER BY (MAX(last_at) IS NULL) ASC, MAX(last_at) DESC, name ASC`,
     )
-    .bind(boardId)
+    .bind(boardId, boardId)
     .all<{ name: string; event_count: number; last_at: number | null }>()
 
   return (results ?? []).map((row) => ({ name: row.name, count: row.event_count }))

@@ -13,7 +13,6 @@ export function App() {
         <a className="brand" href="/">
           FlowQuery
         </a>
-        <span className="phase">M8 · release candidate</span>
       </header>
 
       <Routes>

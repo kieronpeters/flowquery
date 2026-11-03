@@ -282,16 +282,16 @@ describe('BoardPage', () => {
 
     await screen.findByText('Card one')
 
-    const backlog = screen.getByRole('tab', { name: /Backlog/ })
-    const review = screen.getByRole('tab', { name: /Review/ })
+    const backlog = screen.getByRole('button', { name: 'Backlog' })
+    const review = screen.getByRole('button', { name: 'Review' })
 
-    expect(backlog.getAttribute('aria-selected')).toBe('true')
-    expect(review.getAttribute('aria-selected')).toBe('false')
+    expect(backlog.getAttribute('aria-pressed')).toBe('true')
+    expect(review.getAttribute('aria-pressed')).toBe('false')
 
     await userEvent.click(review)
 
-    expect(review.getAttribute('aria-selected')).toBe('true')
-    expect(backlog.getAttribute('aria-selected')).toBe('false')
+    expect(review.getAttribute('aria-pressed')).toBe('true')
+    expect(backlog.getAttribute('aria-pressed')).toBe('false')
   })
 
   it('gives the activity box its own surface', async () => {

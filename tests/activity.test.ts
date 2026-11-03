@@ -260,6 +260,18 @@ describe('activity filters', () => {
     expect(result.actors[0]!.name).toBe('Bob')
   })
 
+  it('keeps events whose actor no longer matches a profile', async () => {
+    await seedTwoActors()
+
+    const result = await page({ boardId: BOARD, limit: 50 })
+    const counts = new Map(result.actors.map((actor) => [actor.name, actor.count]))
+
+    // 'Owner' is not a profile in this database. The events are still real, so
+    // the filter has to be able to reach them — otherwise a renamed person's
+    // history becomes invisible and unfilterable.
+    expect(counts.get('Owner')).toBe(1)
+  })
+
   it('filters to one actor', async () => {
     await seedTwoActors()
 

@@ -375,8 +375,8 @@ export function BoardPage() {
         <div>
           <h1>{board.name}</h1>
           <p className="lede">
-            {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag a card, or open it
-            and use the move buttons
+            {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag to reorder, or open
+            a card to edit it
           </p>
         </div>
         <button
@@ -406,14 +406,13 @@ export function BoardPage() {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveTask(null)}
       >
-        <div className="board-tabs" role="tablist" aria-label="Columns">
+        <div className="board-tabs" role="group" aria-label="Choose a column">
           {columns.map((column) => (
             <button
               key={column.key}
               className="board-tab"
               type="button"
-              role="tab"
-              aria-selected={column.key === activeColumn}
+              aria-pressed={column.key === activeColumn}
               onClick={() => setActiveColumn(column.key)}
             >
               {column.name}

@@ -50,7 +50,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 167 tests: server, real-schema and UI component |
+| `npm test` | Vitest: server, real-schema and UI component suites |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |

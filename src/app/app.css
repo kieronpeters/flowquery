@@ -75,13 +75,6 @@ a {
   color: var(--text);
 }
 
-.phase {
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .page {
   max-width: 44rem;
   margin: 0 auto;
@@ -304,7 +297,7 @@ a {
     cursor: pointer;
   }
 
-  .board-tab[aria-selected='true'] {
+  .board-tab[aria-pressed='true'] {
     border-color: var(--accent);
     background: var(--accent-soft);
     color: var(--text);
@@ -336,10 +329,7 @@ a {
     font-size: 1.5rem;
   }
 
-  /* The milestone label is noise on a phone and costs a line of width. */
-  .app-header .phase {
-    display: none;
-  }
+  /* The milestone label is gone, so there is nothing to hide here. */
 
   /* Sixteen swatches and a button per row do not fit side by side. */
   .theme-row {

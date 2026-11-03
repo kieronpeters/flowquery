@@ -26,7 +26,7 @@ npm run dev                        # http://localhost:5173
 | Command | Effect |
 |---|---|
 | `npm run dev` | Local app on 5173 |
-| `npm test` | 149 tests (unit, route, real-schema) |
+| `npm test` | The full suite: unit, route, real-schema and UI |
 | `npm run typecheck` / `npm run lint` / `npm run build` | Quality gates |
 | `npm run bench` | CPU measurement for board and auth paths |
 | `npm run db:migrate:local` | Apply migrations only |
