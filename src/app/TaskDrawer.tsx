@@ -13,13 +13,14 @@ const PRIORITY_LABELS: Record<string, string> = {
 }
 
 /**
- * Assignees are humans, AI profiles or contractors. The label is shown beside
- * the name so "Kieron" and "Bob" are never mistaken for the same kind of thing.
+ * Assignees are humans or AI agents. The contractor is an AI agent too, so it
+ * carries the same label; the distinction is kept in the data, not shown twice
+ * in a dropdown where it means nothing to the reader.
  */
 const KIND_LABEL: Record<ProfileDto['kind'], string> = {
   human: 'Human',
-  ai: 'AI',
-  contractor: 'Contractor',
+  ai: 'AI Agent',
+  contractor: 'AI Agent',
 }
 
 type Mode = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string }

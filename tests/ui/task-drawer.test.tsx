@@ -101,6 +101,13 @@ function renderDrawer(overrides: Partial<Parameters<typeof TaskDrawer>[0]> = {})
           kind: 'human',
           avatarPath: null,
         },
+        {
+          id: 'prf_contractor',
+          displayName: 'Contractor',
+          roleTitle: 'External Specialist',
+          kind: 'contractor',
+          avatarPath: null,
+        },
       ]}
       onClose={onClose}
       onChanged={onChanged}
@@ -112,13 +119,15 @@ function renderDrawer(overrides: Partial<Parameters<typeof TaskDrawer>[0]> = {})
 }
 
 describe('TaskDrawer', () => {
-  it('labels each assignee as human or AI', async () => {
+  it('labels each assignee as human or AI agent', async () => {
     renderDrawer()
 
     const assignee = await screen.findByLabelText('Assignee')
 
     expect(within(assignee).getByRole('option', { name: 'Kieron · Human' })).toBeTruthy()
-    expect(within(assignee).getByRole('option', { name: 'Alex · AI' })).toBeTruthy()
+    expect(within(assignee).getByRole('option', { name: 'Alex · AI Agent' })).toBeTruthy()
+    // The contractor is an AI agent too, and reads as one.
+    expect(within(assignee).getByRole('option', { name: 'Contractor · AI Agent' })).toBeTruthy()
   })
 
   it('loads the task and shows every field', async () => {
