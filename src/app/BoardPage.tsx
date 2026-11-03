@@ -451,7 +451,6 @@ export function BoardPage() {
               onClick={() => setActiveColumn(column.key)}
             >
               {column.name}
-              <span className="count">{column.taskCount}</span>
             </button>
           ))}
         </div>

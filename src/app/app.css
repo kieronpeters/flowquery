@@ -310,11 +310,6 @@ a {
     color: var(--text);
   }
 
-  .board-tab .count {
-    font-size: 0.72rem;
-    opacity: 0.75;
-  }
-
   .board {
     display: block;
     overflow: visible;
