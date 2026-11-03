@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 
-import { readSessionCookie } from '../auth/cookies'
 import type { AppEnv } from '../env'
-import { createD1AuthStore } from '../repositories/auth-store'
+import { requireSession } from '../middleware/session'
+import { registerTaskRoutes } from './tasks'
 import {
   createBoard,
   deleteBoard,
@@ -12,7 +12,6 @@ import {
   renameBoard,
 } from '../services/boards'
 import { loadBoardView } from '../services/board-view'
-import { resolveSession } from '../services/auth'
 
 function validationError(c: Context, message: string, field?: string) {
   return c.json(
@@ -40,18 +39,8 @@ async function readJson(c: Context): Promise<Record<string, unknown> | null> {
 
 export const boardRoutes = new Hono<AppEnv>()
 
-/** Every board route requires a human session. Applied once, not per handler. */
-boardRoutes.use('*', async (c, next) => {
-  const store = createD1AuthStore(c.env.DB)
-  const user = await resolveSession({ store, token: readSessionCookie(c) })
-
-  if (!user) {
-    return c.json({ error: { code: 'UNAUTHENTICATED', message: 'Sign in required.' } }, 401)
-  }
-
-  c.set('user', user)
-  await next()
-})
+/** Every board and task route requires a human session. Applied once, not per handler. */
+boardRoutes.use('*', requireSession)
 
 /** BOARD-001: every board, newest first, for any signed-in human. */
 boardRoutes.get('/', async (c) => {
@@ -144,3 +133,6 @@ boardRoutes.delete('/:boardId', async (c) => {
 
   return c.body(null, 204)
 })
+
+// Task routes share this router's session middleware.
+registerTaskRoutes(boardRoutes)

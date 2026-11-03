@@ -48,6 +48,14 @@ export type BoardView = {
   columns: ColumnView[]
 }
 
+export type ProfileDto = {
+  id: string
+  displayName: string
+  roleTitle: string
+  kind: 'human' | 'ai' | 'contractor'
+  avatarPath: string | null
+}
+
 export type ApiError = {
   error: {
     code: string

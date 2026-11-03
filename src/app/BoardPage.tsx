@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import type { BoardView, TaskDto } from '../shared/api-types'
+import type { BoardView, ProfileDto, TaskDto } from '../shared/api-types'
+import type { ColumnKey } from '../shared/columns'
+import { TaskDrawer } from './TaskDrawer'
 
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'ok'; view: BoardView }
   | { kind: 'not-found' }
   | { kind: 'error'; message: string }
+
+type DrawerState = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string } | null
 
 const PRIORITY_LABELS: Record<string, string> = {
   none: 'None',
@@ -28,25 +32,27 @@ function formatDueDate(value: string): string {
   })
 }
 
-function TaskCard({ task }: { task: TaskDto }) {
+function TaskCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
   return (
-    <li className="card">
-      <h3 className="card-title">{task.title}</h3>
+    <li>
+      <button className="card" type="button" onClick={onOpen}>
+        <span className="card-title">{task.title}</span>
 
-      {task.description && (
-        <p className="card-description">
-          {task.description}
-          {task.descriptionTruncated && <span className="truncated"> …</span>}
-        </p>
-      )}
+        {task.description && (
+          <span className="card-description">
+            {task.description}
+            {task.descriptionTruncated && <span className="truncated"> …</span>}
+          </span>
+        )}
 
-      <ul className="card-meta">
-        <li className={`priority priority-${task.priority}`}>
-          {PRIORITY_LABELS[task.priority] ?? task.priority}
-        </li>
-        {task.assignee && <li>{task.assignee.displayName}</li>}
-        {task.dueDate && <li>Due {formatDueDate(task.dueDate)}</li>}
-      </ul>
+        <span className="card-meta">
+          <span className={`priority priority-${task.priority}`}>
+            {PRIORITY_LABELS[task.priority] ?? task.priority}
+          </span>
+          {task.assignee && <span>{task.assignee.displayName}</span>}
+          {task.dueDate && <span>Due {formatDueDate(task.dueDate)}</span>}
+        </span>
+      </button>
     </li>
   )
 }
@@ -55,44 +61,53 @@ export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
   const navigate = useNavigate()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
+  const [profiles, setProfiles] = useState<ProfileDto[]>([])
+  const [drawer, setDrawer] = useState<DrawerState>(null)
+
+  const load = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      if (!boardId) return
+      if (!options.silent) setState({ kind: 'loading' })
+
+      const response = await fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`)
+
+      if (response.status === 401) {
+        navigate(`/login?next=${encodeURIComponent(`/boards/${boardId}`)}`, { replace: true })
+        return
+      }
+      if (response.status === 404) {
+        setState({ kind: 'not-found' })
+        return
+      }
+      if (!response.ok) {
+        setState({ kind: 'error', message: `HTTP ${response.status}` })
+        return
+      }
+
+      setState({ kind: 'ok', view: (await response.json()) as BoardView })
+    },
+    [boardId, navigate],
+  )
 
   useEffect(() => {
-    if (!boardId) return
+    void load()
+  }, [load])
 
+  useEffect(() => {
     let cancelled = false
-    setState({ kind: 'loading' })
-
-    fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`)
-      .then(async (response) => {
-        if (response.status === 401) {
-          if (!cancelled) {
-            navigate(`/login?next=${encodeURIComponent(`/boards/${boardId}`)}`, { replace: true })
-          }
-          return null
-        }
-        if (response.status === 404) {
-          if (!cancelled) setState({ kind: 'not-found' })
-          return null
-        }
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return (await response.json()) as BoardView
+    fetch('/api/v1/profiles')
+      .then(async (response) =>
+        response.ok ? ((await response.json()) as { profiles: ProfileDto[] }) : null,
+      )
+      .then((body) => {
+        if (!cancelled && body) setProfiles(body.profiles)
       })
-      .then((view) => {
-        if (!cancelled && view) setState({ kind: 'ok', view })
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setState({
-            kind: 'error',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          })
-        }
-      })
+      .catch(() => null)
 
     return () => {
       cancelled = true
     }
-  }, [boardId, navigate])
+  }, [])
 
   if (state.kind === 'loading') {
     return (
@@ -119,7 +134,7 @@ export function BoardPage() {
       <main className="page">
         <h1>Could not load the board</h1>
         <p className="error">{state.message}</p>
-        <button className="button" type="button" onClick={() => window.location.reload()}>
+        <button className="button" type="button" onClick={() => void load()}>
           Try again
         </button>
       </main>
@@ -137,7 +152,7 @@ export function BoardPage() {
       <div className="board-heading">
         <h1>{board.name}</h1>
         <p className="lede">
-          {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · read-only preview
+          {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'}
         </p>
       </div>
 
@@ -154,13 +169,35 @@ export function BoardPage() {
             ) : (
               <ul className="card-list">
                 {column.tasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onOpen={() => setDrawer({ kind: 'edit', taskId: task.id })}
+                  />
                 ))}
               </ul>
             )}
+
+            <button
+              className="add-task"
+              type="button"
+              onClick={() => setDrawer({ kind: 'create', status: column.key })}
+            >
+              + Add task
+            </button>
           </section>
         ))}
       </div>
+
+      {drawer && boardId && (
+        <TaskDrawer
+          boardId={boardId}
+          mode={drawer}
+          profiles={profiles}
+          onClose={() => setDrawer(null)}
+          onChanged={() => load({ silent: true })}
+        />
+      )}
     </main>
   )
 }

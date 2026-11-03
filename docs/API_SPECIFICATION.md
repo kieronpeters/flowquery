@@ -80,7 +80,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M4):** board list, create, rename, delete and the board view are implemented and session-gated. Task, comment and activity endpoints remain unimplemented (M5–M6); agent tokens remain unimplemented (M7).
+> **Implementation status (M5a):** task create, read, partial update and delete are implemented and session-gated, along with `GET /profiles`. The task **list** endpoint and drag-and-drop reordering are not: the board view already returns tasks per column, and reordering lands in M5b. Agent tokens remain unimplemented (M7).
 
 ## 5. Agent tokens (human)
 
@@ -106,7 +106,8 @@ Plaintext token format: `fq_` + 32 CSPRNG bytes, base32. Displayed once with a c
 | `GET` | `/boards/{boardId}/tasks/{taskId}/comments` | List comments, oldest first. |
 | `POST` | `/boards/{boardId}/tasks/{taskId}/comments` | Add comment. `201`. |
 | `GET` | `/boards/{boardId}/activity` | Board activity, newest first, paginated. |
-| `GET` | `/boards/{boardId}/profiles` | Assignable team profiles. |
+| `GET` | `/boards/{boardId}/profiles` | Superseded: profiles are global, not board-scoped. Use `GET /profiles`. |
+| `GET` | `/profiles` | Assignable team profiles (id, display name, role, kind). |
 | `GET` | `/columns` | The five fixed columns (constant, same for every board). |
 
 ## 7. Tasks — agent namespace
@@ -179,6 +180,8 @@ There is **no** `POST /agent/boards`, `PATCH /agent/boards/*` or `DELETE /agent/
 ```
 
 Response returns the authoritative ordering for the affected columns so the client can reconcile an optimistic update.
+
+> **M5a behaviour:** a `PATCH` that changes `status` appends the task to the **end** of the target column. Explicit `position` and intra-column reordering arrive with drag-and-drop in M5b.
 
 ### Update task
 

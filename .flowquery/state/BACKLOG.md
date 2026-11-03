@@ -1,6 +1,6 @@
 # FlowQuery Backlog
 
-Ordered by priority. M5 onward requires owner approval per milestone.
+Ordered by priority. M5b onward requires owner approval per milestone.
 
 ## Complete
 
@@ -27,29 +27,30 @@ Ordered by priority. M5 onward requires owner approval per milestone.
 - [x] `GET/POST/PATCH/DELETE /api/v1/boards`
 - [x] Permanent delete with typed-name confirmation; `409` on mismatch
 - [x] Cascade to tasks, comments, activity and tokens — verified against the real schema
-- [x] Dashboard replacing the placeholder: list, create, rename, delete
-- [x] Landing page redirects signed-in humans to `/boards`
-- [x] Double-submit guard on the create form
-- [x] Real-schema test harness (`node:sqlite`) for cascades and constraints
-- [x] Tests for BOARD-001…007; browser verification of all three flows
+- [x] Dashboard with create, rename, delete; double-submit guard
+- [x] Tests for BOARD-001…007; browser verification
+
+### M5a — Task management
+- [x] `POST/GET/PATCH/DELETE /api/v1/boards/:boardId/tasks[/:taskId]`
+- [x] Field validation: title, description, priority, status, assignee, due date
+- [x] `expectedVersion` optimistic concurrency → `409`
+- [x] Status change appends to the end of the target column
+- [x] Task detail drawer for create and edit, with two-step delete
+- [x] `GET /api/v1/profiles` for the assignee picker
+- [x] Shared session middleware extracted; task routes reuse it
+- [x] Tests for TASK-001…006, TASK-010…013; browser verification of the drawer
 
 ## Awaiting approval
 
-### M5 — Kanban and tasks
-Recommended split into two reviewable halves:
-
-**M5a — task CRUD and detail**
-- [ ] Task create, edit, delete; title, description, priority, assignee, due date
-- [ ] Task detail panel with full description
-- [ ] Validation limits (`TASK-002`, `TASK-003`, `TASK-013`)
-- [ ] Tests for TASK-001…006, TASK-010, TASK-011
-
-**M5b — ordering and movement**
-- [ ] Move between the five fixed columns; reorder within a column
-- [ ] Atomic position renumbering in one `batch()`
-- [ ] Drag-and-drop with dnd-kit plus an explicit keyboard move control
-- [ ] Optimistic updates with `409` reconciliation and `expectedVersion`
-- [ ] Tests for TASK-007, TASK-008, TASK-009, TASK-012
+### M5b — Ordering and movement
+- [ ] Move between the five fixed columns with drag-and-drop (dnd-kit)
+- [ ] Reorder within a column
+- [ ] Explicit keyboard move control (TASK-008)
+- [ ] Pure ordering function, unit tested in isolation
+- [ ] Atomic renumbering in one `db.batch()`
+- [ ] Optimistic updates with `409` reconciliation
+- [ ] Tests asserting positions stay unique and contiguous after every operation
+- [ ] Tests for TASK-007, TASK-008, TASK-009
 
 ## Not yet authorised
 
@@ -61,9 +62,9 @@ Recommended split into two reviewable halves:
 ## Technical debt
 
 - [ ] Remove the seeded placeholder user once real OAuth users exist
-- [ ] Show the signed-in user's name in the app header (currently only on `/boards`)
+- [ ] Show the signed-in user's name in the app header
+- [ ] Task list endpoint with filters (needed by the agent API in M7)
 - [ ] Trim `design/DESIGN_DIRECTION.md` to the MVP shell
 - [ ] Reconcile or mark historical `repository/SETUP_QUESTIONS.md`
 - [ ] Delete the neutralised `memory/` mirror
 - [ ] Replace the placeholder D1 `database_id` at deployment
-- [ ] Consider `node:sqlite` for the remaining route-level fakes where SQL behaviour matters

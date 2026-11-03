@@ -4,6 +4,37 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M5a task management (Bob, current session)
+
+**Authorised:** M5a — task CRUD and detail (owner approved M5; Bob proposed and took the split).
+
+**Performed:**
+- `repositories/tasks.ts`: scoped reads, insert, whitelisted dynamic update, delete, next-position, active-profile lookup.
+- `services/tasks.ts`: validation for title/description/priority/status/due date/assignee, create/read/edit/delete, `expectedVersion` concurrency.
+- `services/task-dto.ts`: DTO mapping extracted so the board view and task endpoints share one shape; truncation is an explicit call-site decision.
+- `routes/tasks.ts` registered onto the board router so it inherits the session gate; `routes/profiles.ts` added.
+- `middleware/session.ts`: the gate extracted from the board router, now used by two routers.
+- UI: `TaskDrawer` serves create and edit; cards are buttons; each column has an add-task control.
+- Status change appends to the end of the target column, so position is never left pointing into the wrong column.
+
+**Verified (actual output):**
+- 64 tests pass, 5 files; typecheck, lint, build clean.
+- Create defaults → 201, backlog, position 3 (after three seeded tasks), version 1.
+- Nine invalid inputs → 400 with the offending field named.
+- Single-task read returns a 900-character description; the board view truncates it to 500 and flags it.
+- Update → version 2; clearing assignee and due date both work.
+- Stale `expectedVersion` → 409 and the task is unchanged.
+- Delete → 204, task gone, its comment cascaded.
+- Browser: drawer create → card in Backlog; reopen shows title, priority, assignee and due date preserved; status change moved it to Review with position 1; two-step delete removed it; zero console errors.
+
+**Discovered:** nothing broken, but browser driving confirmed that the `expectedVersion` round-trip works against a real moving board.
+
+**Not done:** no drag-and-drop, no reordering, no keyboard move control, no comments or activity, no agent API, no deployment.
+
+**Outcome:** M5a complete; awaiting approval for M5b.
+
+---
+
 ## 2026-11-03 — M4 boards and dashboard (Bob, current session)
 
 **Authorised:** M4 only — board lifecycle, dashboard.

@@ -4,6 +4,7 @@ import { COLUMNS } from '../shared/columns'
 import type { Bindings } from './env'
 import { authRoutes } from './routes/auth'
 import { boardRoutes } from './routes/boards'
+import { profileRoutes } from './routes/profiles'
 
 export const app = new Hono<{ Bindings: Bindings }>()
 
@@ -36,11 +37,14 @@ app.route('/api/v1', authRoutes)
 /** Board reads and administration — session required. */
 app.route('/api/v1/boards', boardRoutes)
 
+/** Assignable profiles — session required. */
+app.route('/api/v1/profiles', profileRoutes)
+
 app.get('/api/v1/health', (c) =>
   c.json({
     status: 'ok',
     service: 'flowquery',
-    version: '0.0.0-m4',
+    version: '0.0.0-m5a',
     time: new Date().toISOString(),
   }),
 )
