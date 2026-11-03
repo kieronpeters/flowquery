@@ -79,10 +79,20 @@ function CardBody({ task }: { task: TaskDto }) {
   )
 }
 
-function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
+function SortableCard({
+  task,
+  onOpen,
+  onMove,
+}: {
+  task: TaskDto
+  onOpen: () => void
+  onMove: (direction: 'left' | 'right') => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
+
+  const columnIndex = COLUMNS.findIndex((column) => column.key === task.status)
 
   return (
     <li
@@ -108,6 +118,30 @@ function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
       >
         ⠿
       </button>
+
+      {/*
+        Touch-only shortcut for the thing dragging across columns is worst at:
+        with one column on screen, the next column is off-screen. These call the
+        same move endpoint as the drawer's buttons.
+      */}
+      <div className="card-quickmove">
+        <button
+          type="button"
+          aria-label={`Move ${task.title} to the previous column`}
+          disabled={columnIndex <= 0}
+          onClick={() => onMove('left')}
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          aria-label={`Move ${task.title} to the next column`}
+          disabled={columnIndex >= COLUMNS.length - 1}
+          onClick={() => onMove('right')}
+        >
+          →
+        </button>
+      </div>
     </li>
   )
 }
@@ -123,6 +157,9 @@ export function BoardPage() {
   // instead of being clipped by the column or board scroll container.
   const [activeTask, setActiveTask] = useState<TaskDto | null>(null)
   const [showTheme, setShowTheme] = useState(false)
+  // Which column a phone is showing. Desktop ignores it: every column is
+  // visible there and the tab bar is hidden by CSS.
+  const [activeColumn, setActiveColumn] = useState<ColumnKey>('backlog')
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
 
@@ -403,15 +440,37 @@ export function BoardPage() {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveTask(null)}
       >
+        <div className="board-tabs" role="tablist" aria-label="Columns">
+          {columns.map((column) => (
+            <button
+              key={column.key}
+              className="board-tab"
+              type="button"
+              role="tab"
+              aria-selected={column.key === activeColumn}
+              onClick={() => setActiveColumn(column.key)}
+            >
+              {column.name}
+              <span className="count">{column.taskCount}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="board">
           {columns.map((column) => (
             <Column
               key={column.key}
               column={column}
+              active={column.key === activeColumn}
               background={theme.columns?.[column.key]}
               ticket={theme.tickets}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
               onAdd={() => setDrawer({ kind: 'create', status: column.key })}
+              onMove={(taskId, direction) => {
+                void moveRelative(taskId, direction).then((message) => {
+                  if (message) setNotice(message)
+                })
+              }}
             />
           ))}
         </div>
@@ -466,16 +525,20 @@ export function BoardPage() {
 
 function Column({
   column,
+  active,
   background,
   ticket,
   onOpen,
   onAdd,
+  onMove,
 }: {
   column: BoardView['columns'][number]
+  active?: boolean
   background?: string
   ticket?: string
   onOpen: (taskId: string) => void
   onAdd: () => void
+  onMove: (taskId: string, direction: 'left' | 'right') => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key })
 
@@ -494,6 +557,7 @@ function Column({
       className={isOver ? 'column over' : 'column'}
       style={Object.keys(style).length > 0 ? style : undefined}
       data-custom={background || cardBg ? 'true' : undefined}
+      data-active={active ? 'true' : undefined}
       aria-labelledby={`column-${column.key}`}
     >
       <header className="column-header">
@@ -510,7 +574,12 @@ function Column({
         ) : (
           <ul className="card-list">
             {column.tasks.map((task) => (
-              <SortableCard key={task.id} task={task} onOpen={() => onOpen(task.id)} />
+              <SortableCard
+                key={task.id}
+                task={task}
+                onOpen={() => onOpen(task.id)}
+                onMove={(direction) => onMove(task.id, direction)}
+              />
             ))}
           </ul>
         )}

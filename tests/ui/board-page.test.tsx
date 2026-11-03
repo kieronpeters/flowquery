@@ -276,6 +276,40 @@ describe('BoardPage', () => {
     expect(handle.className).toContain('card-handle')
   })
 
+  it('switches columns with the tab bar', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    const backlog = screen.getByRole('tab', { name: /Backlog/ })
+    const review = screen.getByRole('tab', { name: /Review/ })
+
+    expect(backlog.getAttribute('aria-selected')).toBe('true')
+    expect(review.getAttribute('aria-selected')).toBe('false')
+
+    await userEvent.click(review)
+
+    expect(review.getAttribute('aria-selected')).toBe('true')
+    expect(backlog.getAttribute('aria-selected')).toBe('false')
+  })
+
+  it('moves a card between columns without dragging', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Move Card one to the next column' }))
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.url.endsWith('/move'))).toBe(true)
+    })
+
+    const move = calls.find((call) => call.url.endsWith('/move'))!
+    expect(move.body).toEqual({ status: 'todo', position: 0, expectedVersion: 1 })
+  })
+
   it('gives the activity box its own surface', async () => {
     mockApi({ theme: { activity: '#141a2e' } })
     renderBoard()
