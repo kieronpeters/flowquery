@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M1 complete — repository foundation and project configuration.
-**Next gate:** owner approval for M2.
+**Current phase:** M2 complete — walking skeleton.
+**Next gate:** owner approval for M3.
 **Last updated:** 2026-11-03.
 
 ## Phase history
@@ -12,27 +12,34 @@
 | Requirements consolidation (v1) | Complete — superseded | Organisation → project → board hierarchy; never implemented |
 | Access-control investigation | Complete — resolved by scope change | Hierarchy removed; authenticated-humans-only chosen |
 | Specification consolidation (v2) | Complete 2026-11-03 | Flat board model documented end to end; single decisions register |
-| Owner review and approval | Complete 2026-11-03 | AUTH-01, AUTH-02, DEC-031, SCOPE-01, DEC-029, DEC-030 approved |
-| **M1 Repository foundation** | **Complete 2026-11-03** | Git, toolchain, structure, OpenCode agents, verified smoke test |
-| M2 Walking skeleton | Not started | Requires owner approval |
-| M3–M8 | Not started | — |
+| Owner review and approval | Complete 2026-11-03 | AUTH-01, AUTH-02, DEC-031, SCOPE-01, DEC-029, DEC-030 |
+| M1 Repository foundation | Complete 2026-11-03 | Git, toolchain, structure, OpenCode agents, smoke test |
+| **M2 Walking skeleton** | **Complete 2026-11-03** | D1 schema, seeds, read-only board, CPU measurement, restore drill |
+| M3 Human authentication | Not started | Requires owner approval |
+| M4–M8 | Not started | — |
 | M9 Deployment | Not started | Requires explicit deployment approval |
 
-## M1 completion evidence
+## M2 completion evidence
 
-Commands run, with real results:
-
-| Command | Result |
+| Check | Result |
 |---|---|
 | `npm run typecheck` | Pass (app + worker projects) |
 | `npm run lint` | Pass, no findings |
-| `npm test` | 2 tests passed, 1 file |
-| `npm run build` | Pass — worker 57.83 kB, client 220.80 kB |
-| `npm run format:check` | All files match Prettier style |
-| `npm run dev` | Served `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON |
-| `opencode api get /api/agent` | Bob (primary) + 15 specialists discovered |
-| Fresh `git clone` + `npm ci` | `typecheck`, `lint`, `test`, `build` all passed from the committed state |
+| `npm test` | **11 tests passed**, 2 files |
+| `npm run build` | Pass — worker 69 kB, client 262 kB |
+| `npm run format:check` | All files match |
+| `npm run db:reset` | Migrated 4 statements, seeded 4 statements |
+| D1 row counts | 18 profiles, 1 board, 9 tasks, 1 user |
+| `GET /api/v1/boards/brd_demo` | 200, 4.4 KB, five columns, tasks in position order |
+| `GET /api/v1/boards/does-not-exist` | 404 JSON |
+| `GET /boards/brd_demo` (deep link) | 200 HTML via SPA fallback |
+| Export → delete state → import | Data identical; `PRAGMA foreign_key_check` empty |
+| `npm run bench` | 0.032 ms at 9 tasks, 1.443 ms at 500 (CPU-bound portion) |
 
 ## Explicitly not done
 
-No product features. No database schema or migration. No D1 binding. No authentication. No remote repository. No push. No Cloudflare resource. No deployment. No domain. No paid service.
+No authentication. No mutations (create/edit/move/delete). No board dashboard. No agent API or tokens. No comments or activity UI. No remote repository. No push. No Cloudflare resource. No deployment. No domain. No paid service.
+
+## Security note carried forward
+
+`GET /api/v1/boards/:boardId` is unauthenticated until M3. Nothing is deployed, and **M3 must complete before any deployment discussion**.

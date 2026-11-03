@@ -160,7 +160,7 @@ Sources: `https://simplewebauthn.dev/docs/packages/server`, `https://www.w3.org/
 
 **Assessment:** viable in principle, unvalidated on this platform, and the largest implementation of the three options. Held as an alternative if a third-party identity provider is unacceptable.
 
-## 8. Local measurement — PBKDF2 cost
+## 8. Local measurements
 
 **Purpose:** determine whether server-side password hashing can fit the 10 ms Workers Free CPU budget.
 
@@ -179,6 +179,26 @@ Sources: `https://simplewebauthn.dev/docs/packages/server`, `https://www.w3.org/
 
 **Caveat, stated plainly:** this is a proxy measurement, not a Workers measurement. It establishes the order of magnitude, which is all that is needed to rule the approach out. If a future decision depends on a precise figure, it must be measured on a deployed Worker.
 
+### 8.2 Board view assembly and serialisation
+
+**Purpose:** establish whether the read path fits the 10 ms CPU budget. D1 query time is I/O and is excluded from CPU, so the constrained work is our own: assembling the view and serialising JSON.
+
+**Method:** `npm run bench` (`benchmarks/board-view.ts`), Node v24.21.0 on the owner's machine, 50 warm-up iterations then 300 measured per size. Synthetic tasks with realistic titles, ~160-character descriptions, assignees and due dates.
+
+**Actual output:**
+
+```text
+ tasks     payload     median        p95
+     9       4.8 KB    0.032 ms    0.057 ms
+    50      24.8 KB    0.145 ms    0.285 ms
+   200      98.0 KB    0.546 ms    0.838 ms
+   500     244.5 KB    1.443 ms    2.666 ms
+```
+
+**Interpretation:** at 500 tasks the CPU-bound work is ~15% of the 10 ms budget. At realistic sizes it is negligible. The bottleneck for this application is not CPU; it is whether the design stays simple.
+
+**What this does not tell us:** local workerd tooling exposes span *duration* but not CPU time, so an end-to-end CPU figure requires a deployed Worker. That measurement is deferred to M9 and is recorded as such in §9.
+
 ## 9. Not verified
 
 | Item | Why it matters | When to resolve |
@@ -186,7 +206,7 @@ Sources: `https://simplewebauthn.dev/docs/packages/server`, `https://www.w3.org/
 | Whether Cloudflare Access works on `*.workers.dev` in practice | Would change AUTH-01 to Option B | Only if AUTH-01 revisits |
 | Whether `@simplewebauthn/server` runs on Workers | Would change AUTH-01 to Option C | Only if AUTH-01 revisits |
 | ES256 verification CPU cost | Same | Same |
-| Actual Workers CPU per FlowQuery endpoint | The 10 ms budget is the key risk | M2, measured from Workers logs |
+| Actual Workers CPU per FlowQuery endpoint | The 10 ms budget is the key risk | M9, from Workers logs — local tooling exposes duration only, not CPU |
 | D1 read-replication status | Beta at last check, requires the Sessions API | Not needed — single primary is fine at this scale |
 | Latency from Bali to the D1 primary | Affects perceived speed | M9, with `apac` location hint |
 | GitHub OAuth behaviour with a `workers.dev` callback | Blocks sign-in if wrong | M3, first attempt |

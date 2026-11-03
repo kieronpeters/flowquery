@@ -37,6 +37,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M2 — Walking skeleton — M
 
+**Status: complete 2026-11-03.**
+
 **Goal:** prove React + Worker + D1 + local dev + tests work together before any product logic exists.
 
 - D1 schema migration `0001_init.sql` for the full designed schema

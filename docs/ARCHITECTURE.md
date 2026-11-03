@@ -116,7 +116,20 @@ Workers Free allows **10 ms of CPU per request**; I/O wait is not counted. A rea
 | JSON serialisation of board payload | 1–3 ms for ~200 tasks |
 | Router + framework overhead | < 1 ms |
 
-Comfortably inside 10 ms at MVP scale, but the margin is thin at the top end. Controls:
+Comfortably inside 10 ms at MVP scale, but the margin is thin at the top end.
+
+**Measured at M2** (Node/V8 on the developer machine, not workerd — order of magnitude only):
+
+| Tasks in board | Payload | Median assembly + serialise | p95 |
+|---|---|---|---|
+| 9 (demo board) | 4.8 KB | 0.032 ms | 0.057 ms |
+| 50 | 24.8 KB | 0.145 ms | 0.285 ms |
+| 200 | 98.0 KB | 0.546 ms | 0.838 ms |
+| 500 | 244.5 KB | 1.443 ms | 2.666 ms |
+
+At 500 tasks the CPU-bound work uses roughly 15% of the budget, which confirms that the 500-character description cap (DEC-025) is a safety margin rather than a necessity at this scale. Re-measure if boards routinely exceed a few hundred tasks.
+
+Controls:
 
 1. **Bound everything.** Title 200 chars, description 20,000 chars, comment 10,000 chars, page size ≤ 100.
 2. **Never serialise an unbounded board.** The board endpoint returns tasks for the visible columns with descriptions truncated to 500 characters; a task detail request returns the full description. This keeps the hot path flat as the board grows.

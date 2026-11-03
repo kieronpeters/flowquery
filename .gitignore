@@ -22,6 +22,10 @@ coverage/
 playwright-report/
 test-results/
 
+# Local database backups (never commit dumps)
+backups/
+*.sql.bak
+
 # Editor and OS noise
 .DS_Store
 Thumbs.db

@@ -2,8 +2,8 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M1 complete — repository foundation. Awaiting owner approval for M2.
-**Implementation authorised:** M1 only (complete). M2 onward: no.
+**Current phase:** M2 complete — walking skeleton. Awaiting owner approval for M3.
+**Implementation authorised:** M1–M2 (complete). M3 onward: no.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
 **Deployment:** None
@@ -39,21 +39,25 @@ Register: `docs/DECISIONS.md`.
 
 ## Current repository state (verified 2026-11-03)
 
-- Git initialised on `main`. Three commits: documentation baseline, owner approvals, M1 foundation.
-- Toolchain installed and verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `npm run typecheck`, `npm run lint`, `npm test` (2 tests), `npm run build`, `npm run format:check` all pass.
-- `npm run dev` verified: `/` and `/boards/:id` return the SPA (200 HTML); `/api/v1/health` returns JSON 200; unknown `/api/*` returns JSON 404.
-- OpenCode discovers Bob as primary and 15 specialists as subagents (verified through `/api/agent` on the running service).
-- `npm audit --omit=dev` reports 0 vulnerabilities. 11 moderate findings exist in the dev-only ESLint chain.
+- Git on `main`; local only, no remote.
+- Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
+- `typecheck`, `lint`, `test` (11 tests), `build`, `format:check` all pass.
+- D1 bound locally; `0001_init.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
+- Read path proven end to end: SPA → `/api/v1/boards/brd_demo` → service → repository → D1 → rendered board with five columns.
+- Export → total state loss → import restored identical data with foreign keys intact.
+- Board view CPU-bound work measured at 0.032 ms for 9 tasks, 1.44 ms for 500.
+- OpenCode discovers Bob as primary and 15 specialists as subagents.
+- `npm audit --omit=dev` reports 0 vulnerabilities.
 
 ## Architecture status
 
-Documented, and the foundation of it is now proven running locally:
+Proven running locally:
 
-- Single Worker serving the SPA and `/api/v1`, static assets with `not_found_handling: single-page-application` and `run_worker_first: ["/api/*"]` only.
-- Hono router; React 19 + TypeScript strict; Vitest.
-- D1 designed but **not yet bound** — the binding and `0001_init.sql` arrive in M2.
-- Two API namespaces planned (human session, agent token) sharing one service layer.
+- Single Worker serving the SPA and `/api/v1`; static assets with `not_found_handling: single-page-application` and `run_worker_first: ["/api/*"]` only.
+- Hono router; React 19 + TypeScript strict; Vitest; shared types in `src/shared/`.
+- D1 bound and migrated; repository → service → route layering in place.
+- Two API namespaces still to come: human session (M3) and agent token (M7), sharing the existing service layer.
+- **Known temporary compromise:** `GET /api/v1/boards/:boardId` is unauthenticated until M3. No deployment may happen before M3.
 
 Details: `docs/ARCHITECTURE.md`, `docs/DATABASE_DESIGN.md`, `docs/API_SPECIFICATION.md`.
 
@@ -77,9 +81,11 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: none, and none authorised.
 
-## Known gaps carried into M2
+## Known gaps carried into M3
 
+- Authentication does not exist; the board read endpoint is temporarily open (local only).
+- `/login`, `/signup`, `/agent`, `/boards` routes are not built; `/` is a temporary landing page that will become the dashboard in M4.
+- No mutations: tasks cannot be created, edited, moved or deleted yet.
 - `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
 - `repository/SETUP_QUESTIONS.md` predates the current plan; reconcile or mark historical.
 - `memory/` mirror is neutralised but still present; delete once history is comfortable.
-- `@cloudflare/vite-plugin` runs workerd locally — the D1 binding must be added in a way that stays local-only.

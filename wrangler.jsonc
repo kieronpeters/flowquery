@@ -10,4 +10,15 @@
   "observability": {
     "enabled": true,
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "flowquery-db",
+      // Local development only. This placeholder is never used remotely because
+      // no deployment exists. A real database_id is created at M9, after the
+      // owner approves deployment.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
 }

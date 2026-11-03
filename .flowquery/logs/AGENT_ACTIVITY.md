@@ -4,6 +4,37 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M2 walking skeleton (Bob, current session)
+
+**Authorised:** M2 only — D1 schema, seeds, read-only board, measurement.
+
+**Performed:**
+- D1 binding added with a placeholder `database_id` (local only; a real id is created at M9).
+- `migrations/0001_init.sql`: 9 tables, 9 indexes, CHECK constraints, foreign keys.
+- `seeds/dev.sql`: 18 assignee profiles (2 human, 15 AI, 1 contractor), 1 demo board, 9 tasks, 1 placeholder dev user. Separate from migrations by design.
+- Scripts: `db:migrate:local`, `db:seed:local`, `db:reset` (deletes local state, migrates, seeds).
+- Layering: `repositories/boards.ts` (all SQL), `services/board-view.ts` (pure assembly + I/O wrapper), `domain` row types, `shared` wire types and column constants.
+- Routes: `GET /api/v1/columns`, `GET /api/v1/boards/:boardId`.
+- React: router, landing page, board view with five columns, priority/assignee/due-date metadata.
+- `benchmarks/board-view.ts` + `npm run bench`; `tsx` added as a dev dependency because Vitest 5 removed its built-in bench API.
+
+**Verified (actual output):**
+- `db:reset` → 4 migration statements, 4 seed statements, no errors.
+- Row counts: 18 profiles, 1 board, 9 tasks, 1 user.
+- `GET /api/v1/boards/brd_demo` → 200, 4.4 KB, backlog 3 / todo 2 / in-progress 1 / review 1 / done 2.
+- `GET /api/v1/boards/does-not-exist` → 404 JSON; unknown `/api/*` → 404 JSON; `/boards/brd_demo` deep link → 200 HTML.
+- Export (12.2 KB, 10 tables, 31 inserts) → deleted `.wrangler/state` entirely → import → identical counts and board name, `PRAGMA foreign_key_check` empty.
+- `npm run typecheck`, `lint`, `test` (**11 passed**), `build`, `format:check` all pass.
+- Bench: 9 tasks 0.032 ms, 50 → 0.145, 200 → 0.546, 500 → 1.443 (median, assembly + JSON serialisation).
+
+**Discovered:** Vitest 5 no longer exports `bench`; local workerd tooling exposes span duration but not CPU, so end-to-end CPU is deferred to M9 and recorded as such.
+
+**Not done:** no authentication (the board endpoint is temporarily open locally), no mutations, no dashboard, no agent API, no remote, no deployment.
+
+**Outcome:** M2 complete; awaiting owner approval for M3.
+
+---
+
 ## 2026-11-03 — M1 repository foundation (Bob, current session)
 
 **Authorised:** M1 only — repository foundation and project configuration. No product implementation.

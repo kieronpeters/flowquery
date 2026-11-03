@@ -73,11 +73,13 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 |---|---|---|
 | `GET` | `/boards` | All boards, newest first: `id, name, createdAt, updatedAt, taskCount`. |
 | `POST` | `/boards` | Create. Body `{ name }`. Returns `201` with the board. |
-| `GET` | `/boards/{boardId}` | Board metadata plus columns and task counts. `404` if absent. |
+| `GET` | `/boards/{boardId}` | **Board view:** board metadata, the five columns in order, and each column's tasks ordered by position. Descriptions are truncated at 500 characters with `descriptionTruncated` set. `404` if absent. |
 | `PATCH` | `/boards/{boardId}` | Rename. Body `{ name }`. ID is unchanged (`BOARD-003`). |
 | `DELETE` | `/boards/{boardId}` | **Permanent.** Requires `{ "confirm": true, "confirmName": "<exact board name>" }`. `409` if the name does not match. Cascades to tasks, comments, activity and tokens. |
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
+
+> **Implementation status (M2):** `GET /boards/{boardId}` is implemented and **temporarily unauthenticated** because human sessions arrive in M3. No other board endpoint exists yet, and nothing is deployed. The authorisation rules in §10 are the target state, not the current one.
 
 ## 5. Agent tokens (human)
 

@@ -3,6 +3,6 @@
   "default_agent": "bob",
   "model": "opencode-go/deepseek-v4.1-flash",
   "experimental": {
-    "subagent_depth": 1
-  }
+    "subagent_depth": 1,
+  },
 }
