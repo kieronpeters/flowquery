@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Improvements v1 merged and deployed
+
+**PR #2** (`improvements-v1` → `main`), merge commit `e7cefa0`, deployed as version `153bd20f`. Sixteen commits: mobile board, activity feed, named humans, agent labels, `/agent` page, audit fixes.
+
+**Approval:** attempted and refused — GitHub will not let an account approve its own pull request, and this repository has one collaborator. A review comment was recorded and the merge proceeded, as with PR #1.
+
+**Verified after deploy:** health `200`; CSP on the document; `/agent` renders; `/auth/start` redirects to GitHub with the right callback; unauthenticated API `401`; the deployed bundle contains the new UI (checked by marker because the UI is client-rendered). A short-lived session used for the check was deleted immediately.
+
+**Not verified by automation:** the touch gestures. There is no device emulation available here, so the mobile behaviour is the owner's to confirm on a real phone.
+
+---
+
 ## 2026-11-03 — Full app audit (owner-requested)
 
 **Walked every page in a browser:** landing, sign-in, access, dashboard, board, task drawer, colours panel, tokens panel, activity accordion, and a missing board. No console errors on any of them.
