@@ -4,6 +4,36 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M4 boards and dashboard (Bob, current session)
+
+**Authorised:** M4 only — board lifecycle, dashboard.
+
+**Performed:**
+- Repository functions for list-with-counts, insert, rename and delete; all SQL stays in `repositories/boards.ts`.
+- `services/boards.ts`: name validation (1–120 chars, trimmed, control characters rejected) and a delete service that requires the exact current name.
+- `routes/boards.ts`: one session middleware for the whole router; `GET/POST/PATCH/DELETE`.
+- Dashboard UI replacing the M3 placeholder: list with task counts, create form, inline rename, typed-name delete confirmation.
+- Landing page redirects signed-in humans to `/boards`.
+- `tests/helpers/sqlite-d1.ts`: a D1 facade over Node's built-in SQLite so tests run the real migrations with foreign keys enabled.
+- Double-submit guard (ref, not state) after browser automation exposed the window.
+
+**Verified (actual output):**
+- 46 tests pass, 4 files; typecheck, lint, build all clean.
+- Signed-out `GET /api/v1/boards` → 401.
+- Create → 201, `brd_` id, appears in list with 0 tasks; empty/whitespace/non-string/121-char names → 400.
+- Rename → 200, id unchanged, all 9 tasks intact; unknown board → 404.
+- Delete with wrong name → 409 and nothing removed; with no confirmation → 409; with the exact name → 204 and the board, its 9 tasks, a comment, an activity event and an agent token all gone, while 18 profiles and both users survive.
+- Cross-origin delete → 403.
+- Browser: dashboard rendered with counts; create, rename and the typed-name delete all worked; zero console errors.
+
+**Observed during testing:** automation filled the wrong textbox and created a duplicate board. Investigated: not an application bug, but it did expose a real double-submit window, which is now guarded.
+
+**Not done:** no task editing, no drag-and-drop, no comments or activity UI, no agent API, no remote, no deployment.
+
+**Outcome:** M4 complete; awaiting owner review.
+
+---
+
 ## 2026-11-03 — M3 human authentication (Bob, current session)
 
 **Authorised:** M3 only — human authentication.

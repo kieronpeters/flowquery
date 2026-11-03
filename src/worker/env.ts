@@ -1,5 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types'
 
+import type { UserRecord } from './repositories/auth-store'
+
 /** Worker bindings and configuration. */
 export type Bindings = {
   DB: D1Database
@@ -10,4 +12,12 @@ export type Bindings = {
 
   /** `<immutable-github-id>:<display name>`, comma separated (DEC-031). */
   AUTH_ALLOWLIST?: string
+}
+
+/** Context available to authenticated human routes. */
+export type AppEnv = {
+  Bindings: Bindings
+  Variables: {
+    user: UserRecord
+  }
 }

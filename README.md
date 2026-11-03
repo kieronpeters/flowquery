@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M3 complete — human authentication. Sign-in is implemented and tested against a stubbed GitHub; **a live sign-in has not been performed** because it needs the owner's OAuth app credentials. Nothing is deployed.
+**Status:** M4 complete — board management. Sign in, see your boards, create, rename and delete them. **Task editing does not exist yet** (M5). Nothing is deployed.
 
 ---
 
@@ -47,7 +47,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 33 tests |
+| `npm test` | Vitest — 46 tests, including real-schema tests through SQLite |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |
@@ -75,13 +75,17 @@ Without these values, `/api/v1/auth/start` returns `503 AUTH_NOT_CONFIGURED` and
 
 | Request | Result |
 |---|---|
-| `GET /` | `200 text/html` — landing page |
+| `GET /` | `200 text/html` — landing page, redirects signed-in humans to `/boards` |
 | `GET /login`, `/signup` | `200 text/html` — sign-in and access explanation |
-| `GET /boards` | Session-gated page (dashboard arrives in M4) |
-| `GET /boards/:boardId` | Session-gated board, redirects to `/login` when signed out |
+| `GET /boards` | Dashboard: every board with task counts, create, rename, delete |
+| `GET /boards/:boardId` | Board view, redirects to `/login` when signed out |
 | `GET /api/v1/health` | `200 application/json` |
 | `GET /api/v1/columns` | `200 application/json` — the five fixed columns |
-| `GET /api/v1/boards/brd_demo` | `401` without a session, `200` with one |
+| `GET /api/v1/boards` | `200` with `{ boards: [...] }`, `401` without a session |
+| `POST /api/v1/boards` | `201` with the new board; `400` on an invalid name |
+| `PATCH /api/v1/boards/:id` | `200` on rename; `404` if unknown |
+| `DELETE /api/v1/boards/:id` | `204` with the exact name; `409` if it does not match |
+| `GET /api/v1/boards/:id` | `200` with the board view, `401`/`404` otherwise |
 | `GET /api/v1/auth/start` | `302` to GitHub with PKCE, or `503` if unconfigured |
 | `GET /api/v1/auth/me` | Identity or `401` |
 | `POST /api/v1/auth/logout` | `204`, invalidates the session server-side |
@@ -91,6 +95,8 @@ Without these values, `/api/v1/auth/start` returns `503 AUTH_NOT_CONFIGURED` and
 ### Not verified yet
 
 The **real GitHub round trip**. The callback is covered by tests with a stubbed GitHub, and the start redirect was verified against a running dev server, but a live sign-in requires the owner's credentials. It must be performed before deployment.
+
+The M4 dashboard was verified in a real browser end to end — create, rename, and the typed-name delete confirmation — but with a locally created session rather than a GitHub sign-in.
 
 ## Data
 

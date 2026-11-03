@@ -1,87 +1,333 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-type Me = { user: { id: string; displayName: string; email: string } }
+import type { ApiError, BoardSummary } from '../shared/api-types'
+
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; boards: BoardSummary[] }
+  | { kind: 'error'; message: string }
+
+function today(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 /**
- * Authenticated landing page.
+ * The human dashboard (M4).
  *
- * M3 scaffolding: it proves the session works and gives a sign-out control.
- * The real dashboard, listing every board, is M4.
+ * Deletion is permanent (DEC-007), so the confirmation requires typing the
+ * board's exact name. The API enforces the same rule, so a UI bug cannot
+ * bypass it — the worst case is a 409 and nothing deleted.
  */
 export function BoardsPage() {
   const navigate = useNavigate()
-  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [me, setMe] = useState<Me['user'] | null>(null)
+  const [state, setState] = useState<LoadState>({ kind: 'loading' })
+  const [me, setMe] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  const [newName, setNewName] = useState('')
+  const [busy, setBusy] = useState(false)
+  // A ref guard, not state: two clicks in the same frame both see `busy === false`
+  // because state updates are asynchronous. This prevents duplicate boards.
+  const submitting = useRef(false)
+
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmValue, setConfirmValue] = useState('')
+
+  const load = useCallback(async () => {
+    const meResponse = await fetch('/api/v1/auth/me')
+    if (meResponse.status === 401) {
+      navigate('/login?next=/boards', { replace: true })
+      return
+    }
+
+    const response = await fetch('/api/v1/boards')
+    if (response.status === 401) {
+      navigate('/login?next=/boards', { replace: true })
+      return
+    }
+    if (!response.ok) {
+      setState({ kind: 'error', message: `Could not load boards (HTTP ${response.status}).` })
+      return
+    }
+
+    const meBody = (await meResponse.json()) as { user: { displayName: string } }
+    const body = (await response.json()) as { boards: BoardSummary[] }
+    setMe(meBody.user.displayName)
+    setState({ kind: 'ready', boards: body.boards })
+  }, [navigate])
 
   useEffect(() => {
-    let cancelled = false
+    void load()
+  }, [load])
 
-    fetch('/api/v1/auth/me')
-      .then(async (response) => {
-        if (response.status === 401) {
-          if (!cancelled) navigate('/login?next=/boards', { replace: true })
-          return null
-        }
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return (await response.json()) as Me
-      })
-      .then((body) => {
-        if (cancelled || !body) return
-        setMe(body.user)
-        setState('ready')
-      })
-      .catch(() => {
-        if (!cancelled) setState('error')
+  async function createBoard(event: React.FormEvent) {
+    event.preventDefault()
+    if (submitting.current) return
+
+    submitting.current = true
+    setBusy(true)
+    setNotice(null)
+
+    try {
+      const response = await fetch('/api/v1/boards', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
       })
 
-    return () => {
-      cancelled = true
+      if (!response.ok) {
+        const error = (await response.json().catch(() => null)) as ApiError | null
+        setNotice(error?.error.message ?? 'Could not create the board.')
+        return
+      }
+
+      setNewName('')
+      await load()
+    } finally {
+      submitting.current = false
+      setBusy(false)
     }
-  }, [navigate])
+  }
+
+  async function saveRename(boardId: string) {
+    if (submitting.current) return
+
+    submitting.current = true
+    setBusy(true)
+    setNotice(null)
+
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: renameValue }),
+      })
+
+      if (!response.ok) {
+        const error = (await response.json().catch(() => null)) as ApiError | null
+        setNotice(error?.error.message ?? 'Could not rename the board.')
+        return
+      }
+
+      setRenamingId(null)
+      await load()
+    } finally {
+      submitting.current = false
+      setBusy(false)
+    }
+  }
+
+  async function removeBoard(board: BoardSummary) {
+    if (submitting.current) return
+
+    submitting.current = true
+    setBusy(true)
+    setNotice(null)
+
+    try {
+      const response = await fetch(`/api/v1/boards/${board.id}`, {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ confirmName: confirmValue }),
+      })
+
+      if (!response.ok) {
+        const error = (await response.json().catch(() => null)) as ApiError | null
+        setNotice(error?.error.message ?? 'Could not delete the board.')
+        return
+      }
+
+      setDeletingId(null)
+      setConfirmValue('')
+      setNotice(`Deleted “${board.name}” and all of its tasks.`)
+      await load()
+    } finally {
+      submitting.current = false
+      setBusy(false)
+    }
+  }
 
   async function signOut() {
     await fetch('/api/v1/auth/logout', { method: 'POST' })
     navigate('/', { replace: true })
   }
 
-  if (state === 'loading') {
+  if (state.kind === 'loading') {
     return (
       <main className="page">
-        <p role="status">Checking your session…</p>
+        <p role="status">Loading boards…</p>
       </main>
     )
   }
 
-  if (state === 'error') {
+  if (state.kind === 'error') {
     return (
       <main className="page">
-        <h1>Something went wrong</h1>
-        <p className="error">Your session could not be checked.</p>
-        <Link className="button" to="/login">
-          Sign in again
-        </Link>
+        <h1>Could not load boards</h1>
+        <p className="error">{state.message}</p>
+        <button className="button" type="button" onClick={() => void load()}>
+          Try again
+        </button>
       </main>
     )
   }
 
   return (
     <main className="page">
-      <h1>Boards</h1>
-      <p className="lede">
-        Signed in as {me?.displayName}. The board dashboard arrives in M4; for now the seeded board
-        is reachable directly.
-      </p>
+      <div className="page-heading">
+        <div>
+          <h1>Boards</h1>
+          <p className="lede">{me ? `Signed in as ${me}.` : null}</p>
+        </div>
+        <button className="button button-quiet inline" type="button" onClick={signOut}>
+          Sign out
+        </button>
+      </div>
 
-      <nav className="home-links" aria-label="Boards">
-        <Link className="button" to="/boards/brd_demo">
-          FlowQuery Development
-        </Link>
-      </nav>
+      {notice && (
+        <p className="alert alert-neutral" role="status">
+          {notice}
+        </p>
+      )}
 
-      <button className="button button-quiet" type="button" onClick={signOut}>
-        Sign out
-      </button>
+      <form className="board-form" onSubmit={createBoard}>
+        <label className="field">
+          <span className="field-label">New board</span>
+          <input
+            className="input"
+            value={newName}
+            onChange={(event) => setNewName(event.target.value)}
+            placeholder="e.g. Website relaunch"
+            maxLength={120}
+          />
+        </label>
+        <button className="button button-primary" type="submit" disabled={busy || !newName.trim()}>
+          Create
+        </button>
+      </form>
+
+      {state.boards.length === 0 ? (
+        <p className="empty-state">No boards yet. Create one above to get started.</p>
+      ) : (
+        <ul className="board-list">
+          {state.boards.map((board) => (
+            <li className="board-row" key={board.id}>
+              <div className="board-row-main">
+                {renamingId === board.id ? (
+                  <form
+                    className="inline-form"
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      void saveRename(board.id)
+                    }}
+                  >
+                    <input
+                      className="input"
+                      value={renameValue}
+                      onChange={(event) => setRenameValue(event.target.value)}
+                      aria-label={`New name for ${board.name}`}
+                      maxLength={120}
+                      autoFocus
+                    />
+                    <button className="button button-primary" type="submit" disabled={busy}>
+                      Save
+                    </button>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => setRenamingId(null)}
+                      disabled={busy}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <>
+                    <Link className="board-link" to={`/boards/${board.id}`}>
+                      {board.name}
+                    </Link>
+                    <span className="board-meta">
+                      {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · created{' '}
+                      {today(board.createdAt)}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {renamingId !== board.id && (
+                <div className="board-row-actions">
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => {
+                      setRenamingId(board.id)
+                      setRenameValue(board.name)
+                      setDeletingId(null)
+                    }}
+                  >
+                    Rename
+                  </button>
+                  <button
+                    className="button button-danger"
+                    type="button"
+                    onClick={() => {
+                      setDeletingId(board.id)
+                      setConfirmValue('')
+                      setRenamingId(null)
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+
+              {deletingId === board.id && (
+                <div className="confirm-panel" role="group" aria-label={`Delete ${board.name}`}>
+                  <p>
+                    <strong>Permanently delete “{board.name}”?</strong> This removes its{' '}
+                    {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'}, all comments,
+                    activity history and any agent tokens. It cannot be undone.
+                  </p>
+                  <label className="field">
+                    <span className="field-label">Type the board name to confirm</span>
+                    <input
+                      className="input"
+                      value={confirmValue}
+                      onChange={(event) => setConfirmValue(event.target.value)}
+                      placeholder={board.name}
+                      aria-label="Board name confirmation"
+                    />
+                  </label>
+                  <div className="confirm-actions">
+                    <button
+                      className="button button-danger"
+                      type="button"
+                      disabled={busy || confirmValue !== board.name}
+                      onClick={() => void removeBoard(board)}
+                    >
+                      Delete permanently
+                    </button>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => setDeletingId(null)}
+                      disabled={busy}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }

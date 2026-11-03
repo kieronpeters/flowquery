@@ -81,7 +81,7 @@ const session = {
   user_id: 'usr_test',
   token_hash: 'hash',
   created_at: now,
-  expires_at: now + 86_400_000,
+  expires_at: Date.now() + 86_400_000,
   last_seen_at: now,
 }
 
@@ -147,7 +147,7 @@ describe('GET /api/v1/health', () => {
 
     const body = (await response.json()) as { status: string; version: string }
     expect(body.status).toBe('ok')
-    expect(body.version).toBe('0.0.0-m3')
+    expect(body.version).toBe('0.0.0-m4')
   })
 })
 

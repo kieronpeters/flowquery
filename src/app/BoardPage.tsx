@@ -107,8 +107,8 @@ export function BoardPage() {
       <main className="page">
         <h1>Board not found</h1>
         <p className="lede">It may have been deleted, or the link may be wrong.</p>
-        <Link className="button" to="/">
-          Back to start
+        <Link className="button" to="/boards">
+          Back to boards
         </Link>
       </main>
     )
@@ -130,6 +130,10 @@ export function BoardPage() {
 
   return (
     <main className="board-page">
+      <Link className="back-link" to="/boards">
+        ← All boards
+      </Link>
+
       <div className="board-heading">
         <h1>{board.name}</h1>
         <p className="lede">

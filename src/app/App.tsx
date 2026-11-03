@@ -13,7 +13,7 @@ export function App() {
         <a className="brand" href="/">
           FlowQuery
         </a>
-        <span className="phase">M3 · private preview</span>
+        <span className="phase">M4 · boards</span>
       </header>
 
       <Routes>

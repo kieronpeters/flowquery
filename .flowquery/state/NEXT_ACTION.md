@@ -1,37 +1,36 @@
 # Next Action
 
-**M3 is complete. Two things are needed from you before M4.**
+**M4 is complete. Two things from you: a live sign-in, and approval for M5.**
 
-## 1. Perform a live sign-in test
+## 1. Still outstanding: a live GitHub sign-in
 
-This is the only part of M3 that could not be verified without your credentials. It takes about five minutes:
+Carried forward from M3. It is the only part of the system that has never talked to a real provider.
 
-1. Create a GitHub OAuth app (Settings → Developer settings → OAuth Apps):
+1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
    - Homepage URL: `http://localhost:5173`
    - Authorization callback URL: `http://localhost:5173/api/v1/auth/callback`
-2. `cp .dev.vars.example .dev.vars`, then fill in:
-   - `GITHUB_CLIENT_ID`
-   - `GITHUB_CLIENT_SECRET`
-   - `AUTH_ALLOWLIST="<your numeric id>:Kieron,<friend numeric id>:Friend"`
-3. `npm run db:reset && npm run dev`
-4. Open `http://localhost:5173/boards/brd_demo` → you should be redirected to `/login` → "Continue with GitHub" → back to the board.
+2. `cp .dev.vars.example .dev.vars`, then fill in `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and `AUTH_ALLOWLIST="<your id>:Kieron,<friend id>:Friend"`.
+3. `npm run db:reset && npm run dev`, then open `http://localhost:5173/boards`.
 
-Expected: you land on the board, `/api/v1/auth/me` shows your name, sign-out returns you to `/`. If anything fails, the URL will contain `/login?error=…` and I will know exactly which stage rejected it.
+You should land on the dashboard, create a board, and see it persist.
 
-## 2. Approve M4
+## 2. Approve M5 — Kanban and tasks
 
-M4 turns `/boards` into a real dashboard:
+This is the milestone where FlowQuery becomes a real Kanban tool.
 
-- `GET /api/v1/boards` (list, newest first)
-- `POST /api/v1/boards` (create)
-- `PATCH /api/v1/boards/:id` (rename)
-- `DELETE /api/v1/boards/:id` with typed-name confirmation and full cascade
-- Dashboard UI replacing the placeholder, with create, rename and delete flows
-- Landing page behaviour for signed-in users
-- Tests for `BOARD-001`…`BOARD-007`, including cascade completeness
+- Task create, edit and delete; priority, assignee profile, due date
+- Move between the five fixed columns and reorder within a column
+- Drag-and-drop with dnd-kit, plus an explicit keyboard path (TASK-008)
+- Optimistic updates with `409` reconciliation and `expectedVersion`
+- Task detail panel with the full description
+- Tests for `TASK-001`…`TASK-013`, including ordering and concurrency
 
-## Not in M4
+## A note on M5's size
 
-Task editing, drag-and-drop (M5), comments and activity (M6), the agent API (M7).
+M5 is the largest milestone so far — it is where most of the product's complexity lives. If you prefer smaller steps, I can split it: **M5a** (task CRUD, priority, assignee, due date, detail panel) and **M5b** (drag-and-drop, reordering, keyboard move, concurrency). I would recommend the split; it keeps each review short and puts the risky ordering logic in its own change.
 
-**Current gate: owner review of M3 and a live sign-in.**
+## Not in M5
+
+Comments and activity history (M6), agent API and tokens (M7), notifications (dropped).
+
+**Current gate: owner review of M4.**

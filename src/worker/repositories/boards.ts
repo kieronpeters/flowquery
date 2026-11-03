@@ -18,6 +18,55 @@ export async function getBoardById(db: D1Database, boardId: string): Promise<Boa
     .first<BoardRow>()
 }
 
+export type BoardWithCountRow = BoardRow & { task_count: number }
+
+/** Every board, newest first, with its task count. Humans can see all boards. */
+export async function listBoardsWithTaskCounts(db: D1Database): Promise<BoardWithCountRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT b.id, b.name, b.created_by, b.created_at, b.updated_at,
+              COUNT(t.id) AS task_count
+         FROM boards b
+         LEFT JOIN tasks t ON t.board_id = b.id
+        GROUP BY b.id
+        ORDER BY b.created_at DESC`,
+    )
+    .all<BoardWithCountRow>()
+
+  return results ?? []
+}
+
+export async function insertBoard(
+  db: D1Database,
+  input: { id: string; name: string; createdBy: string; now: number },
+): Promise<void> {
+  await db
+    .prepare(
+      'INSERT INTO boards (id, name, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    )
+    .bind(input.id, input.name, input.createdBy, input.now, input.now)
+    .run()
+}
+
+/** Returns false when the board does not exist. */
+export async function updateBoardName(
+  db: D1Database,
+  input: { boardId: string; name: string; now: number },
+): Promise<boolean> {
+  const result = await db
+    .prepare('UPDATE boards SET name = ?, updated_at = ? WHERE id = ?')
+    .bind(input.name, input.now, input.boardId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
+}
+
+/** Returns false when the board does not exist. Cascades to tasks, comments, activity and tokens. */
+export async function deleteBoardById(db: D1Database, boardId: string): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM boards WHERE id = ?').bind(boardId).run()
+  return (result.meta?.changes ?? 0) > 0
+}
+
 export async function listTasksByBoard(db: D1Database, boardId: string): Promise<TaskRow[]> {
   const { results } = await db
     .prepare(

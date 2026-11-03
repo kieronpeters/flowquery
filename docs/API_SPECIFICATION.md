@@ -76,11 +76,11 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 | `POST` | `/boards` | Create. Body `{ name }`. Returns `201` with the board. |
 | `GET` | `/boards/{boardId}` | **Board view:** board metadata, the five columns in order, and each column's tasks ordered by position. Descriptions are truncated at 500 characters with `descriptionTruncated` set. `404` if absent. |
 | `PATCH` | `/boards/{boardId}` | Rename. Body `{ name }`. ID is unchanged (`BOARD-003`). |
-| `DELETE` | `/boards/{boardId}` | **Permanent.** Requires `{ "confirm": true, "confirmName": "<exact board name>" }`. `409` if the name does not match. Cascades to tasks, comments, activity and tokens. |
+| `DELETE` | `/boards/{boardId}` | **Permanent.** Requires `{ "confirmName": "<exact board name>" }` — the typed name *is* the confirmation. `409` if it does not match. Cascades to tasks, comments, activity and tokens. |
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M3):** `GET /boards/{boardId}` now requires a human session and returns `401` otherwise. `GET /boards`, `POST`, `PATCH`, `DELETE` and all token endpoints remain unimplemented (M4 and M7).
+> **Implementation status (M4):** board list, create, rename, delete and the board view are implemented and session-gated. Task, comment and activity endpoints remain unimplemented (M5–M6); agent tokens remain unimplemented (M7).
 
 ## 5. Agent tokens (human)
 

@@ -69,6 +69,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M4 — Board lifecycle and dashboard — M
 
+**Status: complete 2026-11-03.**
+
 **Goal:** boards exist and can be managed.
 
 - `POST/GET/PATCH/DELETE /api/v1/boards`
