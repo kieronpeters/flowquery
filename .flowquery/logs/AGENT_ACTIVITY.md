@@ -4,6 +4,23 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Visual improvements v1 reviewed through a pull request
+
+**Asked:** put the visual work on a branch, open a merge request, assign the owner, approve and merge.
+
+**Constraint reported first:** the work was already on `main`, so a branch cut today would produce an empty PR. The owner chose the retroactive route.
+
+**Done:**
+- `visual-improvements-v1` cut at `888a64e`; `main` reset to `dd7b940` and force-pushed with `--force-with-lease`.
+- PR #1 opened against `main`, assigned to `kieronpeters`, merged as `654031f` (merge commit, four commits preserved).
+- `git diff 888a64e main` is empty: the merged tree is byte-identical to the pre-rewrite tip. 233 tests pass on the merged `main`.
+
+**Not done, because GitHub forbids it:** the approval. `gh pr review --approve` returned *"Can not approve your own pull request"* — the PR author and the only collaborator are the same account. A review comment was recorded instead, and the merge proceeded without an approval, which is permitted because branch protection cannot be enabled on a free private repository.
+
+**Lesson for the next round:** open the branch *before* committing, not after, or the review is theatre.
+
+---
+
 ## 2026-11-03 — Palette spread across the spectrum; custom control says what it is
 
 **Reported by the owner:** the presets did not cover all seven colours, three of them were near-white, and the "+" button did not explain itself.

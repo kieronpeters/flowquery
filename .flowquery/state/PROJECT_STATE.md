@@ -117,6 +117,8 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: `https://github.com/kieronpeters/flowquery` — **private**, branch `main`, pushed. Created 2026-11-03 with the owner's approval. No CI workflow, by the owner's choice (they did not want to consume Actions minutes).
 
+Workflow from 2026-11-03: the visual-improvement round was reviewed through **PR #1** (`visual-improvements-v1` → `main`), merged as `654031f`. `main` was force-pushed back to `dd7b940` to make that review possible; the merged tree is identical to the pre-rewrite tip (verified with `git diff 888a64e main`, empty). GitHub will not let an account approve its own pull request, and `kieronpeters` is the only collaborator, so PR #1 carries a review comment rather than an approval. Branch protection is unavailable on a free private repository (API returns 403), so merges do not require an approval.
+
 ## Known gaps carried to deployment
 
 - **Live sign-in is now verified.** The owner signed in with a real GitHub account on localhost through the full OAuth round trip. This closes the gap that had been open since M3; previously the callback was only exercised with a stubbed provider.
