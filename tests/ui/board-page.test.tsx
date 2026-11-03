@@ -1,0 +1,220 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { BoardPage } from '../../src/app/BoardPage'
+import type { BoardView, TaskDto } from '../../src/shared/api-types'
+
+/**
+ * The board page: rendering, opening a task, and the keyboard move path that
+ * exists so drag-and-drop is never the only way to move work (TASK-008).
+ *
+ * A real drag cannot be driven here — dnd-kit needs pointer input that jsdom
+ * does not produce — so the gesture itself is verified in a browser instead.
+ * What these cover is the wiring either way: the same endpoint, the same
+ * optimistic update, the same reconciliation.
+ */
+
+function makeTask(overrides: Partial<TaskDto>): TaskDto {
+  return {
+    id: 'tsk_1',
+    title: 'Card one',
+    description: '',
+    descriptionTruncated: false,
+    status: 'backlog',
+    position: 0,
+    priority: 'none',
+    assignee: null,
+    dueDate: null,
+    version: 1,
+    createdAt: '2026-11-03T00:00:00.000Z',
+    updatedAt: '2026-11-03T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function boardWith(backlog: TaskDto[], review: TaskDto[]): BoardView {
+  return {
+    board: {
+      id: 'brd_demo',
+      name: 'FlowQuery Development',
+      createdAt: '2026-11-03T00:00:00.000Z',
+      updatedAt: '2026-11-03T00:00:00.000Z',
+      taskCount: backlog.length + review.length,
+    },
+    columns: [
+      { key: 'backlog', name: 'Backlog', position: 0, taskCount: backlog.length, tasks: backlog },
+      { key: 'todo', name: 'To Do', position: 1, taskCount: 0, tasks: [] },
+      { key: 'in_progress', name: 'In Progress', position: 2, taskCount: 0, tasks: [] },
+      { key: 'review', name: 'Review', position: 3, taskCount: review.length, tasks: review },
+      { key: 'done', name: 'Done', position: 4, taskCount: 0, tasks: [] },
+    ],
+  }
+}
+
+const cardOne = makeTask({ id: 'tsk_1', title: 'Card one', status: 'backlog', position: 0 })
+const cardTwo = makeTask({ id: 'tsk_2', title: 'Card two', status: 'review', position: 0 })
+
+/** The board after Card one moves one column right, into To Do. */
+const movedBoard: BoardView = {
+  board: {
+    id: 'brd_demo',
+    name: 'FlowQuery Development',
+    createdAt: '2026-11-03T00:00:00.000Z',
+    updatedAt: '2026-11-03T00:00:00.000Z',
+    taskCount: 2,
+  },
+  columns: [
+    { key: 'backlog', name: 'Backlog', position: 0, taskCount: 0, tasks: [] },
+    {
+      key: 'todo',
+      name: 'To Do',
+      position: 1,
+      taskCount: 1,
+      tasks: [
+        makeTask({ id: 'tsk_1', title: 'Card one', status: 'todo', position: 0, version: 2 }),
+      ],
+    },
+    { key: 'in_progress', name: 'In Progress', position: 2, taskCount: 0, tasks: [] },
+    { key: 'review', name: 'Review', position: 3, taskCount: 1, tasks: [cardTwo] },
+    { key: 'done', name: 'Done', position: 4, taskCount: 0, tasks: [] },
+  ],
+}
+
+type Call = { url: string; method: string; body: unknown }
+
+function mockApi(overrides: { moveStatus?: number } = {}) {
+  const calls: Call[] = []
+  const initial = boardWith([cardOne], [cardTwo])
+
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined
+      calls.push({ url, method, body })
+
+      if (url.endsWith('/api/v1/profiles')) {
+        return Response.json({
+          profiles: [
+            {
+              id: 'prf_alex',
+              displayName: 'Alex',
+              roleTitle: 'Engineer',
+              kind: 'ai',
+              avatarPath: null,
+            },
+          ],
+        })
+      }
+
+      if (url.endsWith('/move')) {
+        if (overrides.moveStatus === 409) {
+          return Response.json({ error: { code: 'CONFLICT', message: 'stale' } }, { status: 409 })
+        }
+        return Response.json({ board: movedBoard, task: movedBoard.columns[1]!.tasks[0]! })
+      }
+
+      if (url.endsWith('/comments')) {
+        return Response.json({ comments: [] })
+      }
+      if (url.endsWith('/activity')) {
+        return Response.json({ events: [], nextBefore: null })
+      }
+      if (url.includes('/tasks/') && method === 'GET') {
+        return Response.json({ task: cardOne })
+      }
+
+      // The board view, and any refetch of it.
+      return Response.json(initial)
+    }),
+  )
+
+  return { calls }
+}
+
+function renderBoard() {
+  render(
+    <MemoryRouter initialEntries={['/boards/brd_demo']}>
+      <Routes>
+        <Route path="/boards/:boardId" element={<BoardPage />} />
+        <Route path="/login" element={<p>sign in page</p>} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+describe('BoardPage', () => {
+  it('renders the five columns and their cards', async () => {
+    mockApi()
+    renderBoard()
+
+    expect(await screen.findByText('Card one')).toBeTruthy()
+    expect(screen.getByText('Card two')).toBeTruthy()
+
+    for (const name of ['Backlog', 'To Do', 'In Progress', 'Review', 'Done']) {
+      expect(screen.getByRole('heading', { name })).toBeTruthy()
+    }
+  })
+
+  it('opens a task when its card is clicked', async () => {
+    mockApi()
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+    expect(await screen.findByDisplayValue('Card one')).toBeTruthy()
+  })
+
+  it('moves a task to the next column with the keyboard path', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+    const dialog = await screen.findByRole('dialog')
+
+    const nextColumn = within(dialog).getByRole('button', {
+      name: 'Move to the next column',
+    })
+    await userEvent.click(nextColumn)
+
+    await waitFor(() => {
+      const move = calls.find((call) => call.url.endsWith('/move'))
+      expect(move).toBeTruthy()
+    })
+
+    const move = calls.find((call) => call.url.endsWith('/move'))!
+    expect(move.url).toContain('/api/v1/boards/brd_demo/tasks/tsk_1/move')
+    expect(move.body).toEqual({ status: 'todo', position: 0, expectedVersion: 1 })
+
+    // The server's board replaces the optimistic one.
+    const todo = await screen.findByRole('region', { name: 'To Do' })
+    expect(await within(todo).findByText('Card one')).toBeTruthy()
+  })
+
+  it('says so and refetches when the move conflicts', async () => {
+    const { calls } = mockApi({ moveStatus: 409 })
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Move to the next column' }))
+
+    expect(await screen.findByText(/Someone changed that task first/i)).toBeTruthy()
+
+    // A refetch happened: more than one board read.
+    const boardReads = calls.filter(
+      (call) => call.method === 'GET' && call.url.endsWith('/api/v1/boards/brd_demo'),
+    )
+    expect(boardReads.length).toBeGreaterThan(1)
+  })
+})

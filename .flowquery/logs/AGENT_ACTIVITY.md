@@ -4,6 +4,26 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Board page tests and defensive parsing (Bob, current session)
+
+**Trigger:** owner chose "keep improving"; the gap I had named last turn was the board page.
+
+**Performed:**
+- `tests/ui/board-page.test.tsx` (4 tests): five columns render, clicking a card opens the dialog, the keyboard "move to next column" path calls `/move` with `{status, position, expectedVersion}` and replaces the board with the server's response, and a `409` surfaces a notice plus a refetch.
+
+**Found by writing them — two real defects:**
+- `ActivityFeed` crashed with `Cannot read properties of undefined (reading 'length')` when the activity payload lacked an `events` array, taking the whole board down. It now validates the payload and shows an error instead.
+- `TaskDrawer` had the same fault for the comment list.
+Both were reachable only through an unexpected response, but a page that white-screens because a secondary panel got a bad payload is the wrong failure mode; the board is the primary surface.
+
+**Also fixed:** my own test expectations were wrong twice — a mock that matched `/tasks/` before `/comments`, and an assertion that expected a move from Backlog to land in Review instead of To Do. Both were my errors, not the application's.
+
+**Result:** 167 tests across 15 files; typecheck, lint, build clean.
+
+**Not done:** no deployment, no resource, no cost.
+
+---
+
 ## 2026-11-03 — UI component tests (Bob, current session)
 
 **Trigger:** owner chose "keep improving without deploying" from four options.

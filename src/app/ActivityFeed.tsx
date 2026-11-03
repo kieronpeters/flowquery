@@ -73,11 +73,21 @@ export function ActivityFeed({
   const [error, setError] = useState<string | null>(null)
 
   const fetchPage = useCallback(
-    async (before?: number): Promise<ActivityPageDto | null> => {
+    async (before?: number): Promise<ActivityPageDto> => {
       const query = before ? `?before=${before}` : ''
       const response = await fetch(`/api/v1/boards/${boardId}/activity${query}`)
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      return (await response.json()) as ActivityPageDto
+
+      const body = (await response.json()) as Partial<ActivityPageDto>
+
+      // A bad payload should degrade this panel, not take the board down with
+      // it. The feed is secondary; the board is not.
+      if (!body || !Array.isArray(body.events)) throw new Error('Unexpected activity payload')
+
+      return {
+        events: body.events,
+        nextBefore: typeof body.nextBefore === 'number' ? body.nextBefore : null,
+      }
     },
     [boardId],
   )
@@ -88,7 +98,7 @@ export function ActivityFeed({
 
     fetchPage()
       .then((page) => {
-        if (cancelled || !page) return
+        if (cancelled) return
         setEvents(page.events)
         setNextBefore(page.nextBefore)
         setError(null)
@@ -111,10 +121,8 @@ export function ActivityFeed({
 
     try {
       const page = await fetchPage(nextBefore)
-      if (page) {
-        setEvents((current) => [...current, ...page.events])
-        setNextBefore(page.nextBefore)
-      }
+      setEvents((current) => [...current, ...page.events])
+      setNextBefore(page.nextBefore)
     } catch {
       setError('Older activity could not be loaded.')
     } finally {

@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M8 complete — hardened and release-ready. 163 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. **Nothing is deployed**; the deployment plan is written and awaits approval.
+**Status:** M8 complete — hardened and release-ready. 167 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. **Nothing is deployed**; the deployment plan is written and awaits approval.
 
 ---
 
@@ -50,7 +50,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 163 tests: server, real-schema and UI component |
+| `npm test` | Vitest — 167 tests: server, real-schema and UI component |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |

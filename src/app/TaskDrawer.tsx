@@ -162,13 +162,20 @@ export function TaskDrawer(props: {
     fetch(`/api/v1/boards/${boardId}/tasks/${mode.taskId}/comments`)
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return (await response.json()) as { comments: CommentDto[] }
+        return (await response.json()) as { comments?: unknown }
       })
       .then((body) => {
-        if (!cancelled) {
-          setComments(body.comments)
+        if (cancelled) return
+
+        if (!Array.isArray(body.comments)) {
+          // Degrade the comment list, not the dialog.
+          setCommentError('Comments could not be loaded.')
           setCommentsLoading(false)
+          return
         }
+
+        setComments(body.comments as CommentDto[])
+        setCommentsLoading(false)
       })
       .catch(() => {
         if (!cancelled) setCommentsLoading(false)
