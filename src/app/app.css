@@ -562,21 +562,47 @@ a {
 }
 
 .theme-row {
-  display: grid;
-  grid-template-columns: 11rem 3rem 2.75rem auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.3rem 0;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
 }
 
 .theme-label {
+  flex: 0 0 9rem;
   font-size: 0.85rem;
   color: var(--text);
 }
 
+.theme-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.swatch {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .theme-colour {
-  width: 3rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 1.8rem;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: 0.4rem;
@@ -609,6 +635,22 @@ a {
 
 .theme-actions .button {
   margin-top: 0;
+}
+
+/* Cards tint with their column rather than staying a fixed dark surface. */
+.column[data-custom='true'] .card {
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border-color: color-mix(in srgb, var(--card-fg) 20%, transparent);
+}
+
+.column[data-custom='true'] .card-description,
+.column[data-custom='true'] .card-meta {
+  color: color-mix(in srgb, var(--card-fg) 72%, transparent);
+}
+
+.column[data-custom='true'] .card-meta span {
+  border-color: color-mix(in srgb, var(--card-fg) 22%, transparent);
 }
 
 /* Drag and drop ----------------------------------------------------------- */

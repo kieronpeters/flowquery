@@ -5,7 +5,7 @@ import { parseAllowlist } from '../src/worker/auth/allowlist'
 import { app } from '../src/worker/app'
 import { createD1AuthStore } from '../src/worker/repositories/auth-store'
 import { completeSignIn } from '../src/worker/services/auth'
-import { inkFor, luminance } from '../src/app/theme'
+import { cardBackground, inkFor, luminance, mix } from '../src/app/theme'
 import { createSqliteD1 } from './helpers/sqlite-d1'
 
 /**
@@ -182,5 +182,33 @@ describe('readable ink', () => {
     expect(luminance('#ffffff')).toBeCloseTo(1, 2)
     expect(luminance('#808080')).toBeGreaterThan(0.2)
     expect(luminance('#808080')).toBeLessThan(0.3)
+  })
+})
+
+describe('card tint', () => {
+  it('blends two colours without leaving the hex format', () => {
+    expect(mix('#000000', '#ffffff', 0.5)).toBe('#808080')
+    expect(mix('#000000', '#ffffff', 0)).toBe('#000000')
+    expect(mix('#000000', '#ffffff', 1)).toBe('#ffffff')
+  })
+
+  it('lifts a dark column only slightly', () => {
+    const card = cardBackground('#141a2e')
+    expect(card).not.toBe('#141a2e')
+    expect(luminance(card)).toBeGreaterThan(luminance('#141a2e'))
+    expect(luminance(card)).toBeLessThan(0.35)
+  })
+
+  it('lifts a light column close to white so cards still separate', () => {
+    const card = cardBackground('#dff2e4')
+    expect(luminance(card)).toBeGreaterThan(0.85)
+  })
+
+  it('always produces readable card text', () => {
+    for (const column of ['#0b1020', '#f4efe6', '#123c3a', '#dce9f7', '#4a1f2a']) {
+      const card = cardBackground(column)
+      const ink = inkFor(card)
+      expect(ink).toBe(luminance(card) > 0.45 ? '#0b1020' : '#e6e9f2')
+    }
   })
 })

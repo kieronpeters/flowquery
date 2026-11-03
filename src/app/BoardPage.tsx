@@ -26,7 +26,7 @@ import { ActivityFeed } from './ActivityFeed'
 import { applyMove, locate } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
-import { inkFor } from './theme'
+import { cardBackground, inkFor } from './theme'
 
 type LoadState =
   | { kind: 'loading' }
@@ -400,11 +400,21 @@ export function BoardPage() {
           clip it when it leaves its own column.
         */}
         <DragOverlay dropAnimation={null}>
-          {activeTask ? (
-            <div className="card drag-overlay">
-              <CardBody task={activeTask} />
-            </div>
-          ) : null}
+          {activeTask
+            ? (() => {
+                const columnColour = theme.columns?.[activeTask.status]
+                const floating = columnColour ? cardBackground(columnColour) : undefined
+
+                return (
+                  <div
+                    className="card drag-overlay"
+                    style={floating ? { background: floating, color: inkFor(floating) } : undefined}
+                  >
+                    <CardBody task={activeTask} />
+                  </div>
+                )
+              })()
+            : null}
         </DragOverlay>
       </DndContext>
 
@@ -439,8 +449,15 @@ function Column({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key })
 
+  const cardBg = background ? cardBackground(background) : undefined
+
   const style = background
-    ? ({ background, '--column-fg': inkFor(background) } as React.CSSProperties)
+    ? ({
+        background,
+        '--column-fg': inkFor(background),
+        '--card-bg': cardBg,
+        '--card-fg': inkFor(cardBg!),
+      } as React.CSSProperties)
     : undefined
 
   return (
@@ -448,6 +465,7 @@ function Column({
       ref={setNodeRef}
       className={isOver ? 'column over' : 'column'}
       style={style}
+      data-custom={background ? 'true' : undefined}
       aria-labelledby={`column-${column.key}`}
     >
       <header className="column-header">
