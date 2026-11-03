@@ -81,7 +81,7 @@ export function BoardsPage() {
       const response = await fetch('/api/v1/boards', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: newName }),
+        body: JSON.stringify({ name: newName.trim() }),
       })
 
       if (!response.ok) {

@@ -47,12 +47,13 @@ npm run db:migrate:local # migrations apply cleanly from empty
 
 Copy the real terminal output into the handoff. A summary is not a substitute.
 
-**Two tiers of test, used deliberately:**
+**Three tiers of test, used deliberately:**
 
 1. **Route tests with a hand-written D1 stand-in.** Prove the HTTP contract: status codes, payload shape, auth boundaries. Cheap, fast, and honest about being a fake.
 2. **Real-schema tests through `node:sqlite`** (`tests/helpers/sqlite-d1.ts`). These run the actual migration files with foreign keys enabled, so cascade deletes, CHECK constraints and unique indexes are exercised rather than trusted. Anything involving deletion, isolation or integrity belongs here.
+3. **UI component tests** (`tests/ui/`) with jsdom and Testing Library. These cover what only a user notices: that the dialog loads its fields, that saving carries the version guard, and that deleting takes two deliberate clicks. They use `// @vitest-environment jsdom` per file, so the rest of the suite stays on Node.
 
-Neither tier is a substitute for the other. Do not "prove" a cascade with a fake that returns rows regardless of parameters.
+None is a substitute for another. Do not "prove" a cascade with a fake that returns rows regardless of parameters, and do not "prove" a confirmation dialog with a server test that has no dialog.
 
 ### Review
 Checklist before closing:

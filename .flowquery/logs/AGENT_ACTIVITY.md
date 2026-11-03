@@ -4,6 +4,28 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — UI component tests (Bob, current session)
+
+**Trigger:** owner chose "keep improving without deploying" from four options.
+
+**Gap addressed:** all 152 tests were server-side. Nothing covered the drawer, the dashboard or the delete confirmation — a regression there would have shipped unnoticed.
+
+**Performed:**
+- Added `@testing-library/react`, `@testing-library/dom`, `@testing-library/user-event` and `jsdom` as dev dependencies.
+- `tests/ui/task-drawer.test.tsx` (6 tests): fields load from the API, save sends `expectedVersion`, deletion needs a second deliberate click, "Keep" sends nothing, empty title disables save, comment markup renders as text.
+- `tests/ui/boards-page.test.tsx` (5 tests): board list with counts, 401 redirects to sign-in, delete stays disabled until the exact name is typed, cancel sends nothing, create posts a trimmed name.
+
+**Three fixes that came out of writing them:**
+1. `vitest.config.ts` include pattern missed `.tsx` — the files silently matched nothing.
+2. Testing Library's automatic cleanup relies on a global `afterEach`, which this config does not enable, so rendered trees accumulated between tests and queries matched the previous test's DOM. Added explicit `cleanup()`.
+3. The create form sent the name untrimmed and relied on the server. It now trims at the source, so the optimistic UI and the stored value agree.
+
+**Result:** 163 tests across 14 files; typecheck, lint and build clean.
+
+**Not done:** no deployment, no resource, no cost.
+
+---
+
 ## 2026-11-03 — Accessibility audit and modal fix (Bob, current session)
 
 **Trigger:** the owner said "continue" at the deployment gate, which remains blocked on Cloudflare authentication.

@@ -41,7 +41,7 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (**152 tests**), `build`, `format:check` all pass.
+- `typecheck`, `lint`, `test` (**163 tests**), `build`, `format:check` all pass.
 - D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
 - Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
 - Board management implemented: list, create, rename, permanent delete with typed-name confirmation; cascade verified against the real schema.
@@ -61,6 +61,7 @@ Register: `docs/DECISIONS.md`.
 - `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
 - **Documentation reconciled against the build (M8+ pass):** `ARCHITECTURE.md` no longer claims TanStack Query, Tailwind or Zod; `MVP_SPECIFICATION.md` no longer calls AUTH-01 open; `DESIGN_DIRECTION.md` lists the eleven unbuilt features from the concept images; `repository/SETUP_QUESTIONS.md` no longer points at a path that does not exist.
 - **Accessibility audited (M8+ pass):** Lighthouse scores 100 for accessibility and best practices on the board, dashboard and task dialog. A real defect was found by testing rather than by the audit: the `aria-modal` drawer let Tab escape into the page and did not return focus on close. Both fixed and verified (20 Tab presses, zero escapes; Escape returns focus to the card).
+- **UI component tests added (M8+ pass):** jsdom + Testing Library cover the task dialog (fields load, save carries `expectedVersion`, deletion needs two clicks, markup renders as text) and the dashboard (board list, delete blocked until the exact name is typed, create sends a trimmed name). 11 tests; the rest of the suite stays on Node.
 - **Privacy:** `public/robots.txt` disallows all crawlers; `/robots.txt` previously returned the SPA's HTML.
 - Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
 - `npm run preflight` added as a deployment guard: it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified to fail on the placeholder and pass with a real id.
