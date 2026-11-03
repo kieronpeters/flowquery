@@ -1,0 +1,5 @@
+# FlowQuery is a private application. There is nothing here to index.
+# The document also carries <meta name="robots" content="noindex">, so this is
+# belt and braces: a shared link should not end up in a search result.
+User-agent: *
+Disallow: /

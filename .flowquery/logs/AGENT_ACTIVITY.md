@@ -4,6 +4,27 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Accessibility audit and modal fix (Bob, current session)
+
+**Trigger:** the owner said "continue" at the deployment gate, which remains blocked on Cloudflare authentication.
+
+**Performed:**
+- Ran Lighthouse against the board, the dashboard and the task dialog.
+- Accessibility **100**, best practices **100** on all three; SEO 80 (the remaining item is a deliberate omission of a meta description for a `noindex` app).
+- Added `public/robots.txt` (Disallow: /) — `/robots.txt` had been returning the SPA's HTML, and a private app should not be crawlable.
+
+**Found by testing, not by the audit:** the task drawer declares `aria-modal="true"`, but pressing Tab walked focus out of it into the page behind (the brand link, then "All boards"), and closing did not return focus to the card that opened it. A keyboard or screen-reader user is told the background is inert and then put inside it anyway.
+
+**Fixed:** a focus trap that cycles within the dialog, and focus restored to the trigger on unmount.
+
+**Verified:** 20 consecutive Tab presses, zero escapes; Escape returns focus to the card (`classList.contains('card')` true). One earlier run showed focus restore "failing" — that was my automation calling `.click()`, which does not focus a button the way a real pointer click does. Re-tested with focus applied first, and it works.
+
+**Tests:** 152 still passing; typecheck, lint, build clean.
+
+**Not done:** no deployment, no resource, no cost.
+
+---
+
 ## 2026-11-03 — Documentation reconciliation (Bob, current session)
 
 **Trigger:** the owner said "continue" at the deployment gate, which is blocked on Cloudflare authentication. Rather than repeat the request, I audited eight milestones of accumulated drift.

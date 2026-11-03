@@ -13,7 +13,6 @@
 - Accessible contrast, visible focus states, keyboard operation for every action including moving a card.
 
 ## 2. What the concept images show that is deliberately absent
-
 The three images in this directory were generated before the scope was settled. They depict a larger product. None of the following exists, and none should be inferred from the images:
 
 | In the images | Status |
@@ -33,7 +32,7 @@ If any of these is wanted later, it needs a decision entry and an owner conversa
 2. **Surfaces, not borders.** Elevation is expressed with a slightly lighter surface plus a hairline border.
 3. **Density with air.** Cards are compact, but the board breathes.
 4. **Motion is feedback, not decoration.** The only animation is the drag transform.
-5. **Accessibility is a requirement.** Contrast, focus rings, keyboard paths and semantic landmarks are part of "done", not polish.
+5. **Accessibility is a requirement.** Contrast, focus rings, keyboard paths and semantic landmarks are part of "done", not polish. Lighthouse scores 100 for accessibility and best practices on the board, the dashboard and the task dialog; the dialog also traps focus and returns it to the trigger, which Lighthouse does not check.
 6. **No icon-only controls without an accessible name.** Buttons carry `aria-label` when the visible text is a symbol.
 
 ## 4. Where the rules live in code

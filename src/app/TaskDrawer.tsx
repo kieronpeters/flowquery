@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { ApiError, CommentDto, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
@@ -66,6 +66,50 @@ export function TaskDrawer(props: {
   const [commentText, setCommentText] = useState('')
   const [commentError, setCommentError] = useState<string | null>(null)
   const [postingComment, setPostingComment] = useState(false)
+
+  const drawerRef = useRef<HTMLElement | null>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+
+  /**
+   * A dialog that claims aria-modal must behave like one: focus returns to
+   * whatever opened it, and Tab cannot walk into the page behind. Without this
+   * a keyboard or screen-reader user is told the background is inert and then
+   * put inside it anyway.
+   */
+  useEffect(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null
+
+    return () => {
+      returnFocusRef.current?.focus?.()
+    }
+  }, [])
+
+  function onDialogKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key !== 'Tab') return
+
+    const root = drawerRef.current
+    if (!root) return
+
+    const focusable = [
+      ...root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ].filter((element) => element.offsetParent !== null)
+
+    if (focusable.length === 0) return
+
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
+    const active = document.activeElement
+
+    if (!event.shiftKey && active === last) {
+      event.preventDefault()
+      first.focus()
+    } else if (event.shiftKey && (active === first || !root.contains(active))) {
+      event.preventDefault()
+      last.focus()
+    }
+  }
 
   useEffect(() => {
     if (mode.kind !== 'edit') return
@@ -261,6 +305,8 @@ export function TaskDrawer(props: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"
+        ref={drawerRef}
+        onKeyDown={onDialogKeyDown}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="drawer-header">

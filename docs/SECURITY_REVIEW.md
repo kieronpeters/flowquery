@@ -84,4 +84,18 @@ The last one is worth dwelling on. The first attempt at fixing the missing CSP *
 
 For a private two-person board exposed on the public internet with a scoped agent token, the controls in place are proportionate: authenticated humans only, no public links, hashed credentials, structural board isolation, and an audit trail that records who changed what.
 
+### Accessibility and privacy audit (added during the M8+ pass)
+
+Lighthouse was run against the live board, the dashboard and the task dialog:
+
+| Audit | Score |
+|---|---|
+| Accessibility | **100** |
+| Best practices | **100** |
+| SEO | 80 — the remaining item is a missing meta description, deliberate for a `noindex` application |
+
+One real defect was found by testing rather than by Lighthouse: the task drawer declares `aria-modal="true"` but **Tab walked straight out of it** into the page behind, and focus was not returned to the card on close. Both are now fixed — a focus trap cycles within the dialog, and the trigger regains focus on dismissal. Verified by pressing Tab twenty times (zero escapes) and closing with Escape (focus lands back on the card).
+
+`public/robots.txt` now disallows all crawlers, so a shared link cannot be indexed. The document previously carried only a `noindex` meta tag, and `/robots.txt` returned the SPA's HTML.
+
 The two remaining gaps are not weaknesses in the code — they are unverified paths, and they are listed in `NEXT_ACTION.md` rather than left implicit.

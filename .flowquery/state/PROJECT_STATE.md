@@ -60,6 +60,8 @@ Register: `docs/DECISIONS.md`.
 - `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
 - `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
 - **Documentation reconciled against the build (M8+ pass):** `ARCHITECTURE.md` no longer claims TanStack Query, Tailwind or Zod; `MVP_SPECIFICATION.md` no longer calls AUTH-01 open; `DESIGN_DIRECTION.md` lists the eleven unbuilt features from the concept images; `repository/SETUP_QUESTIONS.md` no longer points at a path that does not exist.
+- **Accessibility audited (M8+ pass):** Lighthouse scores 100 for accessibility and best practices on the board, dashboard and task dialog. A real defect was found by testing rather than by the audit: the `aria-modal` drawer let Tab escape into the page and did not return focus on close. Both fixed and verified (20 Tab presses, zero escapes; Escape returns focus to the card).
+- **Privacy:** `public/robots.txt` disallows all crawlers; `/robots.txt` previously returned the SPA's HTML.
 - Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
 - `npm run preflight` added as a deployment guard: it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified to fail on the placeholder and pass with a real id.
 - **Deployment is blocked on three things only the owner can provide:** `wrangler login`, a production GitHub OAuth app, and explicit approval. Plan: `docs/DEPLOYMENT_PLAN.md`.
