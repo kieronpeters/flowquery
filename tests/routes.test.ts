@@ -74,6 +74,7 @@ const board: BoardRow = {
   created_by: 'usr_test',
   created_at: now,
   updated_at: now,
+  theme: '{}',
 }
 
 const session = {

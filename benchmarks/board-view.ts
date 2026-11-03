@@ -22,6 +22,7 @@ const board: BoardRow = {
   created_by: 'usr_bench',
   created_at: 1793664000000,
   updated_at: 1793664000000,
+  theme: '{}',
 }
 
 const profiles: ProfileRow[] = Array.from({ length: 18 }, (_, index) => ({

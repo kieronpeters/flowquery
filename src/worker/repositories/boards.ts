@@ -13,9 +13,22 @@ import type { BoardRow, ProfileRow, TaskRow } from '../domain/types'
 
 export async function getBoardById(db: D1Database, boardId: string): Promise<BoardRow | null> {
   return await db
-    .prepare('SELECT id, name, created_by, created_at, updated_at FROM boards WHERE id = ?')
+    .prepare('SELECT id, name, created_by, created_at, updated_at, theme FROM boards WHERE id = ?')
     .bind(boardId)
     .first<BoardRow>()
+}
+
+/** Stores the appearance document. Returns false when the board does not exist. */
+export async function updateBoardTheme(
+  db: D1Database,
+  input: { boardId: string; theme: unknown; now: number },
+): Promise<boolean> {
+  const result = await db
+    .prepare('UPDATE boards SET theme = ?, updated_at = ? WHERE id = ?')
+    .bind(JSON.stringify(input.theme), input.now, input.boardId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
 }
 
 export type BoardWithCountRow = BoardRow & { task_count: number }

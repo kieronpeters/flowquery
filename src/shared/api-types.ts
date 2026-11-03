@@ -46,6 +46,15 @@ export type ColumnView = {
 export type BoardView = {
   board: BoardSummary
   columns: ColumnView[]
+  /** Per-board colours. Empty object means "use the defaults". */
+  theme: BoardTheme
+}
+
+export type BoardTheme = {
+  /** Page background behind the board. */
+  background?: string
+  /** One colour per column, keyed by column. */
+  columns?: Partial<Record<ColumnKey, string>>
 }
 
 export type ProfileDto = {

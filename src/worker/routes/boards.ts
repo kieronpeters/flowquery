@@ -11,6 +11,7 @@ import {
   createBoard,
   deleteBoard,
   listBoards,
+  setBoardTheme,
   validateBoardName,
   renameBoard,
 } from '../services/boards'
@@ -105,10 +106,33 @@ boardRoutes.patch('/:boardId', async (c) => {
 })
 
 /**
+ * Board appearance. Human administration only: the agent namespace has no
+ * equivalent route, so Bob cannot restyle a board.
+ */
+boardRoutes.put('/:boardId/theme', async (c) => {
+  const body = await readJson(c)
+  if (!body) return validationError(c, 'Expected a JSON object body.')
+
+  const result = await setBoardTheme(c.env.DB, {
+    boardId: c.req.param('boardId'),
+    body,
+  })
+
+  if (result.kind === 'not_found') {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Board not found.' } }, 404)
+  }
+
+  if (result.kind === 'invalid') {
+    return validationError(c, result.message)
+  }
+
+  return c.json({ theme: result.theme })
+})
+
+/**
  * BOARD-004/005: permanent delete. The client must echo the exact board name;
  * that is the confirmation gate, enforced in the service.
- */
-boardRoutes.delete('/:boardId', async (c) => {
+ */ boardRoutes.delete('/:boardId', async (c) => {
   const body = await readJson(c)
   if (!body) return validationError(c, 'Expected a JSON object body.')
 

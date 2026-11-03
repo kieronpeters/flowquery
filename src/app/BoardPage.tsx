@@ -20,11 +20,13 @@ import { CSS } from '@dnd-kit/utilities'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import type { BoardView, ProfileDto, TaskDto } from '../shared/api-types'
+import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
 import { applyMove, locate } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
+import { ThemePanel } from './ThemePanel'
+import { inkFor } from './theme'
 
 type LoadState =
   | { kind: 'loading' }
@@ -104,6 +106,7 @@ export function BoardPage() {
   // The card being dragged, rendered in a portal so it follows the cursor
   // instead of being clipped by the column or board scroll container.
   const [activeTask, setActiveTask] = useState<TaskDto | null>(null)
+  const [showTheme, setShowTheme] = useState(false)
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
 
@@ -204,6 +207,28 @@ export function BoardPage() {
     },
     [boardId, load],
   )
+
+  /** Saves the appearance document and applies it without a full refetch. */
+  async function saveTheme(theme: BoardTheme): Promise<string | null> {
+    const response = await fetch(`/api/v1/boards/${boardId}/theme`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(theme),
+    })
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as ApiError | null
+      return body?.error.message ?? 'Could not save colours.'
+    }
+
+    const body = (await response.json()) as { theme: BoardTheme }
+    setState((current) =>
+      current.kind === 'ok'
+        ? { kind: 'ok', view: { ...current.view, theme: body.theme } }
+        : current,
+    )
+    return null
+  }
 
   function handleDragStart(event: DragStartEvent) {
     if (state.kind !== 'ok') return
@@ -306,21 +331,43 @@ export function BoardPage() {
     )
   }
 
-  const { board, columns } = state.view
+  const { board, columns, theme } = state.view
+
+  const pageStyle = theme.background
+    ? ({
+        background: theme.background,
+        '--page-fg': inkFor(theme.background),
+        '--page-muted': inkFor(theme.background),
+      } as React.CSSProperties)
+    : undefined
 
   return (
-    <main className="board-page">
+    <main className="board-page" style={pageStyle}>
       <Link className="back-link" to="/boards">
         ← All boards
       </Link>
 
-      <div className="board-heading">
-        <h1>{board.name}</h1>
-        <p className="lede">
-          {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag a card, or open it and
-          use the move buttons
-        </p>
+      <div className="page-heading">
+        <div>
+          <h1>{board.name}</h1>
+          <p className="lede">
+            {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag a card, or open it
+            and use the move buttons
+          </p>
+        </div>
+        <button
+          className="button button-quiet inline"
+          type="button"
+          onClick={() => setShowTheme((open) => !open)}
+          aria-expanded={showTheme}
+        >
+          Colours
+        </button>
       </div>
+
+      {showTheme && (
+        <ThemePanel initial={theme} onSave={saveTheme} onClose={() => setShowTheme(false)} />
+      )}
 
       {notice && (
         <p className="alert alert-neutral" role="status">
@@ -340,6 +387,7 @@ export function BoardPage() {
             <Column
               key={column.key}
               column={column}
+              background={theme.columns?.[column.key]}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
               onAdd={() => setDrawer({ kind: 'create', status: column.key })}
             />
@@ -380,19 +428,26 @@ export function BoardPage() {
 
 function Column({
   column,
+  background,
   onOpen,
   onAdd,
 }: {
   column: BoardView['columns'][number]
+  background?: string
   onOpen: (taskId: string) => void
   onAdd: () => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key })
 
+  const style = background
+    ? ({ background, '--column-fg': inkFor(background) } as React.CSSProperties)
+    : undefined
+
   return (
     <section
       ref={setNodeRef}
       className={isOver ? 'column over' : 'column'}
+      style={style}
       aria-labelledby={`column-${column.key}`}
     >
       <header className="column-header">

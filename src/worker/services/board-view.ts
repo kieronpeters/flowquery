@@ -1,12 +1,40 @@
 import type { D1Database } from '@cloudflare/workers-types'
 
-import type { BoardView } from '../../shared/api-types'
+import type { BoardTheme, BoardView } from '../../shared/api-types'
 import { COLUMNS } from '../../shared/columns'
 import type { BoardRow, ProfileRow, TaskRow } from '../domain/types'
 import { getBoardById, listActiveProfiles, listTasksByBoard } from '../repositories/boards'
 import { DESCRIPTION_PREVIEW_LENGTH, toIso, toTaskDto } from './task-dto'
 
 export { DESCRIPTION_PREVIEW_LENGTH }
+
+/** Never let a malformed stored document break a board read. */
+export function parseTheme(raw: string | undefined): BoardTheme {
+  if (!raw) return {}
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+
+    const theme: BoardTheme = {}
+    const record = parsed as Record<string, unknown>
+
+    if (typeof record.background === 'string') theme.background = record.background
+
+    if (record.columns && typeof record.columns === 'object' && !Array.isArray(record.columns)) {
+      const columns: BoardTheme['columns'] = {}
+      for (const column of COLUMNS) {
+        const value = (record.columns as Record<string, unknown>)[column.key]
+        if (typeof value === 'string') columns[column.key] = value
+      }
+      theme.columns = columns
+    }
+
+    return theme
+  } catch {
+    return {}
+  }
+}
 
 /**
  * Pure assembly step, separated from I/O so it can be tested without a
@@ -47,6 +75,7 @@ export function assembleBoardView(
       taskCount: tasks.length,
     },
     columns,
+    theme: parseTheme(board.theme),
   }
 }
 

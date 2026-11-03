@@ -1,6 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types'
 
-import type { BoardSummary } from '../../shared/api-types'
+import type { BoardSummary, BoardTheme } from '../../shared/api-types'
+import { isColumnKey } from '../../shared/columns'
 import type { BoardWithCountRow } from '../repositories/boards'
 import {
   deleteBoardById,
@@ -8,6 +9,7 @@ import {
   insertBoard,
   listBoardsWithTaskCounts,
   updateBoardName,
+  updateBoardTheme,
 } from '../repositories/boards'
 import { randomId } from '../lib/ids'
 
@@ -92,6 +94,73 @@ export type DeleteResult =
   | { kind: 'ok'; boardName: string }
   | { kind: 'not_found' }
   | { kind: 'name_mismatch'; boardName: string }
+
+const HEX = /^#[0-9a-f]{6}$/i
+
+export type ThemeResult =
+  { kind: 'ok'; theme: BoardTheme } | { kind: 'invalid'; message: string } | { kind: 'not_found' }
+
+/**
+ * Validates and stores a board's appearance.
+ *
+ * Colours are restricted to six-digit hex. Accepting arbitrary CSS would allow
+ * `url(...)` values, which turn a colour field into a request to a third party
+ * — and a screenshot of someone's board is not the place to discover that.
+ */
+export async function setBoardTheme(
+  db: D1Database,
+  input: { boardId: string; body: unknown; now?: number },
+): Promise<ThemeResult> {
+  const body = input.body
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { kind: 'invalid', message: 'Expected a theme object.' }
+  }
+
+  const record = body as Record<string, unknown>
+  const allowed = new Set(['background', 'columns'])
+
+  for (const key of Object.keys(record)) {
+    if (!allowed.has(key)) return { kind: 'invalid', message: `Unknown theme key: ${key}.` }
+  }
+
+  const theme: BoardTheme = {}
+
+  if (record.background !== undefined && record.background !== null) {
+    if (typeof record.background !== 'string' || !HEX.test(record.background)) {
+      return { kind: 'invalid', message: 'background must be a #rrggbb colour.' }
+    }
+    theme.background = record.background.toLowerCase()
+  }
+
+  if (record.columns !== undefined && record.columns !== null) {
+    if (typeof record.columns !== 'object' || Array.isArray(record.columns)) {
+      return { kind: 'invalid', message: 'columns must be an object.' }
+    }
+
+    const columns: NonNullable<BoardTheme['columns']> = {}
+
+    for (const [key, value] of Object.entries(record.columns as Record<string, unknown>)) {
+      if (!isColumnKey(key)) {
+        return { kind: 'invalid', message: `Unknown column: ${key}.` }
+      }
+      if (value === null) continue
+      if (typeof value !== 'string' || !HEX.test(value)) {
+        return { kind: 'invalid', message: `Column ${key} must be a #rrggbb colour.` }
+      }
+      columns[key] = value.toLowerCase()
+    }
+
+    theme.columns = columns
+  }
+
+  const updated = await updateBoardTheme(db, {
+    boardId: input.boardId,
+    theme,
+    now: input.now ?? Date.now(),
+  })
+
+  return updated ? { kind: 'ok', theme } : { kind: 'not_found' }
+}
 
 /**
  * Permanent deletion (DEC-007). The caller must echo the exact current name;

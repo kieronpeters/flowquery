@@ -7,6 +7,8 @@ export type BoardRow = {
   created_by: string
   created_at: number
   updated_at: number
+  /** JSON document; parsed by the service layer. */
+  theme: string
 }
 
 export type TaskRow = {

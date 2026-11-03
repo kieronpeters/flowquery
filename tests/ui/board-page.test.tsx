@@ -44,6 +44,7 @@ function boardWith(backlog: TaskDto[], review: TaskDto[]): BoardView {
       updatedAt: '2026-11-03T00:00:00.000Z',
       taskCount: backlog.length + review.length,
     },
+    theme: {},
     columns: [
       { key: 'backlog', name: 'Backlog', position: 0, taskCount: backlog.length, tasks: backlog },
       { key: 'todo', name: 'To Do', position: 1, taskCount: 0, tasks: [] },
@@ -66,6 +67,7 @@ const movedBoard: BoardView = {
     updatedAt: '2026-11-03T00:00:00.000Z',
     taskCount: 2,
   },
+  theme: {},
   columns: [
     { key: 'backlog', name: 'Backlog', position: 0, taskCount: 0, tasks: [] },
     {

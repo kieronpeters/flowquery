@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 
 import type { D1Database } from '@cloudflare/workers-types'
@@ -19,10 +19,25 @@ function readSql(relativePath: string): string {
   return readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8')
 }
 
+const MIGRATIONS = new URL('../../migrations/', import.meta.url)
+
+/**
+ * Applies every migration in order.
+ *
+ * Reads the directory rather than listing files by hand: a new migration that
+ * the helper does not know about would leave the test schema behind the real
+ * one, and the failures would look like application bugs.
+ */
 export function applyMigrations(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON')
-  db.exec(readSql('migrations/0001_init.sql'))
-  db.exec(readSql('migrations/0002_auth_attempts.sql'))
+
+  const files = readdirSync(MIGRATIONS)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+
+  for (const file of files) {
+    db.exec(readFileSync(new URL(file, MIGRATIONS), 'utf8'))
+  }
 }
 
 export function applySeed(db: DatabaseSync): void {

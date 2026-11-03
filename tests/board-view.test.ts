@@ -9,6 +9,7 @@ const board: BoardRow = {
   created_by: 'usr_test',
   created_at: 1793664000000,
   updated_at: 1793664000000,
+  theme: '{}',
 }
 
 const profiles: ProfileRow[] = [
