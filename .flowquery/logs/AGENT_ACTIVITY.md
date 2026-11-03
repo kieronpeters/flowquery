@@ -4,6 +4,22 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Palette spread across the spectrum; custom control says what it is
+
+**Reported by the owner:** the presets did not cover all seven colours, three of them were near-white, and the "+" button did not explain itself.
+
+**Changed:**
+- Presets are now Midnight, Slate, **Red, Orange, Yellow, Green, Teal, Blue, Indigo, Violet, Pink**, Paper. Seven hues are represented by name; Mint and Sky are gone, leaving Paper as the only pale neutral.
+- Yellow is a light preset (`#f2c94c`) on purpose: a dark yellow is olive, which does not read as yellow. Its ink is dark, and the AA test confirms it.
+- The custom control is a worded "Custom colour" button after the swatches, outside the preset group so the group contains only presets. `aria-expanded` still drives the picker.
+- Tests added: the palette names all seven hues, exactly one preset is pale, and the custom control's visible text is words rather than a glyph.
+
+**Verified in a browser:** 12 swatches in the expected order, row fits on one line (898 px wide, 49 px tall), custom control reads "Custom colour", pressing it opened exactly one labelled picker on the Tickets row with `aria-expanded="true"`.
+
+**233 tests pass** (was 230). No deployment, no cloud cost.
+
+---
+
 ## 2026-11-03 — Appearance scope decided: per board
 
 **Asked:** should board colours be per board or per user, and what is standard.

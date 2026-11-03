@@ -201,6 +201,21 @@ describe('colour presets', () => {
     }
   })
 
+  it('covers the whole spectrum rather than a cluster of one hue', () => {
+    const names = PRESETS.map((preset) => preset.name)
+
+    for (const hue of ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Indigo', 'Violet']) {
+      expect(names).toContain(hue)
+    }
+  })
+
+  it('keeps a single pale neutral so the hues are not crowded out', () => {
+    const pale = PRESETS.filter((preset) => luminance(preset.value) > 0.7)
+
+    expect(pale).toHaveLength(1)
+    expect(pale[0]!.name).toBe('Paper')
+  })
+
   it('every preset keeps ticket text at AA contrast or better', () => {
     for (const preset of PRESETS) {
       expect(contrastRatio(preset.value, inkFor(preset.value))).toBeGreaterThanOrEqual(4.5)

@@ -94,21 +94,25 @@ export function cardBackground(columnHex: string): string {
 /**
  * Colour presets.
  *
- * Seven base tones plus varieties. Every one is checked against the AA
- * contrast threshold for body text by a test, so "a preset" always means
- * "readable", not "a colour someone liked".
+ * Every hue in the spectrum is represented — red, orange, yellow, green,
+ * blue, indigo and violet — plus two neutrals and one pale surface. Only one
+ * pale neutral is kept: three near-whites were indistinguishable in the row
+ * and crowded out the hues the owner actually wanted.
+ *
+ * Every preset is checked against the AA contrast threshold for body text by
+ * a test, so "a preset" always means "readable", not "a colour someone liked".
  */
 export const PRESETS = [
   { name: 'Midnight', value: '#0b1020' },
-  { name: 'Slate', value: '#141a2e' },
-  { name: 'Steel', value: '#2b3038' },
+  { name: 'Slate', value: '#1c2333' },
+  { name: 'Red', value: '#5c1a24' },
+  { name: 'Orange', value: '#5e3312' },
+  { name: 'Yellow', value: '#f2c94c' },
+  { name: 'Green', value: '#1b3f2b' },
+  { name: 'Teal', value: '#0f3f3c' },
+  { name: 'Blue', value: '#1b2a5e' },
   { name: 'Indigo', value: '#2a2350' },
-  { name: 'Violet', value: '#3b2f63' },
-  { name: 'Teal', value: '#123c3a' },
-  { name: 'Forest', value: '#123524' },
-  { name: 'Amber', value: '#4a3617' },
-  { name: 'Rose', value: '#4a1f2a' },
+  { name: 'Violet', value: '#402a63' },
+  { name: 'Pink', value: '#5d2340' },
   { name: 'Paper', value: '#f4efe6' },
-  { name: 'Mint', value: '#dff2e4' },
-  { name: 'Sky', value: '#dce9f7' },
 ] as const

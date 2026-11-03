@@ -116,8 +116,8 @@ export function ThemePanel({
       </div>
 
       <p className="token-note">
-        Saved with this board and visible to everyone who can open it. Pick a swatch, or press
-        Custom for a colour of your own. Text and card shading adjust automatically so they stay
+        Saved with this board and visible to everyone who can open it. Pick a swatch, or choose
+        Custom colour for anything else. Text and card shading adjust automatically so they stay
         readable.
       </p>
 
@@ -140,24 +140,24 @@ export function ThemePanel({
                   onClick={() => surface.onChange(preset.value)}
                 />
               ))}
-
-              <button
-                type="button"
-                className="swatch swatch-custom"
-                aria-label={`Custom colour for ${surface.label}`}
-                aria-expanded={showingCustom}
-                onClick={() => toggleCustom(surface.id)}
-              >
-                +
-              </button>
             </div>
+
+            <button
+              type="button"
+              className="button button-quiet inline custom-colour"
+              aria-label={`Custom colour for ${surface.label}`}
+              aria-expanded={showingCustom}
+              onClick={() => toggleCustom(surface.id)}
+            >
+              Custom colour
+            </button>
 
             {showingCustom && (
               <input
                 className="theme-colour"
                 type="color"
                 aria-label={`Pick a custom colour for ${surface.label}`}
-                value={surface.value ?? '#141a2e'}
+                value={surface.value ?? '#0b1020'}
                 onChange={(event) => surface.onChange(event.target.value)}
               />
             )}

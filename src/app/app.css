@@ -583,8 +583,8 @@ a {
 }
 
 .swatch {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.3rem;
+  height: 1.3rem;
   padding: 0;
   border-radius: 0.3rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -600,20 +600,16 @@ a {
   outline-offset: 1px;
 }
 
-/* The custom picker is a swatch too, so the palette stays one row. */
-.swatch-custom {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px dashed var(--border-strong);
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1;
+/*
+ * The custom picker is a worded control, not a glyph: a lone "+" gave no clue
+ * what it opened. It sits after the swatches and reveals one picker.
+ */
+.custom-colour {
+  margin-top: 0;
+  white-space: nowrap;
 }
 
-.swatch-custom[aria-expanded='true'] {
-  border-style: solid;
+.custom-colour[aria-expanded='true'] {
   border-color: var(--accent);
   color: var(--text);
 }

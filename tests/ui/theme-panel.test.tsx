@@ -53,13 +53,13 @@ describe('ThemePanel', () => {
   it('saves only the colours that were changed', async () => {
     const { onSave, onClose } = renderPanel()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Rose for To Do' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Red for To Do' }))
     await userEvent.click(screen.getByRole('button', { name: 'Paper for Board background' }))
     await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
 
     expect(onSave).toHaveBeenCalledWith({
       background: '#f4efe6',
-      columns: { todo: '#4a1f2a' },
+      columns: { todo: '#5c1a24' },
     })
     expect(onClose).toHaveBeenCalled()
   })
@@ -79,16 +79,24 @@ describe('ThemePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Slate for Activity box' }))
     await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
 
-    expect(onSave).toHaveBeenCalledWith({ activity: '#141a2e' })
+    expect(onSave).toHaveBeenCalledWith({ activity: '#1c2333' })
   })
 
-  it('keeps the custom picker hidden until the Custom swatch is pressed', async () => {
+  it('keeps the custom picker hidden until the Custom colour control is pressed', async () => {
     renderPanel()
 
     expect(screen.queryByLabelText('Pick a custom colour for Tickets')).toBeNull()
 
     await userEvent.click(screen.getByRole('button', { name: 'Custom colour for Tickets' }))
     expect(screen.getByLabelText('Pick a custom colour for Tickets')).toBeTruthy()
+  })
+
+  it('labels the custom control in words rather than a glyph', () => {
+    renderPanel()
+
+    const control = screen.getByRole('button', { name: 'Custom colour for Tickets' })
+    expect(control.textContent).toBe('Custom colour')
+    expect(control.textContent).not.toBe('+')
   })
 
   it('uses a colour chosen from the custom picker', async () => {
@@ -104,7 +112,7 @@ describe('ThemePanel', () => {
   })
 
   it('clears a surface back to the default', async () => {
-    renderPanel({ columns: { review: '#3b2f63' } })
+    renderPanel({ columns: { review: '#402a63' } })
 
     const swatch = screen.getByRole('button', { name: 'Violet for Review' })
     expect(swatch.getAttribute('aria-pressed')).toBe('true')
