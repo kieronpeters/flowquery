@@ -131,13 +131,16 @@ export async function listBoardActivity(
 }
 
 /**
- * The people who can be filtered on: everyone assignable on the board, plus
- * any actor whose name no longer matches a profile.
+ * The people who can be filtered on: every human, plus anyone who has actually
+ * acted on this board.
  *
- * The second part matters more than it looks. Events store the actor's name as
- * it was at the time, so a person who later renames their GitHub account keeps
- * their old events under the old name — and without this those events would be
- * unreachable by the filter and the roster would claim nobody had acted.
+ * Three groups, deliberately:
+ *  - humans always, because a two-person team wants to pick either of them
+ *    whether or not they have done anything yet;
+ *  - agents only once they have events, because sixteen idle chips reading 0
+ *    are noise;
+ *  - any actor whose name no longer matches a profile. Names are frozen on the
+ *    event, so a renamed account would otherwise leave unfilterable history.
  *
  * Ordered by most recent event, because "who changed something lately" is the
  * question the filter is usually asked. People with no events sort last.
@@ -158,6 +161,7 @@ export async function listActivityActors(
                ON a.board_id = ? AND a.actor_name = p.display_name
             WHERE p.active = 1
             GROUP BY p.id
+           HAVING p.kind = 'human' OR COUNT(a.id) > 0
 
            UNION ALL
 

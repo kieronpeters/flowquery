@@ -92,7 +92,7 @@ Appearance is board administration, so it is human-only: the agent namespace has
 | `GET` | `/boards/{boardId}/tokens` | List: `id, label, tokenPrefix, createdAt, lastUsedAt, revokedAt`. Never the secret. |
 | `POST` | `/boards/{boardId}/tokens` | Create. Body `{ label }`. Returns `201` with `token` (**only time the plaintext is returned**) and the metadata. |
 | `DELETE` | `/boards/{boardId}/tokens/{tokenId}` | Revoke. `204`. Effective on the next request. |
-| `POST` | `/agent` (page) | Human-facing agent sign-in page; not an API endpoint. |
+| `GET` | `/agent` (page) | Human-facing agent sign-in page: paste a token to see the board it reaches. Not an API endpoint. |
 
 Plaintext token format: `fq_` + 32 CSPRNG bytes, base32. Displayed once with a copy control and a warning that it cannot be shown again (`AGT-002`).
 

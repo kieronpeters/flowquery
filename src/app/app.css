@@ -1173,6 +1173,66 @@ a {
   justify-content: space-between;
 }
 
+.token-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Agent access page ------------------------------------------------------ */
+
+.stack-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 26rem;
+  margin: 1.25rem 0 0;
+}
+
+.stack-form .button {
+  margin-top: 0;
+  align-self: flex-start;
+}
+
+.agent-result {
+  margin-top: 1.5rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.agent-board-name {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.agent-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.agent-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.agent-facts dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agent-facts dd {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
 .token-note {
   margin: 0.35rem 0 0.9rem;
   font-size: 0.82rem;

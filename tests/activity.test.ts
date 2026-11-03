@@ -241,20 +241,20 @@ describe('activity filters', () => {
     return result.page
   }
 
-  it('lists the board people with their event counts', async () => {
+  it('lists humans and anyone who acted, not sixteen idle agents', async () => {
     await seedTwoActors()
 
     const result = await page({ boardId: BOARD, limit: 50 })
-
     const counts = new Map(result.actors.map((actor) => [actor.name, actor.count]))
 
-    // Bob is an agent profile, so his events are counted against it.
+    // Humans are always offered, whether or not they have done anything yet.
+    expect(counts.get('Abdul')).toBe(0)
+
+    // Agents appear once they act: Bob has events.
     expect(counts.get('Bob')).toBe(1)
 
-    // Everyone assignable appears, even with nothing to their name yet: a
-    // filter list that hides people until they act is not a filter list.
-    expect(counts.get('Abdul')).toBe(0)
-    expect(result.actors.length).toBeGreaterThan(15)
+    // And an agent who has never acted stays out of the way.
+    expect(counts.has('Alex')).toBe(false)
 
     // Whoever acted most recently sorts first; people with no events sort last.
     expect(result.actors[0]!.name).toBe('Bob')
@@ -369,8 +369,8 @@ describe('activity filters', () => {
     }
 
     expect(body.events.map((event) => event.actorName)).toEqual(['Owner'])
-    expect(body.actors.length).toBeGreaterThan(15)
     expect(body.actors.some((actor) => actor.name === 'Bob')).toBe(true)
+    expect(body.actors.some((actor) => actor.name === 'Abdul')).toBe(true)
   })
 
   it('treats an empty actors parameter as no filter', async () => {
