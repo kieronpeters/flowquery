@@ -1,6 +1,6 @@
 # FlowQuery — Architecture and Technical Design
 
-**Status:** Authoritative technical design, 3 November 2026. Candidate choices marked "proposed" require the owner's approval before implementation.
+**Status:** Authoritative technical design, updated 3 November 2026 after implementation. Everything below describes what was built; where the original plan changed, the change and its reason are stated.
 **Constraint that shapes everything below:** zero recurring cost. Cloudflare Workers **Free** and D1 **Free** only.
 
 ---
@@ -70,20 +70,24 @@ Because the agent's board never comes from the request, `AGT-008` is true by con
 
 ## 5. Frontend
 
+What is actually in use, as built:
+
 | Concern | Choice | Status |
 |---|---|---|
-| Build | Vite | proposed |
-| Framework | React 19 + TypeScript (strict) | proposed |
-| Routing | React Router | proposed |
-| Server state | TanStack Query | proposed |
-| Styling | Tailwind CSS + design tokens from `design/DESIGN_DIRECTION.md` | proposed |
-| Drag & drop | dnd-kit (keyboard-accessible sensors) | proposed |
-| Validation | Zod schemas shared with the Worker | proposed |
+| Build | Vite | in use |
+| Framework | React 19 + TypeScript (strict) | in use |
+| Routing | React Router | in use |
+| Server state | **plain `fetch` in component state** | in use |
+| Styling | **hand-written CSS with custom properties** | in use |
+| Drag & drop | dnd-kit (keyboard sensors) | in use |
+| Validation | **hand-written validators in the service layer** | in use |
+
+**The last three were changed from the original proposal, and the reason matters:** TanStack Query, Tailwind and Zod were all considered and dropped. At this size each would add a dependency, a layer of indirection, or a build step without removing any real problem — the app has one cache, one stylesheet and about a dozen validation rules. If the board grows to the point where cache invalidation becomes fiddly, TanStack Query is the first thing to add back.
 
 Notes:
 
-- **Drag-and-drop must be optimistic but reconciled.** A drop updates the cache immediately, fires the move request, and on failure refetches and shows a non-blocking error. `TASK-012` guarantees the server refuses stale writes rather than corrupting order.
-- **Accessible alternative is part of the component, not a separate screen.** dnd-kit provides keyboard sensors; TASK-008 additionally requires an explicit "move to column" control on the task menu so the feature does not depend on a keyboard DnD implementation being perfect.
+- **Drag-and-drop is optimistic but reconciled.** A drop updates the view immediately, fires the move request, then replaces the whole board with the server's response. On `409` it refetches and says so rather than trying to repair the optimistic state locally.
+- **The keyboard alternative is a first-class path, not a fallback.** The task drawer has ← → across columns and ↑ ↓ within a column, which call the same endpoint as a drop. `TASK-008` therefore does not depend on a keyboard drag implementation behaving.
 - The design direction document describes a richer product (sidebar sections, reports, calendar). Only the MVP shell is in scope: header, board list, board. Preserved visual language, not preserved feature list.
 
 ## 6. Authentication seam
@@ -106,28 +110,25 @@ Whatever is chosen must satisfy `AUTH-003` (cookie flags), `AUTH-004` (hashed se
 
 ## 7. CPU budget (the real technical risk)
 
-Workers Free allows **10 ms of CPU per request**; I/O wait is not counted. A realistic board request:
+Workers Free allows **10 ms of CPU per request**; I/O wait is not counted. What a board request actually spends:
 
-| Work | CPU estimate |
+| Work | Reality |
 |---|---|
-| Cookie parse + HMAC session verify | < 1 ms |
-| Zod validation | < 0.5 ms |
-| D1 queries (2–4) | I/O (not CPU), plus result deserialisation |
-| JSON serialisation of board payload | 1–3 ms for ~200 tasks |
-| Router + framework overhead | < 1 ms |
+| Session check | SHA-256 of the cookie token + one indexed lookup. Measured at 0.033 ms |
+| Input validation | Hand-written checks, well under 0.1 ms |
+| D1 queries (2–4) | I/O — excluded from the CPU budget |
+| JSON serialisation | The dominant cost, measured below |
 
-Comfortably inside 10 ms at MVP scale, but the margin is thin at the top end.
-
-**Measured at M2** (Node/V8 on the developer machine, not workerd — order of magnitude only):
+**Measured** (Node/V8 on the developer machine, not workerd — order of magnitude only):
 
 | Tasks in board | Payload | Median assembly + serialise | p95 |
 |---|---|---|---|
-| 9 (demo board) | 4.8 KB | 0.032 ms | 0.057 ms |
-| 50 | 24.8 KB | 0.145 ms | 0.285 ms |
-| 200 | 98.0 KB | 0.546 ms | 0.838 ms |
-| 500 | 244.5 KB | 1.443 ms | 2.666 ms |
+| 9 (demo board) | 4.8 KB | 0.033 ms | 0.067 ms |
+| 50 | 24.8 KB | 0.154 ms | 0.406 ms |
+| 200 | 98.0 KB | 0.578 ms | 1.317 ms |
+| 500 | 244.5 KB | 1.620 ms | 2.702 ms |
 
-At 500 tasks the CPU-bound work uses roughly 15% of the budget, which confirms that the 500-character description cap (DEC-025) is a safety margin rather than a necessity at this scale. Re-measure if boards routinely exceed a few hundred tasks.
+The agent task list (50 tasks, one page) measures 0.137 ms median. At 500 tasks the CPU-bound work uses roughly 16% of the budget, which is why the 500-character description cap (DEC-025) is a safety margin rather than a necessity at this scale.
 
 Controls:
 
@@ -177,4 +178,4 @@ No ORM, no GraphQL, no tRPC, no state-management library, no component library, 
 
 ## 12. Ownership of technical decisions
 
-Architecture choices above marked "proposed" are mine to make and defend, but four of them are consequential enough to record explicitly in `DECISIONS.md`: the router, the absence of an ORM, the tasks-as-enum-of-status model, and the auth seam. All are reversible in a day; none is reversible after three months of code — which is why they are written down now, before code exists.
+The consequential choices are recorded in `DECISIONS.md`: the router, the absence of an ORM, tasks-as-an-enum-of-status, the authentication seam, and the three frontend libraries that were considered and dropped. Each was reversible in a day when it was made; none would be reversible after three months of code — which is why they were written down before implementation, and updated here after it.

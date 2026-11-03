@@ -28,7 +28,7 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 - First commit: documentation only
 - Project structure: `src/worker/` (routes, services, repositories, db), `src/app/` (React), `migrations/`, `tests/`
 - Toolchain: TypeScript strict, Vite, Hono, Vitest, ESLint, Prettier
-- Scripts: `dev`, `build`, `test`, `typecheck`, `lint`, `format` (`db:migrate:local` arrives in M2 with the D1 binding)
+- Scripts: `dev`, `build`, `test`, `typecheck`, `lint`, `format` (`db:migrate:local` came in M2 with the D1 binding)
 - OpenCode agents activated (`.opencode/agents/` + valid `opencode.jsonc`), verified discoverable
 - `GET /api/v1/health` as the infrastructure smoke endpoint, with tests for it and for the JSON-404 fallback
 - `README.md` with setup instructions verified from a clean clone

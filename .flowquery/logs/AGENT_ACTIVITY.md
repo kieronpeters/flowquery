@@ -4,6 +4,27 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Documentation reconciliation (Bob, current session)
+
+**Trigger:** the owner said "continue" at the deployment gate, which is blocked on Cloudflare authentication. Rather than repeat the request, I audited eight milestones of accumulated drift.
+
+**Found and fixed:**
+- `ARCHITECTURE.md` still listed **TanStack Query, Tailwind CSS and Zod** as the frontend stack. None of them were used. The table now states what is in use and why each was dropped; `DECISIONS.md` gains DEC-032 recording the decision.
+- The CPU table described "HMAC session verify" and "Zod validation". Sessions are opaque hashed tokens and validation is hand-written; the table now reflects that.
+- `MVP_SPECIFICATION.md` §9 opened with "The mechanism is an open decision (AUTH-01)" and then, twelve lines later, stated it was decided. Fixed.
+- `ARCHITECTURE.md` §12 said decisions were written "before code exists". Code exists.
+- `/api/v1/boards` implementation note still said M7; the API has been hardened since.
+- `design/DESIGN_DIRECTION.md` described a richer product than was built. Rewritten to record the visual language and explicitly list the eleven things in the concept images that do not exist.
+- `repository/SETUP_QUESTIONS.md` still pointed at `C:\repos\flowquery`, a path abandoned in M1. Rewritten as settled-vs-open.
+
+**Deliberately not changed:**
+- The `memory/` mirror stays. It is neutralised file by file and Git-tracked; deleting it has no functional benefit.
+- No signed-in name in the app header: the dashboard already shows it, and a per-page auth fetch would cost a request for no gain.
+
+**Not done:** no deployment, no resource, no cost. Cloudflare authentication is still absent.
+
+---
+
 ## 2026-11-03 — Deployment readiness check (Bob, current session)
 
 **Authorised:** nothing new. The owner said "continue", which does not constitute approval to create cloud resources, so no resource was created.

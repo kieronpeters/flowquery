@@ -141,7 +141,7 @@ Consequence to be documented in the UI: there is no recycle bin and no undo afte
 
 ## 9. Human authentication requirements
 
-The *mechanism* is an open decision (AUTH-01). These requirements bind whichever mechanism is chosen:
+The *mechanism* was an open decision (AUTH-01) and is now **decided: GitHub OAuth with a server-side allowlist**. These requirements bind it:
 
 1. Only the intended humans can obtain an account.
 2. Sessions survive a page reload and expire after a bounded idle period.

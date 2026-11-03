@@ -80,7 +80,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M7):** everything in this document is implemented, including the agent door. `/api/v1/openapi.json` serves the contract. The one absent piece is a human task **list** endpoint — the board view covers it, and the agent namespace has `/agent/tasks` with filters.
+> **Implementation status (post-M8):** everything in this document is implemented, including the agent door. `/api/v1/openapi.json` serves the contract. The one absent piece is a human task **list** endpoint — the board view covers it, and the agent namespace has `/agent/tasks` with filters.
 
 ## 5. Agent tokens (human)
 

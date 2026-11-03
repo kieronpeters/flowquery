@@ -59,6 +59,7 @@ Register: `docs/DECISIONS.md`.
 - `npm run bench` now covers the agent task list: 50 tasks map + serialise in 0.137 ms.
 - `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
 - `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
+- **Documentation reconciled against the build (M8+ pass):** `ARCHITECTURE.md` no longer claims TanStack Query, Tailwind or Zod; `MVP_SPECIFICATION.md` no longer calls AUTH-01 open; `DESIGN_DIRECTION.md` lists the eleven unbuilt features from the concept images; `repository/SETUP_QUESTIONS.md` no longer points at a path that does not exist.
 - Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
 - `npm run preflight` added as a deployment guard: it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified to fail on the placeholder and pass with a real id.
 - **Deployment is blocked on three things only the owner can provide:** `wrangler login`, a production GitHub OAuth app, and explicit approval. Plan: `docs/DEPLOYMENT_PLAN.md`.
@@ -114,6 +115,6 @@ Remote: none, and none authorised.
 - Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.
 - Activity writes are best-effort by design.
 - Seeded placeholder user (`usr_dev_owner`) must not exist in a production database.
-- `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
-- `repository/SETUP_QUESTIONS.md` predates the current plan.
-- `memory/` mirror is neutralised but still present; delete once history is comfortable.
+- `design/DESIGN_DIRECTION.md` describes the visual language and lists what was **not** built, so it cannot be mistaken for scope.
+- `repository/SETUP_QUESTIONS.md` records what is settled and what still needs the owner.
+- `memory/` mirror is neutralised but still present; kept deliberately (Git-tracked, costs nothing, deletion has no functional benefit).
