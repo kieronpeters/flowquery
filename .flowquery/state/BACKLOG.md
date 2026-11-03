@@ -55,11 +55,24 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 ## Awaiting approval
 
 ### M6 — Comments and activity
-- [ ] Comment add/list on a task, attributed to the acting human or Bob
-- [ ] `GET /api/v1/boards/:boardId/activity`, newest first, paginated
-- [ ] Activity recorded for create, edit, move, assign, reprioritise, comment, delete
-- [ ] Board UI: comments in the drawer; activity feed
-- [ ] Tests for COM-001…003 and ACT-001…004
+- [x] `POST/GET /api/v1/boards/:boardId/tasks/:taskId/comments`
+- [x] `GET /api/v1/boards/:boardId/activity` (newest first, keyset paginated)
+- [x] Activity for create, edit, move, comment, delete
+- [x] One event per real change; no event for reordering within a column
+- [x] Deletion event written with a null task reference so it survives the cascade
+- [x] Comments in the task drawer; board activity feed
+- [x] Tests for COM-001…003 and ACT-001…004 (21 cases)
+
+## Awaiting approval
+
+### M7 — Agent API and tokens
+- [ ] Token create/list/revoke per board, shown once, hashed at rest
+- [ ] `/api/v1/agent/*` namespace; board derived from the token
+- [ ] Reads: board, tasks (filtered), one task, comments, activity
+- [ ] Writes: create, edit, move, delete tasks; add comments
+- [ ] OpenAPI 3.1 document served by the app
+- [ ] Isolation suite: cross-board, revoked token, namespace boundary
+- [ ] `FLOWQUERY_API_TOKEN` convention documented
 
 ## Not yet authorised
 

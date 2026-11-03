@@ -20,6 +20,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { BoardView, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
+import { ActivityFeed } from './ActivityFeed'
 import { applyMove, locate } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 
@@ -90,6 +91,8 @@ export function BoardPage() {
   const [profiles, setProfiles] = useState<ProfileDto[]>([])
   const [drawer, setDrawer] = useState<DrawerState>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Bumped whenever board data changes, so the feed refetches.
+  const [activityKey, setActivityKey] = useState(0)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -117,6 +120,7 @@ export function BoardPage() {
       }
 
       setState({ kind: 'ok', view: (await response.json()) as BoardView })
+      setActivityKey((key) => key + 1)
     },
     [boardId, navigate],
   )
@@ -178,6 +182,7 @@ export function BoardPage() {
 
         const body = (await response.json()) as { board: BoardView }
         setState({ kind: 'ok', view: body.board })
+        setActivityKey((key) => key + 1)
         setNotice(null)
       } catch {
         setNotice('The board could not be reached. Refresh to resync.')
@@ -313,6 +318,8 @@ export function BoardPage() {
           ))}
         </div>
       </DndContext>
+
+      <ActivityFeed boardId={boardId ?? ''} refreshKey={activityKey} profiles={profiles} />
 
       {drawer && boardId && (
         <TaskDrawer

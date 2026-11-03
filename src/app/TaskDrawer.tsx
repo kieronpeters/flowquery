@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import type { ApiError, ProfileDto, TaskDto } from '../shared/api-types'
+import type { ApiError, CommentDto, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const
@@ -61,6 +61,11 @@ export function TaskDrawer(props: {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   // Bumped after a move so the drawer reloads the task's new position and version.
   const [reloadToken, setReloadToken] = useState(0)
+  const [comments, setComments] = useState<CommentDto[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(mode.kind === 'edit')
+  const [commentText, setCommentText] = useState('')
+  const [commentError, setCommentError] = useState<string | null>(null)
+  const [postingComment, setPostingComment] = useState(false)
 
   useEffect(() => {
     if (mode.kind !== 'edit') return
@@ -104,6 +109,62 @@ export function TaskDrawer(props: {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onClose])
+
+  useEffect(() => {
+    if (mode.kind !== 'edit') return
+
+    let cancelled = false
+
+    fetch(`/api/v1/boards/${boardId}/tasks/${mode.taskId}/comments`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return (await response.json()) as { comments: CommentDto[] }
+      })
+      .then((body) => {
+        if (!cancelled) {
+          setComments(body.comments)
+          setCommentsLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCommentsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [boardId, mode, reloadToken])
+
+  async function postComment() {
+    if (mode.kind !== 'edit' || postingComment) return
+
+    const body = commentText.trim()
+    if (!body) return
+
+    setPostingComment(true)
+    setCommentError(null)
+
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}/tasks/${mode.taskId}/comments`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ body }),
+      })
+
+      if (!response.ok) {
+        const error = (await response.json().catch(() => null)) as ApiError | null
+        setCommentError(error?.error.message ?? 'Could not add the comment.')
+        return
+      }
+
+      const created = (await response.json()) as { comment: CommentDto }
+      setComments((current) => [...current, created.comment])
+      setCommentText('')
+      await onChanged()
+    } finally {
+      setPostingComment(false)
+    }
+  }
 
   function update<K extends keyof Form>(key: K, value: Form[K]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -403,6 +464,59 @@ export function TaskDrawer(props: {
               )}
             </div>
           </form>
+        )}
+
+        {mode.kind === 'edit' && !loading && (
+          <section className="comments" aria-labelledby="comments-heading">
+            <h3 id="comments-heading" className="section-heading">
+              Comments
+            </h3>
+
+            {commentsLoading ? (
+              <p role="status">Loading comments…</p>
+            ) : comments.length === 0 ? (
+              <p className="empty">No comments yet.</p>
+            ) : (
+              <ul className="comment-list">
+                {comments.map((comment) => (
+                  <li key={comment.id} className="comment">
+                    <p className="comment-meta">
+                      <strong>{comment.authorName}</strong> ·{' '}
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </p>
+                    {/* Rendered as text, never as HTML (COM-003). */}
+                    <p className="comment-body">{comment.body}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <label className="field">
+              <span className="field-label">Add a comment</span>
+              <textarea
+                className="input textarea"
+                rows={3}
+                value={commentText}
+                onChange={(event) => setCommentText(event.target.value)}
+                maxLength={10000}
+              />
+            </label>
+
+            {commentError && (
+              <p className="alert" role="alert">
+                {commentError}
+              </p>
+            )}
+
+            <button
+              className="button"
+              type="button"
+              onClick={() => void postComment()}
+              disabled={postingComment || !commentText.trim()}
+            >
+              Add comment
+            </button>
+          </section>
         )}
       </aside>
     </div>

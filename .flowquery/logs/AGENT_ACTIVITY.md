@@ -4,6 +4,36 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M6 comments and activity (Bob, current session)
+
+**Authorised:** M6 — comments and activity.
+
+**Performed:**
+- `repositories/activity.ts`: event statement builder, board feed with keyset pagination.
+- `repositories/comments.ts`: append-only insert (batched with its activity row) and board-scoped listing via a join.
+- `services/comments.ts`: validation, text-only storage, activity on comment.
+- `services/activity.ts`: limit/before validation, board existence check.
+- `services/tasks.ts`: activity for create, each changed field, column moves and deletion. Inside a column, reordering records nothing.
+- `routes/comments.ts`, `routes/activity.ts`, registered onto the board router.
+- UI: comments in the task drawer; `ActivityFeed` below the board with "Load older".
+
+**Verified (actual output):**
+- 113 tests, 9 files; typecheck, lint, build clean.
+- Comment with `<script>` stored and returned verbatim; browser rendered it as text, `window.__pwned` stayed false, zero injected elements.
+- Activity: create, priority (with from/to), description (no text stored), one move event per column change, none for reorder, comment, delete.
+- Feed ordering and cursor pagination verified at service level with explicit timestamps.
+- Browser: "created", "commented" and "moved" all rendered newest-first.
+
+**Found and fixed:** the `task.deleted` event was being removed by the same cascade that removed the task, so deletion left no trace. It is now written with `task_id = NULL` and survives; task-scoped events still cascade. Recorded in `DATABASE_DESIGN.md` §9.
+
+**Trade-off accepted:** activity writes are best-effort. A failed insert is logged and does not fail the user's action, because failing a successful edit invites a retry that duplicates it.
+
+**Not done:** no agent API, no deployment.
+
+**Outcome:** M6 complete; awaiting approval for M7.
+
+---
+
 ## 2026-11-03 — M5b ordering and drag-and-drop (Bob, current session)
 
 **Authorised:** M5b — ordering, drag-and-drop, keyboard alternative.

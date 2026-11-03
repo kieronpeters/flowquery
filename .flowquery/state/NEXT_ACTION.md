@@ -1,14 +1,12 @@
 # Next Action
 
-**M5 is complete. Two things from you before M6.**
+**M6 is complete. Three things from you.**
 
-## 1. Ten seconds of manual checking
+## 1. Two quick manual checks (still outstanding)
 
-Two things automation could not verify:
+**Drag-and-drop.** Open a board and drag a card to another column, and within a column. Automation could not complete a drag gesture; the movement *behaviour* is proven through the keyboard buttons and 113 tests, but the gesture needs a human.
 
-**Drag-and-drop.** Open a board and drag a card to another column, and drag one within its column. It should move immediately and stay put. The move logic itself is verified — an API call, a pure ordering function with 13 tests, and the drawer's move buttons all pass — but the drag gesture needs a human.
-
-**The live GitHub sign-in.** Carried since M3, and now blocking any realistic use of the app. Five minutes:
+**The live GitHub sign-in.** Carried since M3 and still the biggest gap. Five minutes:
 
 1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
    - Homepage URL: `http://localhost:5173`
@@ -16,20 +14,29 @@ Two things automation could not verify:
 2. `cp .dev.vars.example .dev.vars`, fill in client id/secret and `AUTH_ALLOWLIST="<your id>:Kieron,<friend id>:Friend"`.
 3. `npm run db:reset && npm run dev`.
 
-## 2. Approve M6 — comments and activity
+## 2. Approve M7 — Bob's agent API
 
-- Comments per task: add, list, attributed to the acting human or Bob
-- Append-only activity: created, edited, moved, assigned, reprioritised, commented, deleted
-- Board-level activity feed, newest first, paginated
-- Comment body rendered as text, never HTML
-- Tests for COM-001…003 and ACT-001…004
+This is the milestone that makes the product do what it was built for: Bob working the backlog through an API instead of a browser.
 
-## A caution about M6
+- `AgentCredential` flow: create a labelled token for a board, shown once, revocable
+- Token stored as a SHA-256 hash; `last_used_at`; revocation effective immediately
+- `/api/v1/agent/*` namespace: board derived from the token, never from the request
+- Reads: board, tasks (with filters), one task, comments, activity
+- Writes: create, edit, move, delete tasks; add comments
+- OpenAPI 3.1 document served by the app
+- Isolation suite: board A's token cannot read or write board B; agent cannot reach human endpoints or board administration
+- `FLOWQUERY_API_TOKEN` convention documented for OpenCode
 
-Activity is the one place where "helpful" enrichment becomes a liability: once you start recording diffs of every field, the payload grows and the history becomes noisy. I plan to record **what changed and by whom**, with a small structured payload (`from`/`to`), and nothing else. If the history later feels thin, adding detail is easy; removing it is not.
+## The security work that matters here
 
-## Not in M6
+M7 is where two doors meet the same data. The risk is not a clever attacker; it is a forgotten `WHERE board_id = ?` or a route that trusts a board id from the body. So:
 
-The agent API (M7), notifications (dropped), per-user preferences.
+1. The agent namespace **cannot** accept a board id from the client — the token *is* the scope.
+2. Every agent route is tested against a second board, not just the happy path.
+3. The isolation tests run on the real schema, not a fake.
 
-**Current gate: owner review of M5.**
+## Not in M7
+
+Notifications (dropped). Deployment (M9, separate approval).
+
+**Current gate: owner review of M6.**

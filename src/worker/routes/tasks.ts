@@ -90,6 +90,7 @@ export function registerTaskRoutes(router: Hono<AppEnv>): void {
       boardId: c.req.param('boardId'),
       taskId: c.req.param('taskId'),
       body,
+      actor: actorOf(c),
     })
 
     if (result.kind === 'not_found') {
@@ -147,6 +148,7 @@ export function registerTaskRoutes(router: Hono<AppEnv>): void {
       boardId: c.req.param('boardId'),
       taskId: c.req.param('taskId'),
       body,
+      actor: actorOf(c),
     })
 
     if (result.kind === 'not_found') {
@@ -182,6 +184,7 @@ export function registerTaskRoutes(router: Hono<AppEnv>): void {
     const removed = await removeTask(c.env.DB, {
       boardId: c.req.param('boardId'),
       taskId: c.req.param('taskId'),
+      actor: actorOf(c),
     })
 
     if (!removed) {

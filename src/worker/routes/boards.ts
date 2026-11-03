@@ -3,6 +3,8 @@ import type { Context } from 'hono'
 
 import type { AppEnv } from '../env'
 import { requireSession } from '../middleware/session'
+import { registerActivityRoutes } from './activity'
+import { registerCommentRoutes } from './comments'
 import { registerTaskRoutes } from './tasks'
 import {
   createBoard,
@@ -134,5 +136,7 @@ boardRoutes.delete('/:boardId', async (c) => {
   return c.body(null, 204)
 })
 
-// Task routes share this router's session middleware.
+// Task, comment and activity routes share this router's session middleware.
 registerTaskRoutes(boardRoutes)
+registerCommentRoutes(boardRoutes)
+registerActivityRoutes(boardRoutes)

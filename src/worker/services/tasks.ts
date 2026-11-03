@@ -4,6 +4,7 @@ import type { TaskDto } from '../../shared/api-types'
 import { COLUMN_KEYS, isColumnKey, type ColumnKey } from '../../shared/columns'
 import type { TaskRow } from '../domain/types'
 import { randomId } from '../lib/ids'
+import { activityStatement, type ActivityEventInput } from '../repositories/activity'
 import { getBoardById } from '../repositories/boards'
 import {
   deleteTask,
@@ -37,6 +38,45 @@ export type Actor = {
 function isControlFree(value: string): boolean {
   // eslint-disable-next-line no-control-regex
   return !/[\u0000-\u001f\u007f]/.test(value)
+}
+
+/**
+ * Best-effort history.
+ *
+ * If this fails the user's action still stands: failing the request would make
+ * a successful edit look broken and invite a retry that duplicates it. The
+ * failure is logged loudly instead. Recorded as a known trade-off in the
+ * handoff — one history row is worth less than a trustworthy edit.
+ */
+async function recordActivity(db: D1Database, event: ActivityEventInput): Promise<void> {
+  try {
+    await activityStatement(db, event).run()
+  } catch (error) {
+    console.warn('Activity could not be recorded', error instanceof Error ? error.name : 'unknown')
+  }
+}
+
+function eventFor(
+  input: {
+    boardId: string
+    taskId: string | null
+    actor: Actor
+    now: number
+  },
+  eventType: string,
+  payload: Record<string, unknown>,
+): ActivityEventInput {
+  return {
+    id: randomId('act'),
+    boardId: input.boardId,
+    taskId: input.taskId,
+    actorType: input.actor.type,
+    actorId: input.actor.id,
+    actorName: input.actor.name,
+    eventType,
+    payload,
+    createdAt: input.now,
+  }
 }
 
 export function validateTitle(
@@ -178,6 +218,14 @@ export async function createTask(
   const created = await getTaskById(db, input.boardId, id)
   if (!created) throw new Error('Task creation did not persist')
 
+  await recordActivity(
+    db,
+    eventFor({ boardId: input.boardId, taskId: id, actor: input.actor, now }, 'task.created', {
+      title: title.value,
+      status: status.value,
+    }),
+  )
+
   return { kind: 'ok', task: await toDto(db, created) }
 }
 
@@ -206,11 +254,14 @@ export async function editTask(
     boardId: string
     taskId: string
     body: Record<string, unknown>
+    actor: Actor
     now?: number
   },
 ): Promise<UpdateResult> {
   const existing = await getTaskById(db, input.boardId, input.taskId)
   if (!existing) return { kind: 'not_found' }
+
+  const now = input.now ?? Date.now()
 
   const fields: FieldErrors = {}
   const update: Parameters<typeof updateTask>[1]['fields'] = {}
@@ -273,11 +324,20 @@ export async function editTask(
     taskId: input.taskId,
     fields: update,
     expectedVersion,
-    now: input.now ?? Date.now(),
+    now,
   })
 
   if (outcome === 'not_found') return { kind: 'not_found' }
   if (outcome === 'conflict') return { kind: 'conflict' }
+
+  await recordChanges(db, {
+    boardId: input.boardId,
+    taskId: input.taskId,
+    actor: input.actor,
+    now,
+    existing,
+    update,
+  })
 
   const updated = await getTaskById(db, input.boardId, input.taskId)
   if (!updated) return { kind: 'not_found' }
@@ -285,11 +345,91 @@ export async function editTask(
   return { kind: 'ok', task: await toDto(db, updated) }
 }
 
+/** One event per field that actually changed, and nothing for the rest. */
+async function recordChanges(
+  db: D1Database,
+  input: {
+    boardId: string
+    taskId: string
+    actor: Actor
+    now: number
+    existing: TaskRow
+    update: Parameters<typeof updateTask>[1]['fields']
+  },
+): Promise<void> {
+  const base = { boardId: input.boardId, taskId: input.taskId, actor: input.actor, now: input.now }
+  const { existing, update } = input
+  const events: ActivityEventInput[] = []
+
+  if (update.title !== undefined && update.title !== existing.title) {
+    events.push(eventFor(base, 'task.title_changed', { from: existing.title, to: update.title }))
+  }
+
+  if (update.description !== undefined && update.description !== existing.description) {
+    // The body is not stored in the payload: it can be 20,000 characters and
+    // a feed is not a place for it.
+    events.push(eventFor(base, 'task.description_changed', {}))
+  }
+
+  if (update.priority !== undefined && update.priority !== existing.priority) {
+    events.push(
+      eventFor(base, 'task.priority_changed', { from: existing.priority, to: update.priority }),
+    )
+  }
+
+  if (update.dueDate !== undefined && update.dueDate !== existing.due_date) {
+    events.push(
+      eventFor(base, 'task.due_date_changed', { from: existing.due_date, to: update.dueDate }),
+    )
+  }
+
+  if (
+    update.assigneeProfileId !== undefined &&
+    update.assigneeProfileId !== existing.assignee_profile_id
+  ) {
+    events.push(
+      eventFor(base, 'task.assignee_changed', {
+        from: existing.assignee_profile_id,
+        to: update.assigneeProfileId,
+      }),
+    )
+  }
+
+  if (update.status !== undefined && update.status !== existing.status) {
+    events.push(eventFor(base, 'task.moved', { from: existing.status, to: update.status }))
+  }
+
+  for (const event of events) await recordActivity(db, event)
+}
+
 export async function removeTask(
   db: D1Database,
-  input: { boardId: string; taskId: string },
+  input: { boardId: string; taskId: string; actor: Actor; now?: number },
 ): Promise<boolean> {
-  return await deleteTask(db, input.boardId, input.taskId)
+  const task = await getTaskById(db, input.boardId, input.taskId)
+  if (!task) return false
+
+  const deleted = await deleteTask(db, input.boardId, input.taskId)
+  if (!deleted) return false
+
+  await recordActivity(
+    db,
+    eventFor(
+      {
+        boardId: input.boardId,
+        // Deliberately null: a deletion event that pointed at the task would be
+        // removed by the same cascade that removes the task, leaving the board
+        // with no record that it ever existed.
+        taskId: null,
+        actor: input.actor,
+        now: input.now ?? Date.now(),
+      },
+      'task.deleted',
+      { title: task.title },
+    ),
+  )
+
+  return true
 }
 
 export type MoveResult =
@@ -311,6 +451,7 @@ export async function moveTask(
     boardId: string
     taskId: string
     body: Record<string, unknown>
+    actor: Actor
     now?: number
   },
 ): Promise<MoveResult> {
@@ -377,6 +518,18 @@ export async function moveTask(
   }
 
   await renumberColumn(db, input.boardId, target, finalTarget)
+
+  // Reordering within a column is not history worth recording; changing column is.
+  if (!sameColumn) {
+    await recordActivity(
+      db,
+      eventFor(
+        { boardId: input.boardId, taskId: input.taskId, actor: input.actor, now },
+        'task.moved',
+        { from: task.status, to: target },
+      ),
+    )
+  }
 
   const [board, updated] = await Promise.all([
     loadBoardView(db, input.boardId),

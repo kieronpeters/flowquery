@@ -209,6 +209,6 @@ Two humans, one to five boards, low hundreds of tasks, thousands of activity row
 - Board delete cascades to tasks, comments, activity and tokens in one transaction (`BOARD-005`).
 - Task delete cascades to its comments and its activity rows.
 
-  **Consequence worth stating plainly:** deleting a task also deletes the record that it existed. If an audit trail matters more than tidy data later, the change is to null the task reference instead of cascading. That is not the current decision.
+  **Exception, added in M6:** the `task.deleted` activity row is written with `task_id = NULL` so it survives the cascade. Without that, deleting a task would erase the only record that it ever existed — the history would quietly become false. Other task-scoped events still cascade, because they describe a task that no longer exists.
 - Session rows expire and are deleted lazily on use, plus opportunistically during sign-in.
 - Backups are the only recovery mechanism after a confirmed delete. See `SECURITY_AND_AUTH.md`.

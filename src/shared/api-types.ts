@@ -56,6 +56,30 @@ export type ProfileDto = {
   avatarPath: string | null
 }
 
+export type CommentDto = {
+  id: string
+  taskId: string
+  authorType: 'human' | 'agent'
+  authorName: string
+  body: string
+  createdAt: string
+}
+
+export type ActivityDto = {
+  id: string
+  taskId: string | null
+  actorType: 'human' | 'agent' | 'system'
+  actorName: string
+  eventType: string
+  payload: Record<string, unknown>
+  createdAt: string
+}
+
+export type ActivityPageDto = {
+  events: ActivityDto[]
+  nextBefore: number | null
+}
+
 export type ApiError = {
   error: {
     code: string

@@ -98,6 +98,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M6 — Comments and activity — M
 
+**Status: complete 2026-11-03.**
+
 **Goal:** the board explains its own history.
 
 - Comment add/list with author attribution

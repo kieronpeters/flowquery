@@ -80,7 +80,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M5b):** board and task management are implemented end to end, including moves with drag-and-drop and a keyboard alternative. The task **list** endpoint is still not implemented — the board view returns tasks per column, and the agent API (M7) will add filtering. Agent tokens remain unimplemented (M7).
+> **Implementation status (M6):** boards, tasks, comments and the activity feed are implemented end to end. The task **list** endpoint is still absent — the board view returns tasks per column, and the agent API (M7) will add filtering. Agent tokens remain unimplemented (M7).
 
 ## 5. Agent tokens (human)
 
