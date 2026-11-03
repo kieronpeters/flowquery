@@ -780,6 +780,154 @@ a {
   border-top: 1px solid var(--border);
 }
 
+/*
+ * A themed activity box replaces the hairline rule with a full surface, so the
+ * section reads as a panel rather than a continuation of the page.
+ */
+.activity[data-custom='true'] {
+  padding: 1.15rem 1.25rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--activity-fg) 24%, transparent);
+  border-radius: 0.75rem;
+  color: var(--activity-fg);
+}
+
+.activity-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.activity-order {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.activity[data-custom='true'] .activity-order {
+  color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
+}
+
+.activity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin: 0.75rem 0 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity[data-custom='true'] .activity-filters {
+  border-color: color-mix(in srgb, var(--activity-fg) 18%, transparent);
+}
+
+.activity-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.activity-filter-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.activity[data-custom='true'] .activity-filter-label,
+.activity[data-custom='true'] legend.activity-filter-label {
+  color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
+}
+
+.activity-select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.activity[data-custom='true'] .activity-select {
+  border-color: color-mix(in srgb, var(--activity-fg) 32%, transparent);
+  background: transparent;
+  color: var(--activity-fg);
+}
+
+/* Native dropdowns paint their own list; keep the closed control legible. */
+.activity[data-custom='true'] .activity-select option {
+  color: #0b1020;
+  background: #ffffff;
+}
+
+.activity-people {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* A long roster must not push the feed off the screen. */
+  max-height: 6.5rem;
+  overflow-y: auto;
+}
+
+.activity-people legend {
+  float: left;
+  margin-right: 0.45rem;
+}
+
+.activity-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.activity[data-custom='true'] .activity-person {
+  border-color: color-mix(in srgb, var(--activity-fg) 28%, transparent);
+}
+
+.activity-person:hover {
+  border-color: var(--accent);
+}
+
+.activity-person input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.activity-person-count {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.activity[data-custom='true'] .activity-person-count {
+  color: color-mix(in srgb, var(--activity-fg) 60%, transparent);
+}
+
+.activity[data-custom='true'] .button {
+  border-color: color-mix(in srgb, var(--activity-fg) 32%, transparent);
+  background: transparent;
+  color: var(--activity-fg);
+}
+
+.activity[data-custom='true'] .button:hover:not(:disabled) {
+  border-color: var(--activity-fg);
+}
+
+.activity[data-custom='true'] .empty,
+.activity[data-custom='true'] .activity-when {
+  color: color-mix(in srgb, var(--activity-fg) 70%, transparent);
+}
+
 .activity-list {
   list-style: none;
   margin: 0 0 1rem;
@@ -792,6 +940,10 @@ a {
 .activity-item {
   font-size: 0.85rem;
   color: var(--text);
+}
+
+.activity[data-custom='true'] .activity-item {
+  color: var(--activity-fg);
 }
 
 .activity-who {

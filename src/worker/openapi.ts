@@ -433,6 +433,18 @@ export const openApiDocument = {
             schema: { type: 'integer' },
             description: 'Cursor from nextBefore',
           },
+          {
+            name: 'since',
+            in: 'query',
+            schema: { type: 'integer' },
+            description: 'Inclusive lower bound on createdAt, in milliseconds',
+          },
+          {
+            name: 'actors',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'Comma-separated actor names; omit for everyone',
+          },
         ],
         responses: { '200': json({ type: 'object' }) },
       },

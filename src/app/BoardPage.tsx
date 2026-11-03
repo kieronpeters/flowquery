@@ -420,7 +420,12 @@ export function BoardPage() {
         </DragOverlay>
       </DndContext>
 
-      <ActivityFeed boardId={boardId ?? ''} refreshKey={activityKey} profiles={profiles} />
+      <ActivityFeed
+        boardId={boardId ?? ''}
+        refreshKey={activityKey}
+        profiles={profiles}
+        theme={theme}
+      />
 
       {drawer && boardId && (
         <TaskDrawer

@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import type { ActivityDto, ActivityPageDto, ProfileDto } from '../shared/api-types'
+import type {
+  ActivityActorDto,
+  ActivityDto,
+  ActivityPageDto,
+  BoardTheme,
+  ProfileDto,
+} from '../shared/api-types'
 import { COLUMNS } from '../shared/columns'
+import {
+  ACTIVITY_PERIODS,
+  activityQuery,
+  periodStart,
+  type ActivityPeriod,
+} from './activity-filter'
+import { inkFor } from './theme'
 
 function columnName(value: unknown): string {
   const column = COLUMNS.find((item) => item.key === value)
@@ -61,20 +74,35 @@ export function ActivityFeed({
   boardId,
   refreshKey,
   profiles,
+  theme,
 }: {
   boardId: string
   refreshKey: number
   profiles: ProfileDto[]
+  theme?: BoardTheme
 }) {
   const [events, setEvents] = useState<ActivityDto[]>([])
+  const [roster, setRoster] = useState<ActivityActorDto[]>([])
   const [nextBefore, setNextBefore] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [period, setPeriod] = useState<ActivityPeriod>('all')
+  const [selected, setSelected] = useState<string[]>([])
+
+  const since = periodStart(period)
+  // A string, so the effect compares by value and does not refetch on every
+  // render just because the array identity changed.
+  const actorKey = selected.join(',')
+
   const fetchPage = useCallback(
     async (before?: number): Promise<ActivityPageDto> => {
-      const query = before ? `?before=${before}` : ''
+      const query = activityQuery({
+        since,
+        actors: actorKey === '' ? [] : actorKey.split(','),
+        before,
+      })
       const response = await fetch(`/api/v1/boards/${boardId}/activity${query}`)
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
@@ -87,9 +115,10 @@ export function ActivityFeed({
       return {
         events: body.events,
         nextBefore: typeof body.nextBefore === 'number' ? body.nextBefore : null,
+        actors: Array.isArray(body.actors) ? body.actors : [],
       }
     },
-    [boardId],
+    [boardId, since, actorKey],
   )
 
   useEffect(() => {
@@ -101,6 +130,7 @@ export function ActivityFeed({
         if (cancelled) return
         setEvents(page.events)
         setNextBefore(page.nextBefore)
+        setRoster(page.actors)
         setError(null)
       })
       .catch(() => {
@@ -130,18 +160,96 @@ export function ActivityFeed({
     }
   }
 
+  function toggleActor(name: string) {
+    setSelected((current) =>
+      current.includes(name) ? current.filter((item) => item !== name) : [...current, name],
+    )
+  }
+
+  function resetFilters() {
+    setPeriod('all')
+    setSelected([])
+  }
+
+  const filtered = period !== 'all' || selected.length > 0
+  const background = theme?.activity
+
   return (
-    <section className="activity" aria-labelledby="activity-heading">
-      <h2 id="activity-heading" className="section-heading">
-        Activity
-      </h2>
+    <section
+      className="activity"
+      data-custom={background ? 'true' : undefined}
+      style={
+        background
+          ? ({ background, '--activity-fg': inkFor(background) } as React.CSSProperties)
+          : undefined
+      }
+      aria-labelledby="activity-heading"
+    >
+      <div className="activity-head">
+        <h2 id="activity-heading" className="section-heading">
+          Activity
+        </h2>
+        <span className="activity-order">Newest first</span>
+      </div>
+
+      <div className="activity-filters">
+        <label className="activity-filter">
+          <span className="activity-filter-label">Period</span>
+          <select
+            className="activity-select"
+            value={period}
+            onChange={(event) => setPeriod(event.target.value as ActivityPeriod)}
+          >
+            {ACTIVITY_PERIODS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {roster.length > 0 && (
+          <fieldset className="activity-people">
+            <legend className="activity-filter-label">Who</legend>
+
+            {roster.map((actor) => (
+              <label className="activity-person" key={actor.name}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(actor.name)}
+                  onChange={() => toggleActor(actor.name)}
+                />
+                <span>{actor.name}</span>
+                <span className="activity-person-count" aria-hidden="true">
+                  {actor.count}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+
+        {filtered && (
+          <button className="button button-quiet inline" type="button" onClick={resetFilters}>
+            Reset filters
+          </button>
+        )}
+      </div>
 
       {loading ? (
         <p role="status">Loading activity…</p>
       ) : error ? (
         <p className="error">{error}</p>
       ) : events.length === 0 ? (
-        <p className="empty">Nothing has happened on this board yet.</p>
+        filtered ? (
+          <p className="empty">
+            Nothing matches these filters.{' '}
+            <button className="button button-quiet inline" type="button" onClick={resetFilters}>
+              Show everything
+            </button>
+          </p>
+        ) : (
+          <p className="empty">Nothing has happened on this board yet.</p>
+        )
       ) : (
         <>
           <ol className="activity-list">

@@ -77,7 +77,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 | `GET` | `/boards/{boardId}` | **Board view:** board metadata, the five columns in order, and each column's tasks ordered by position. Descriptions are truncated at 500 characters with `descriptionTruncated` set. `404` if absent. |
 | `PATCH` | `/boards/{boardId}` | Rename. Body `{ name }`. ID is unchanged (`BOARD-003`). |
 | `DELETE` | `/boards/{boardId}` | **Permanent.** Requires `{ "confirmName": "<exact board name>" }` — the typed name *is* the confirmation. `409` if it does not match. Cascades to tasks, comments, activity and tokens. |
-| `PUT` | `/boards/{boardId}/theme` | Board appearance. Body `{ background?, columns?, tickets? }`; colours are `#rrggbb` and stored lower case. Keys absent from the body are cleared, so `{}` restores every default. `400` on an unknown key, column or colour format. |
+| `PUT` | `/boards/{boardId}/theme` | Board appearance. Body `{ background?, columns?, tickets?, activity? }`; colours are `#rrggbb` and stored lower case. Keys absent from the body are cleared, so `{}` restores every default. `400` on an unknown key, column or colour format. |
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
@@ -108,7 +108,7 @@ Plaintext token format: `fq_` + 32 CSPRNG bytes, base32. Displayed once with a c
 | `POST` | `/boards/{boardId}/tasks/{taskId}/move` | Move/reorder. |
 | `GET` | `/boards/{boardId}/tasks/{taskId}/comments` | List comments, oldest first. |
 | `POST` | `/boards/{boardId}/tasks/{taskId}/comments` | Add comment. `201`. |
-| `GET` | `/boards/{boardId}/activity` | Board activity, newest first, paginated. |
+| `GET` | `/boards/{boardId}/activity` | Board activity, newest first, paginated. Query: `limit` (1-50), `before` (cursor from `nextBefore`), `since` (inclusive lower bound in milliseconds), `actors` (comma-separated names, at most 20). The response also carries `actors`: everyone who has acted on the board, with an event count — the filter list, unaffected by the filter itself. |
 | `GET` | `/boards/{boardId}/profiles` | Superseded: profiles are global, not board-scoped. Use `GET /profiles`. |
 | `GET` | `/profiles` | Assignable team profiles (id, display name, role, kind). |
 | `GET` | `/columns` | The five fixed columns (constant, same for every board). |

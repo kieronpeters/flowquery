@@ -10,6 +10,8 @@ export function registerActivityRoutes(router: Hono<AppEnv>): void {
       boardId: c.req.param('boardId'),
       limit: c.req.query('limit'),
       before: c.req.query('before'),
+      since: c.req.query('since'),
+      actors: c.req.query('actors'),
     })
 
     if (result.kind === 'not_found') {

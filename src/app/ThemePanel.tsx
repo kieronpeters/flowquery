@@ -8,7 +8,7 @@ type Surface = {
   id: string
   label: string
   value: string | undefined
-  /** Colour the preview shows behind "Aa". */
+  /** Colour the preview shows behind "Aa" — the thing that text actually sits on. */
   preview: string | undefined
   onChange: (value: string | undefined) => void
 }
@@ -35,6 +35,7 @@ export function ThemePanel({
   const [background, setBackground] = useState<string | undefined>(initial.background)
   const [columns, setColumns] = useState<Partial<Record<ColumnKey, string>>>(initial.columns ?? {})
   const [tickets, setTickets] = useState<string | undefined>(initial.tickets)
+  const [activity, setActivity] = useState<string | undefined>(initial.activity)
   const [custom, setCustom] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +63,7 @@ export function ThemePanel({
       if (background) theme.background = background
       if (Object.keys(columns).length > 0) theme.columns = columns
       if (tickets) theme.tickets = tickets
+      if (activity) theme.activity = activity
 
       const message = await onSave(theme)
       if (message) setError(message)
@@ -76,14 +78,14 @@ export function ThemePanel({
       id: 'board',
       label: 'Board background',
       value: background,
-      preview: background,
+      preview: background ? cardBackground(background) : undefined,
       onChange: setBackground,
     },
     ...COLUMNS.map((column) => ({
       id: column.key,
       label: column.name,
       value: columns[column.key],
-      preview: columns[column.key],
+      preview: columns[column.key] ? cardBackground(columns[column.key]!) : undefined,
       onChange: (value: string | undefined) => setColumn(column.key, value),
     })),
     {
@@ -92,6 +94,13 @@ export function ThemePanel({
       value: tickets,
       preview: tickets,
       onChange: setTickets,
+    },
+    {
+      id: 'activity',
+      label: 'Activity box',
+      value: activity,
+      preview: activity,
+      onChange: setActivity,
     },
   ]
 
@@ -156,11 +165,8 @@ export function ThemePanel({
             <span
               className="theme-preview"
               style={
-                surface.value
-                  ? {
-                      background: cardBackground(surface.value),
-                      color: inkFor(cardBackground(surface.value)),
-                    }
+                surface.preview
+                  ? { background: surface.preview, color: inkFor(surface.preview) }
                   : undefined
               }
             >
@@ -201,6 +207,7 @@ export function ThemePanel({
             setBackground(undefined)
             setColumns({})
             setTickets(undefined)
+            setActivity(undefined)
           }}
           disabled={busy}
         >

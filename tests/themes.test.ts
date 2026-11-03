@@ -58,6 +58,7 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
       background: '#101820',
       columns: { backlog: '#1F2A44', done: '#123524' },
       tickets: '#1E2433',
+      activity: '#1A1F2B',
     })
 
     expect(response.status).toBe(200)
@@ -66,12 +67,16 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
       background: '#101820',
       columns: { backlog: '#1f2a44', done: '#123524' },
       tickets: '#1e2433',
+      activity: '#1a1f2b',
     })
 
     const board = await app.request('/api/v1/boards/brd_demo', { headers: { cookie } }, env(db))
-    const view = (await board.json()) as { theme: { background?: string; tickets?: string } }
+    const view = (await board.json()) as {
+      theme: { background?: string; tickets?: string; activity?: string }
+    }
     expect(view.theme.background).toBe('#101820')
     expect(view.theme.tickets).toBe('#1e2433')
+    expect(view.theme.activity).toBe('#1a1f2b')
   })
 
   it('accepts a ticket colour on its own', async () => {
@@ -113,6 +118,8 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
       { tickets: 'red' },
       { tickets: '#1234' },
       { tickets: '#12345z' },
+      { activity: 'dark' },
+      { activity: '#fff' },
     ]
 
     for (const body of bad) {

@@ -57,6 +57,8 @@ export type BoardTheme = {
   columns?: Partial<Record<ColumnKey, string>>
   /** Card background for the whole board. Falls back to a tint of the column. */
   tickets?: string
+  /** Background of the activity box at the foot of the board. */
+  activity?: string
 }
 
 export type ProfileDto = {
@@ -89,6 +91,13 @@ export type ActivityDto = {
 export type ActivityPageDto = {
   events: ActivityDto[]
   nextBefore: number | null
+  /** Everyone who has acted on this board, whether or not they match the filter. */
+  actors: ActivityActorDto[]
+}
+
+export type ActivityActorDto = {
+  name: string
+  count: number
 }
 
 export type ApiError = {

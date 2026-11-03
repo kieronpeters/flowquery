@@ -34,6 +34,7 @@ describe('ThemePanel', () => {
       'Review',
       'Done',
       'Tickets',
+      'Activity box',
     ]) {
       expect(screen.getByRole('group', { name: `${name} presets` })).toBeTruthy()
     }
@@ -70,6 +71,15 @@ describe('ThemePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
 
     expect(onSave).toHaveBeenCalledWith({ tickets: '#2a2350' })
+  })
+
+  it('saves an activity box colour', async () => {
+    const { onSave } = renderPanel()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Slate for Activity box' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
+
+    expect(onSave).toHaveBeenCalledWith({ activity: '#141a2e' })
   })
 
   it('keeps the custom picker hidden until the Custom swatch is pressed', async () => {

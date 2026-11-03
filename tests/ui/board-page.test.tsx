@@ -262,4 +262,13 @@ describe('BoardPage', () => {
     expect(tint).not.toBe('#dff2e4')
     expect(backlog.style.getPropertyValue('--card-fg')).toBe('#0b1020')
   })
+
+  it('gives the activity box its own surface', async () => {
+    mockApi({ theme: { activity: '#141a2e' } })
+    renderBoard()
+
+    const feed = await screen.findByRole('region', { name: 'Activity' })
+    expect(feed.getAttribute('data-custom')).toBe('true')
+    expect(feed.style.getPropertyValue('--activity-fg')).toBe('#e6e9f2')
+  })
 })

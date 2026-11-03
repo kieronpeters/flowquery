@@ -4,6 +4,25 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Activity box colours and filters
+
+**Requested:** put the activity feed in a coloured box using the same presets; filter it by today / week / month / year / all history and by any people who changed things; keep newest first.
+
+**Built:**
+- `boards.theme.activity` — the eighth themed surface. Text, timestamps, borders, the period select and buttons all derive from the measured ink for that background.
+- `GET /boards/:id/activity` gained `since` (ms) and `actors` (comma-separated, max 20, each ≤ 80 chars). Filters are applied in SQL, not to a loaded page: the feed is paginated, so client-side filtering would hide matches on later pages.
+- The response now carries `actors` — a `GROUP BY actor_name` roster with counts, deliberately not affected by the active filter so the checkboxes do not disappear as you narrow things.
+- Period boundaries are computed in the browser (`periodStart`) and sent as an instant. Weeks start Monday. "Today" is local midnight, which the Worker cannot know.
+- UI: period select, one checkbox chip per actor with its event count, a Reset filters control, and a distinct empty state when filters exclude everything.
+
+**Tests added (33):** `periodStart` for each period including Sunday → previous Monday, query building, actor/period filtering over HTTP and services, the roster surviving a filter, invalid `since` and oversized actor lists, the box colour and ink, and the filter requests the UI actually makes.
+
+**Verified in a browser:** default feed with 8 real events and the "Kieron" chip; changing the period issued `?since=1793635200000` (local midnight, GMT+8); ticking Kieron issued `?actors=Kieron` and revealed Reset; Slate box → `rgb(20, 26, 46)` with light ink; Paper box → `rgb(244, 239, 230)` with dark ink and 70% dark timestamps.
+
+**230 tests pass** (was 197). No deployment, no cloud cost.
+
+---
+
 ## 2026-11-03 — Ticket colours, readable presets, custom picker behind a button
 
 **Requested:** cards should be customisable with the same colour scheme, with default text-colour contrasts that work well as presets, and a custom picker available from within the preset row.
