@@ -79,20 +79,10 @@ function CardBody({ task }: { task: TaskDto }) {
   )
 }
 
-function SortableCard({
-  task,
-  onOpen,
-  onMove,
-}: {
-  task: TaskDto
-  onOpen: () => void
-  onMove: (direction: 'left' | 'right') => void
-}) {
+function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
-
-  const columnIndex = COLUMNS.findIndex((column) => column.key === task.status)
 
   return (
     <li
@@ -118,30 +108,6 @@ function SortableCard({
       >
         ⠿
       </button>
-
-      {/*
-        Touch-only shortcut for the thing dragging across columns is worst at:
-        with one column on screen, the next column is off-screen. These call the
-        same move endpoint as the drawer's buttons.
-      */}
-      <div className="card-quickmove">
-        <button
-          type="button"
-          aria-label={`Move ${task.title} to the previous column`}
-          disabled={columnIndex <= 0}
-          onClick={() => onMove('left')}
-        >
-          ←
-        </button>
-        <button
-          type="button"
-          aria-label={`Move ${task.title} to the next column`}
-          disabled={columnIndex >= COLUMNS.length - 1}
-          onClick={() => onMove('right')}
-        >
-          →
-        </button>
-      </div>
     </li>
   )
 }
@@ -465,11 +431,6 @@ export function BoardPage() {
               ticket={theme.tickets}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
               onAdd={() => setDrawer({ kind: 'create', status: column.key })}
-              onMove={(taskId, direction) => {
-                void moveRelative(taskId, direction).then((message) => {
-                  if (message) setNotice(message)
-                })
-              }}
             />
           ))}
         </div>
@@ -529,7 +490,6 @@ function Column({
   ticket,
   onOpen,
   onAdd,
-  onMove,
 }: {
   column: BoardView['columns'][number]
   active?: boolean
@@ -537,7 +497,6 @@ function Column({
   ticket?: string
   onOpen: (taskId: string) => void
   onAdd: () => void
-  onMove: (taskId: string, direction: 'left' | 'right') => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key })
 
@@ -573,12 +532,7 @@ function Column({
         ) : (
           <ul className="card-list">
             {column.tasks.map((task) => (
-              <SortableCard
-                key={task.id}
-                task={task}
-                onOpen={() => onOpen(task.id)}
-                onMove={(direction) => onMove(task.id, direction)}
-              />
+              <SortableCard key={task.id} task={task} onOpen={() => onOpen(task.id)} />
             ))}
           </ul>
         )}

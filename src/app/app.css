@@ -769,48 +769,6 @@ a {
   display: none;
 }
 
-/* Column-to-column shortcuts, phones only. Hidden where a mouse can drag. */
-.card-quickmove {
-  display: none;
-}
-
-@media (hover: none) {
-  .card-quickmove {
-    position: absolute;
-    right: 0.45rem;
-    bottom: 0.45rem;
-    display: inline-flex;
-    gap: 0.3rem;
-  }
-
-  .card-quickmove button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0;
-    border: 1px solid var(--border-strong);
-    border-radius: 0.5rem;
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
-    color: var(--muted);
-    font: inherit;
-    font-size: 0.95rem;
-    line-height: 1;
-    cursor: pointer;
-  }
-
-  .card-quickmove button:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  /* Room for the buttons so they never sit on top of the meta row. */
-  .card {
-    padding-bottom: 2.7rem;
-  }
-}
-
 @media (hover: none) {
   .card-handle {
     position: absolute;
