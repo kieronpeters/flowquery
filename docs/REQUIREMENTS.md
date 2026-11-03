@@ -37,6 +37,7 @@ Mechanism is AUTH-01 (open). These hold regardless of mechanism.
 | AUTH-008 | MUST | No password, credential or token appears in a URL, a log line, or client-side JavaScript. |
 | AUTH-009 | SHOULD | A human can recover access without manual database intervention (recovery path depends on AUTH-01). |
 | AUTH-010 | MUST | Authentication completes within the Workers Free CPU budget of 10 ms, verified by measurement, not assumption. |
+| AUTH-011 | MUST | Administrator identity is keyed on the immutable GitHub numeric user ID. Username and email are display-only and cannot grant, revoke or transfer access. |
 
 ## 3. Boards
 

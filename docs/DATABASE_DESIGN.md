@@ -36,9 +36,9 @@ CREATE TABLE users (
 CREATE TABLE auth_identities (
   id          TEXT PRIMARY KEY,
   user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  provider    TEXT NOT NULL,                 -- 'github' | 'passkey'
-  subject     TEXT NOT NULL,                 -- provider user id, or credential id
-  credential  TEXT,                          -- passkey public key blob / counter, unused for OAuth
+  provider    TEXT NOT NULL,                 -- 'github' (decided, AUTH-01)
+  subject     TEXT NOT NULL,                 -- immutable GitHub numeric user id (DEC-031)
+  credential  TEXT,                          -- reserved: passkey material, unused for OAuth
   created_at  INTEGER NOT NULL,
   last_used_at INTEGER,
   UNIQUE (provider, subject)

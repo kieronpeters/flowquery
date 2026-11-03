@@ -36,7 +36,7 @@ Workers Free allows 10 ms of CPU per request. That rules out server-side passwor
 
 ## Out of scope
 
-Commercial SaaS, billing, organisations, custom columns, archive/restore, notifications (pending SCOPE-01), email or push, individual agent accounts, permission engines, MCP, webhooks, queues, hosted agents, containerisation.
+Commercial SaaS, billing, organisations, custom columns, archive/restore, notifications, email or push, individual agent accounts, permission engines, MCP, webhooks, queues, hosted agents, containerisation.
 
 ## Status
 

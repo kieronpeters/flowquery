@@ -50,15 +50,22 @@ Statuses: **Approved** = the owner has stated it. **Proposed** = Bob recommends 
 | DEC-027 | `memory/` mirror to be removed once Git history exists | It duplicates `.flowquery/` and will drift | Yes |
 | DEC-028 | OpenCode agents to be activated by moving `opencode/agents/` → `.opencode/agents/` in M1 | OpenCode V2 discovers only the latter | Yes |
 
-## Open — owner input required
+## Approved — owner decisions, 3 November 2026
 
-| ID | Question | Options | Impact if unresolved | Blocks |
-|---|---|---|---|---|
-| **AUTH-01** | How do humans authenticate within 10 ms CPU and zero cost? | External identity provider (recommended: GitHub OAuth with an allowlist) **or** passkeys/WebAuthn | Blocks all human access to the product | M3 |
-| **AUTH-02** | Is requiring a GitHub account for both humans acceptable? | Yes / prefer passkeys / other | Determines AUTH-01 | AUTH-01 |
-| **SCOPE-01** | Keep or drop the in-app notification centre? | Drop (recommended) / keep for task updates only | Affects scope, not architecture | Nothing |
-| DEC-029 | Confirm local path `C:\Users\Asus\source\repos\FlowQuery` | Keep / relocate | Low; the earlier preferred path does not exist | M1 |
-| DEC-030 | Authorise `git init` on `main` (local only, no remote) | Yes / no | Documentation is currently unprotected by version control | M1 |
+Recorded verbatim from the owner's approval, at the M1 gate.
+
+| ID | Decision | Detail |
+|---|---|---|
+| **AUTH-01** | Human authentication is **GitHub OAuth with a server-side allowlist** | No passwords, no email service, no domain. Analysis and rejected alternatives: `SECURITY_AND_AUTH.md` §4 |
+| **AUTH-02** | **Both administrators will use GitHub accounts** | Accepted dependency; account recovery is delegated to GitHub |
+| **DEC-031** | Administrator identity is keyed on the **immutable GitHub numeric user ID** | Username and email are display-only. A renamed account or changed email cannot gain or lose access; the allowlist stores numeric IDs |
+| **SCOPE-01** | The **in-app notification centre is dropped** from the MVP | No `notifications` table, no event feed, no toggle. Reintroducing it needs a new decision |
+| **DEC-029** | Local repository path confirmed: `C:\Users\Asus\source\repos\FlowQuery` | The earlier `C:\repos\flowquery` is not used |
+| **DEC-030** | Local `git init` authorised on `main`; **no remote repository, no push** | Remote creation remains a separate, unapproved decision |
+
+## Open — none
+
+Nothing currently waits on the owner except review of M1's output. Should a new question arise during implementation, it is added here rather than decided silently.
 
 ## Superseded — kept for history, do not follow
 

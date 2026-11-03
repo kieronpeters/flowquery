@@ -37,7 +37,8 @@ There are three kinds of identity. They are deliberately different, and the diff
 
 - Both humans have **identical full access**. There is no role hierarchy between them.
 - Either human can register, sign in, sign out, recover access, view all boards, create boards, rename boards, delete boards (with confirmation), and manage all board content.
-- Registration is restricted. An arbitrary visitor must not be able to create an account and thereby see every board. The mechanism is an open decision (§11, AUTH-01) but the requirement is settled.
+- Registration is restricted. An arbitrary visitor must not be able to create an account and thereby see every board.
+- Administrators are identified by the **immutable GitHub numeric user ID**. Usernames and email addresses are display-only; neither can grant, revoke or transfer access. A renamed GitHub account or a changed email address therefore changes nothing.
 
 ### 3.2 Bob
 
@@ -152,7 +153,7 @@ The *mechanism* is an open decision (AUTH-01). These requirements bind whichever
 
 Requirement 6 rules out server-side password hashing on the free tier: a single PBKDF2-SHA256 hash at the minimum defensible iteration count costs ~26 ms of CPU, 2.6× the entire per-request budget (measured, `TECHNICAL_RESEARCH.md` §8). No free transactional email provider will send to arbitrary recipients without an owned domain, so password reset and magic links are also unavailable at zero cost.
 
-The mechanism is therefore an external identity provider or passkeys. **Recommendation: GitHub OAuth with a server-side allowlist**, which also delegates recovery to the provider. Rationale and alternatives: `SECURITY_AND_AUTH.md` §4.
+The mechanism is therefore an external identity provider or passkeys. **Decided (AUTH-01): GitHub OAuth with a server-side allowlist**, which also delegates recovery to the provider. Administrators are identified by immutable GitHub numeric user ID. Rationale and rejected alternatives: `SECURITY_AND_AUTH.md` §4.
 
 ## 10. Bob's API
 
@@ -162,15 +163,18 @@ Bob can: read board information, list and search tasks, read task details, creat
 
 Bob cannot: create, rename or delete boards, list other boards, read other boards, access human administration, or change board-level settings.
 
-## 11. Open decisions
+## 11. Decisions
 
-Tracked in `DECISIONS.md`. The blocking ones:
+All previously open decisions were settled by the owner on 3 November 2026 and are recorded in `DECISIONS.md`:
 
-| ID | Decision | Status |
-|---|---|---|
-| AUTH-01 | Human authentication mechanism under the free-tier CPU limit | Open — recommendation in `SECURITY_AND_AUTH.md` |
-| SCOPE-01 | Whether the in-app notification centre (present in earlier drafts) is still wanted | Open — currently excluded |
-| AUTH-02 | Whether requiring a GitHub account for the two humans is acceptable | Open — depends on AUTH-01 |
+| ID | Decision |
+|---|---|
+| AUTH-01 | GitHub OAuth with a server-side allowlist |
+| AUTH-02 | Both administrators use GitHub accounts |
+| DEC-031 | Administrator identity is keyed on the immutable GitHub numeric user ID |
+| SCOPE-01 | In-app notification centre dropped from the MVP |
+
+Nothing is currently open. New questions arising during implementation are recorded in the register as Open rather than resolved silently.
 
 ## 12. Operating constraints
 
@@ -188,7 +192,7 @@ Explicitly excluded from the current version:
 - Custom, reorderable or user-defined columns.
 - Archive/restore or a recycle bin.
 - Board templates, labels, checklists, attachments, sub-tasks, dependencies, estimates, time tracking, sprints, roadmaps, calendar or timeline views.
-- Email and push notifications; the in-app notification centre is currently excluded (SCOPE-01).
+- Email and push notifications, and any in-app notification centre (SCOPE-01: dropped).
 - Individual FlowQuery accounts or tokens for specialist agents.
 - A permission or role engine beyond "human administrator" and "board-scoped agent".
 - Commercial features: billing, subscriptions, plans, customer onboarding.

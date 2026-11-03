@@ -1,7 +1,7 @@
 # FlowQuery — Security and Authentication Design
 
 **Status:** 3 November 2026. Authoritative security design.
-**Open decision:** AUTH-01 (mechanism) and AUTH-02 (is a GitHub account acceptable). Everything else below is settled design, subject to implementation.
+**Decided:** AUTH-01 is GitHub OAuth with a server-side allowlist; AUTH-02 confirms both administrators use GitHub accounts; DEC-031 requires administrator identity to be keyed on the immutable GitHub numeric user ID. The analysis of rejected alternatives is retained in §4 so the reasoning is auditable.
 
 ---
 
@@ -68,7 +68,7 @@ So passwords are excluded by measurement, not by preference. The owner's instruc
 
 Verified against official documentation on 2026-11-03. Sources and dates in `TECHNICAL_RESEARCH.md`.
 
-### Option A — GitHub OAuth app with a server-side allowlist (recommended)
+### Option A — GitHub OAuth app with a server-side allowlist (**selected**)
 
 **How it works.** `/auth/start` redirects to GitHub with a `state` value (and PKCE `S256`). GitHub returns a code to `/auth/callback`. The Worker exchanges it for an access token (`POST github.com/login/oauth/access_token` — one `fetch`, which is I/O, not CPU), reads `GET /user` (numeric id, login) and `GET /user/emails` with scope `user:email` (returns `primary` and `verified`). If the numeric GitHub id is on the allowlist, a user row is created or matched and a session issued. Otherwise `403` with "This FlowQuery instance is private." and no session.
 
@@ -127,6 +127,8 @@ Verified against official documentation on 2026-11-03. Sources and dates in `TEC
 
 **Recommendation: Option A.** It is the only option that is free, needs no payment details, no domain and no email service, keeps the agent door simple, and has a documented, boring flow. Its weakness — requiring a GitHub account — is a conversation with your friend, not an engineering problem.
 
+**Selected by the owner on 3 November 2026** (AUTH-01, AUTH-02), with the added requirement (DEC-031) that identity be keyed on the immutable GitHub numeric user ID. Options B and C remain documented above as the fallbacks if the GitHub dependency later becomes unacceptable.
+
 ## 5. Recommended authentication design (Option A)
 
 ```text
@@ -140,13 +142,27 @@ POST /auth/logout       → delete session row, clear cookie → 204
 GET  /auth/me           → identity or 401
 ```
 
-**Allowlist.** A single Worker variable, for example:
+**Allowlist.** A single Worker variable:
 
 ```text
 AUTH_ALLOWLIST = "583231:Kieron,1234567:Friend"
 ```
 
-Keyed by GitHub numeric ID, not login or email, so renaming an account or changing an email cannot grant access. Adding a third person later is a variable update and a redeploy — deliberately not a UI feature, because a UI for granting access is a UI for getting it wrong.
+Each entry is `<github_user_id>:<display name>`. The numeric ID comes from `GET /user` (`id`), and it is the **only** identity key in the system (DEC-031).
+
+Why the numeric ID and not the username or email:
+
+- **Usernames are mutable.** GitHub lets an account be renamed, and the old name can then be claimed by someone else. Keying on login is how allowlists silently transfer access to a stranger.
+- **Email addresses are mutable and re-assignable.** A changed email would either lock the owner out or, worse, match a previous holder.
+- The numeric ID is permanent for the life of the account and is never reused.
+
+Consequences, stated so they are not discovered later:
+
+- `users.display_name` and `users.email` are **display metadata**, refreshed on each sign-in. Changing them grants nothing.
+- `auth_identities` rows use `provider = 'github'` and `subject = <numeric id>`. There is exactly one identity per administrator.
+- Removing an ID from the allowlist does not delete the user row; it prevents a new session. Existing sessions are ended by deleting the session rows (or rotating the signing key).
+
+Adding a third person later is a variable update and a redeploy — deliberately not a UI feature, because a UI for granting access is a UI for getting it wrong.
 
 **Session.** 32 random bytes, base64url, stored as SHA-256 in `sessions`, delivered as `__Host-fq_session` with `HttpOnly; Secure; SameSite=Lax; Path=/`. 30-day absolute expiry, idle refresh on use, deleted on sign-out. Rotated on sign-in. A session is a database row, so it can be killed server-side (`AUTH-006`).
 

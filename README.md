@@ -32,13 +32,17 @@ Two human administrators share a dashboard listing every board. Each board has f
 - Specialist agents are assignee profiles with no accounts and no credentials.
 - Zero recurring cost, `*.workers.dev` address, no domain.
 
-## What is open
+## What was settled at the M1 gate
 
-| ID | Question |
+| ID | Decision |
 |---|---|
-| AUTH-01 | Human authentication mechanism that fits 10 ms of CPU at zero cost |
-| AUTH-02 | Whether requiring a GitHub account for the two humans is acceptable |
-| SCOPE-01 | Whether the in-app notification centre is still wanted |
+| AUTH-01 | GitHub OAuth with a server-side allowlist |
+| AUTH-02 | Both administrators use GitHub accounts |
+| DEC-031 | Administrators identified by immutable GitHub numeric user ID |
+| SCOPE-01 | In-app notification centre dropped |
+| DEC-030 | Local Git authorised; no remote, no push |
+
+Nothing is currently open. The next gate is the owner's review of M1.
 
 ## Repository layout
 
