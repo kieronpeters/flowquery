@@ -852,29 +852,63 @@ a {
 
 .activity {
   margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
+  padding: 0.35rem 1.15rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  color: var(--activity-fg, var(--text));
 }
 
 /*
- * A themed activity box replaces the hairline rule with a full surface, so the
- * section reads as a panel rather than a continuation of the page.
+ * A themed box swaps the surface for the board's chosen colour. The ink comes
+ * from the inline --activity-fg, so every rule below reads from one variable.
  */
 .activity[data-custom='true'] {
-  padding: 1.15rem 1.25rem 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--activity-fg) 24%, transparent);
-  border-radius: 0.75rem;
-  color: var(--activity-fg);
+  border-color: color-mix(in srgb, var(--activity-fg) 24%, transparent);
 }
 
-.activity-head {
+.activity-heading {
+  margin: 0;
+}
+
+/* The whole bar is the control: a chevron alone is a small target on a phone. */
+.activity-toggle {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.activity-toggle:hover .activity-chevron {
+  color: var(--activity-fg, var(--text));
+}
+
+.activity-chevron {
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.activity[data-custom='true'] .activity-chevron {
+  color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
+}
+
+.activity-body {
+  padding-bottom: 1.15rem;
 }
 
 .activity-order {
+  margin-left: auto;
   font-size: 0.75rem;
   color: var(--muted);
 }
@@ -986,6 +1020,61 @@ a {
 }
 
 .activity[data-custom='true'] .activity-person-count {
+  color: color-mix(in srgb, var(--activity-fg) 60%, transparent);
+}
+
+/* Numbered pages, walked forward as they are loaded ---------------------- */
+
+.activity-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.activity-page {
+  min-width: 2.1rem;
+  padding: 0.32rem 0.55rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--activity-fg, var(--text));
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.activity-page:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.activity-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-page[aria-current='page'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.activity[data-custom='true'] .activity-page {
+  border-color: color-mix(in srgb, var(--activity-fg) 30%, transparent);
+}
+
+.activity[data-custom='true'] .activity-page[aria-current='page'] {
+  background: color-mix(in srgb, var(--activity-fg) 20%, transparent);
+  color: var(--activity-fg);
+}
+
+.activity-gap {
+  padding: 0 0.15rem;
+  color: var(--muted);
+}
+
+.activity[data-custom='true'] .activity-gap {
   color: color-mix(in srgb, var(--activity-fg) 60%, transparent);
 }
 
