@@ -4,6 +4,21 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Full app audit (owner-requested)
+
+**Walked every page in a browser:** landing, sign-in, access, dashboard, board, task drawer, colours panel, tokens panel, activity accordion, and a missing board. No console errors on any of them.
+
+**Fixed:**
+- The activity "Who" filter dropped events whose actor no longer matches a profile. Names are frozen on the event, so a renamed account leaves history under the old name; those events were unfilterable and the roster claimed nobody had acted.
+- The header still read "M8 · release candidate" after release. Removed: scaffolding, not information.
+- README and RUNBOOK quoted test counts that had drifted (167 and 149 against 255). Neither quotes a number now.
+- The board subtitle told phone users to drag between columns, which is the hard part there.
+- Column tabs claimed `role="tab"` with no tabpanels; they are toggle buttons with `aria-pressed` now.
+
+**Verified healthy:** board create/rename/delete confirmation, task drawer fields and move buttons, theme panel (8 rows × 12 swatches), token panel, empty and not-found states, 401 handling.
+
+---
+
 ## 2026-11-03 — Hostname moved to flowquery.workstack.workers.dev
 
 **Why:** the account subdomain was auto-assigned from the owner's personal details (`kieronpeters1`) and appeared in every URL. The owner wanted it gone, and wanted a generic namespace so future apps can sit beside this one.
