@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Appearance scope decided: per board
+
+**Asked:** should board colours be per board or per user, and what is standard.
+
+**Answered and decided (DEC-034):** per board, unchanged. Shared board identity is per board in Trello, Notion and GitHub Projects; per-user is where dark/light belongs, not where a board's colours belong. With two admins sharing five boards there is one palette to maintain instead of two that can drift.
+
+**Code changed:** none. The existing `boards.theme` column already behaves this way.
+
+**Would-be fallback, not built:** `board_theme_overrides (user_id, board_id, theme)` merged over the board theme on read, giving a personal pin without altering what the other admin sees. One migration, still zero cost.
+
+---
+
 ## 2026-11-03 — Activity box colours and filters
 
 **Requested:** put the activity feed in a coloured box using the same presets; filter it by today / week / month / year / all history and by any people who changed things; keep newest first.
