@@ -114,7 +114,7 @@ Remote: none, and none authorised.
 
 ## Known gaps carried to deployment
 
-- **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
+- **Live sign-in is now verified.** The owner signed in with a real GitHub account on localhost through the full OAuth round trip. This closes the gap that had been open since M3; previously the callback was only exercised with a stubbed provider.
 - **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
 - **The static `_headers` file is now verified in a production build**: `npm run preview` reports "Parsed 1 valid header rule", and the HTML document returns the full CSP and hardening headers from the asset layer. Not yet exercised on Cloudflare's own network — that is a deployment-time check.
 - Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.

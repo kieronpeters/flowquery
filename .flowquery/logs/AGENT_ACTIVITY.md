@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Live GitHub sign-in confirmed (owner-reported)
+
+The owner reported that they are signed in to the localhost application with a real GitHub account. This is the first live OAuth round trip; every previous verification used a stubbed provider.
+
+**Closes:** the sign-in gap open since M3. Remaining unverified: the drag gesture, and the Cloudflare deployment.
+
+**Also completed this session:** `cf` CLI authenticated (account e0837f85…), Cloudflare skills installed (21), MCP server registered (pending `/mcps` sign-in).
+
+**Not done:** no cloud resource created.
+
+---
+
 ## 2026-11-03 — First-run experience fix (Bob, current session)
 
 **Trigger:** owner said "continue". Rather than invent a feature, I checked the very first thing the owner will do: open the app without OAuth credentials and click "Continue with GitHub".

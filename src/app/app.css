@@ -536,6 +536,17 @@ a {
   opacity: 0.35;
 }
 
+/* The card that follows the cursor while dragging. */
+.drag-overlay {
+  cursor: grabbing;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  border-color: var(--accent);
+  transform: rotate(1.5deg);
+  /* Columns are 260-320px; keep the floating card the same shape. */
+  width: 280px;
+  max-width: 320px;
+}
+
 .column.over {
   border-color: var(--accent);
   background: rgba(139, 124, 246, 0.06);

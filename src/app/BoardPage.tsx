@@ -1,5 +1,6 @@
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   closestCorners,
@@ -7,6 +8,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -51,6 +53,29 @@ function formatDueDate(value: string): string {
   })
 }
 
+function CardBody({ task }: { task: TaskDto }) {
+  return (
+    <>
+      <span className="card-title">{task.title}</span>
+
+      {task.description && (
+        <span className="card-description">
+          {task.description}
+          {task.descriptionTruncated && <span className="truncated"> …</span>}
+        </span>
+      )}
+
+      <span className="card-meta">
+        <span className={`priority priority-${task.priority}`}>
+          {PRIORITY_LABELS[task.priority] ?? task.priority}
+        </span>
+        {task.assignee && <span>{task.assignee.displayName}</span>}
+        {task.dueDate && <span>Due {formatDueDate(task.dueDate)}</span>}
+      </span>
+    </>
+  )
+}
+
 function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -63,22 +88,7 @@ function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
       className={isDragging ? 'card-item dragging' : 'card-item'}
     >
       <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
-        <span className="card-title">{task.title}</span>
-
-        {task.description && (
-          <span className="card-description">
-            {task.description}
-            {task.descriptionTruncated && <span className="truncated"> …</span>}
-          </span>
-        )}
-
-        <span className="card-meta">
-          <span className={`priority priority-${task.priority}`}>
-            {PRIORITY_LABELS[task.priority] ?? task.priority}
-          </span>
-          {task.assignee && <span>{task.assignee.displayName}</span>}
-          {task.dueDate && <span>Due {formatDueDate(task.dueDate)}</span>}
-        </span>
+        <CardBody task={task} />
       </button>
     </li>
   )
@@ -91,6 +101,9 @@ export function BoardPage() {
   const [profiles, setProfiles] = useState<ProfileDto[]>([])
   const [drawer, setDrawer] = useState<DrawerState>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // The card being dragged, rendered in a portal so it follows the cursor
+  // instead of being clipped by the column or board scroll container.
+  const [activeTask, setActiveTask] = useState<TaskDto | null>(null)
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
 
@@ -192,7 +205,16 @@ export function BoardPage() {
     [boardId, load],
   )
 
+  function handleDragStart(event: DragStartEvent) {
+    if (state.kind !== 'ok') return
+    const id = String(event.active.id)
+    const task = state.view.columns.flatMap((column) => column.tasks).find((item) => item.id === id)
+    setActiveTask(task ?? null)
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveTask(null)
+
     const { active, over } = event
     if (!over || state.kind !== 'ok') return
 
@@ -306,7 +328,13 @@ export function BoardPage() {
         </p>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveTask(null)}
+      >
         <div className="board">
           {columns.map((column) => (
             <Column
@@ -317,6 +345,19 @@ export function BoardPage() {
             />
           ))}
         </div>
+
+        {/*
+          The card that follows the cursor. Rendered in a portal at the document
+          level, so a scroll container (the board uses overflow-x: auto) cannot
+          clip it when it leaves its own column.
+        */}
+        <DragOverlay dropAnimation={null}>
+          {activeTask ? (
+            <div className="card drag-overlay">
+              <CardBody task={activeTask} />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       <ActivityFeed boardId={boardId ?? ''} refreshKey={activityKey} profiles={profiles} />

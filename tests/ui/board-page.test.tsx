@@ -201,6 +201,28 @@ describe('BoardPage', () => {
     expect(await within(todo).findByText('Card one')).toBeTruthy()
   })
 
+  it('keeps the dragged card on screen while it is outside its column', async () => {
+    mockApi()
+    renderBoard()
+
+    const card = await screen.findByText('Card one')
+    const button = card.closest('button')!
+    button.focus()
+
+    // dnd-kit's keyboard sensor: space picks the item up.
+    await userEvent.keyboard(' ')
+
+    // The card must still be rendered, in a portal, while dragging.
+    await waitFor(() => {
+      const overlay = document.querySelector('.drag-overlay')
+      expect(overlay).toBeTruthy()
+      expect(overlay?.textContent).toContain('Card one')
+    })
+
+    // Cancel so the test does not leave a drag active.
+    await userEvent.keyboard('{Escape}')
+  })
+
   it('says so and refetches when the move conflicts', async () => {
     const { calls } = mockApi({ moveStatus: 409 })
     renderBoard()
