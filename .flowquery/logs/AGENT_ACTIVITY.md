@@ -4,6 +4,22 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — First-run experience fix (Bob, current session)
+
+**Trigger:** owner said "continue". Rather than invent a feature, I checked the very first thing the owner will do: open the app without OAuth credentials and click "Continue with GitHub".
+
+**Found:** `/auth/start` returned `503` with a JSON body. Because the endpoint is reached by clicking a link, the browser navigated to it and displayed raw JSON — no styling, no way back, and no explanation. The login page already had a `configuration` message that nothing ever triggered.
+
+**Fixed:** `/auth/start` redirects to `/login?error=configuration` when credentials are missing, and the message now names the file to edit (`.dev.vars`) and points at the runbook.
+
+**Verified:** started the dev server with no `.dev.vars` present, clicked the sign-in link, and landed on `/login?error=configuration` with the explanation rendered, zero console errors.
+
+**Tests:** 167 passing (the unconfigured case now asserts a redirect instead of a 503). Typecheck, lint, build clean.
+
+**Not done:** no deployment, no resource, no cost.
+
+---
+
 ## 2026-11-03 — Scale check and header verification (Bob, current session)
 
 **Trigger:** owner said "continue". Two things I had written down as assumptions were still unverified.

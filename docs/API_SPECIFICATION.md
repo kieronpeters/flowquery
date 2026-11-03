@@ -57,7 +57,7 @@ Provider-agnostic by design, so AUTH-01 can change without breaking the contract
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/auth/start` | Begins sign-in. Sets a short-lived signed `state` cookie (with the PKCE verifier) and `302`s to the provider. Optional `?next=` for a post-login destination, restricted to relative paths. |
+| `GET` | `/auth/start` | Begins sign-in. Sets a short-lived signed `state` cookie (with the PKCE verifier) and `302`s to the provider. Optional `?next=` for a post-login destination, restricted to relative paths. If OAuth is not configured, redirects to `/login?error=configuration` rather than returning JSON — this endpoint is reached by clicking a link. |
 | `GET` | `/auth/callback` | Provider callback. Verifies `state`, exchanges the code, checks the allowlist by immutable numeric id, creates or matches the user, sets the session cookie, redirects to `/boards`. |
 | `POST` | `/auth/logout` | Deletes the session row and clears the cookie. `204`. |
 | `GET` | `/auth/me` | Current human identity, or `401`. |

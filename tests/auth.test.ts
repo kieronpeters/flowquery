@@ -272,7 +272,7 @@ describe('GET /api/v1/auth/start', () => {
     expect(raw).toMatch(/Path=\//)
   })
 
-  it('fails clearly when OAuth is not configured', async () => {
+  it('sends the browser to the sign-in page when OAuth is not configured', async () => {
     const { db } = createFakeAuthD1()
     const response = await app.request(
       '/api/v1/auth/start',
@@ -280,9 +280,9 @@ describe('GET /api/v1/auth/start', () => {
       routeEnv(db, { GITHUB_CLIENT_ID: undefined, GITHUB_CLIENT_SECRET: undefined }),
     )
 
-    expect(response.status).toBe(503)
-    const body = (await response.json()) as { error: { code: string } }
-    expect(body.error.code).toBe('AUTH_NOT_CONFIGURED')
+    // A redirect, not JSON: this endpoint is reached by clicking a link.
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toBe('/login?error=configuration')
   })
 })
 

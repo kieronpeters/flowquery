@@ -44,15 +44,10 @@ authRoutes.get('/auth/start', async (c) => {
   const clientId = c.env.GITHUB_CLIENT_ID
   const clientSecret = c.env.GITHUB_CLIENT_SECRET
   if (!clientId || !clientSecret) {
-    return c.json(
-      {
-        error: {
-          code: 'AUTH_NOT_CONFIGURED',
-          message: 'GitHub OAuth is not configured on this deployment.',
-        },
-      },
-      503,
-    )
+    // This endpoint is reached by a browser navigation, so returning JSON here
+    // would show the user a wall of text with no way back. Send them to the
+    // sign-in page, which explains what is missing.
+    return c.redirect('/login?error=configuration')
   }
 
   const pkce = await createPkce()
