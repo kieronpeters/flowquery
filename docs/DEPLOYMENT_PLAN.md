@@ -1,6 +1,6 @@
 # FlowQuery — Deployment Plan (M9)
 
-**Status: EXECUTED 2026-11-03.** Live at https://flowquery.kieronpeters1.workers.dev on Workers Free + D1 Free. Total recurring cost: $0.
+**Status: EXECUTED 2026-11-03.** Live at https://flowquery.workstack.workers.dev on Workers Free + D1 Free. Total recurring cost: $0.
 
 ## What actually happened
 

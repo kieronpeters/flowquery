@@ -1,6 +1,6 @@
 # Next Action
 
-**M9 is complete. FlowQuery is live at https://flowquery.kieronpeters1.workers.dev, on Free plans, costing $0.**
+**M9 is complete. FlowQuery is live at https://flowquery.workstack.workers.dev, on Free plans, costing $0.**
 
 ---
 

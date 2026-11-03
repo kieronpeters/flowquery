@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M9 complete — **deployed** at https://flowquery.kieronpeters1.workers.dev on Cloudflare Workers Free and D1 Free, $0 recurring. 233 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. Sign-in verified end to end against the live database.
+**Status:** M9 complete — **deployed** at https://flowquery.workstack.workers.dev on Cloudflare Workers Free and D1 Free, $0 recurring. 233 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. Sign-in verified end to end against the live database.
 
 ---
 

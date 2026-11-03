@@ -2,7 +2,7 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M1–M9 complete. Deployed to Cloudflare Workers Free with D1 Free on 2026-11-03, at https://flowquery.kieronpeters1.workers.dev.
+**Current phase:** M1–M9 complete. Deployed to Cloudflare Workers Free with D1 Free on 2026-11-03, at https://flowquery.workstack.workers.dev.
 **Implementation authorised:** M1–M8 (complete). M9 deployment: authorised by the owner and executed 2026-11-03.
 **Git repository:** `C:\Users\Asus\source\repos\FlowQuery`, branch `main`, remote `https://github.com/kieronpeters/flowquery` (private).
 **Cloud resources:** one D1 database `flowquery-db` (`d4c07e7e-7f4b-4ac6-81e8-d5f46e026f6a`, APAC) and one Worker `flowquery`.
@@ -72,7 +72,7 @@ Register: `docs/DECISIONS.md`.
 - **Privacy:** `public/robots.txt` disallows all crawlers; `/robots.txt` previously returned the SPA's HTML.
 - Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
 - `npm run preflight` added as a deployment guard: it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified to fail on the placeholder and pass with a real id.
-- **Deployed 2026-11-03 (M9):** Worker `flowquery` at https://flowquery.kieronpeters1.workers.dev, D1 `flowquery-db` in APAC, Free plan, no payment method. Verified after deploy: health `200`, CSP present on the static document (the check that could only be made in production), unauthenticated API `401`, `/auth/start` redirecting to GitHub with PKCE, callback failing cleanly without a code, and a real sign-in producing one user, one identity and a 30-day session in the remote database. A board, a task, a priority change, three moves and a comment all persisted, with six activity events. A redeploy preserved all of it.
+- **Deployed 2026-11-03 (M9):** Worker `flowquery` at https://flowquery.workstack.workers.dev, D1 `flowquery-db` in APAC, Free plan, no payment method. Verified after deploy: health `200`, CSP present on the static document (the check that could only be made in production), unauthenticated API `401`, `/auth/start` redirecting to GitHub with PKCE, callback failing cleanly without a code, and a real sign-in producing one user, one identity and a 30-day session in the remote database. A board, a task, a priority change, three moves and a comment all persisted, with six activity events. A redeploy preserved all of it.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
 - Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.

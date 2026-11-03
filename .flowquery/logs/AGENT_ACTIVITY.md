@@ -4,6 +4,24 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Hostname moved to flowquery.workstack.workers.dev
+
+**Why:** the account subdomain was auto-assigned from the owner's personal details (`kieronpeters1`) and appeared in every URL. The owner wanted it gone, and wanted a generic namespace so future apps can sit beside this one.
+
+**What was tried and failed:** `PUT /accounts/{id}/workers/subdomain` returns `10036 "Account already has an associated subdomain"`. The public API can create a subdomain but not rename one; only the dashboard can. Confirmed against Cloudflare's docs and community reports, not assumed.
+
+**What happened:**
+- The Worker was briefly renamed to `app` for an `app.flowquery.workers.dev` plan, deployed alongside the old Worker so nothing broke. That plan was abandoned when the subdomain change turned out to be dashboard-only and the name `flowquery` was already taken as a subdomain.
+- The owner set the account subdomain to `workstack` in the dashboard.
+- The Worker name was reverted to `flowquery`, which still carried all three secrets — so no re-entry was needed.
+- The redundant `app` Worker was removed; only `flowquery` remains.
+
+**Verified at the new URL:** health `200` (`0.0.0-m8`), document `200` with CSP and HSTS, unauthenticated API `401`, and `/auth/start` redirecting to GitHub with `redirect_uri=https://flowquery.workstack.workers.dev/api/v1/auth/callback`. `app.workstack.workers.dev` returns `404`; the old `kieronpeters1` hostname no longer resolves.
+
+**Note for future debugging:** Windows `curl.exe` (schannel) fails the TLS handshake against the freshly issued `*.workstack.workers.dev` certificate while Node `fetch`, PowerShell and Chrome all succeed. Use Node or PowerShell for these checks, not curl.
+
+---
+
 ## 2026-11-03 — M9: deployed to Cloudflare
 
 **Approved by the owner:** "approved - deploy it".
