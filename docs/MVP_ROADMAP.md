@@ -126,6 +126,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M8 — Hardening and release preparation — M
 
+**Status: complete 2026-11-03.**
+
 **Goal:** it can be trusted, backed up and explained.
 
 - Security headers, error handling, request IDs

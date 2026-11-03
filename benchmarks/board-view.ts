@@ -14,6 +14,7 @@
  */
 import type { BoardRow, ProfileRow, TaskRow } from '../src/worker/domain/types'
 import { assembleBoardView } from '../src/worker/services/board-view'
+import { toTaskDto } from '../src/worker/services/task-dto'
 
 const board: BoardRow = {
   id: 'brd_bench',
@@ -92,3 +93,36 @@ for (const size of sizes) {
 }
 
 process.stdout.write('\nBudget: 10 ms CPU per request on Workers Free.\n')
+
+// ---------------------------------------------------------------------------
+// Agent task list: the same DTO mapping, without the column assembly.
+// ---------------------------------------------------------------------------
+
+process.stdout.write('\nAgent task list: map + JSON.stringify (page of 50)\n\n')
+
+const listTasks = makeTasks(50)
+const profileMap = new Map(profiles.map((profile) => [profile.id, profile]))
+
+function runList(): number {
+  const tasks = listTasks.map((task) =>
+    toTaskDto(task, profileMap.get(task.assignee_profile_id ?? ''), { truncate: true }),
+  )
+  return JSON.stringify({ tasks, truncated: true }).length
+}
+
+for (let index = 0; index < 50; index += 1) runList()
+
+const listSamples: number[] = []
+for (let index = 0; index < 300; index += 1) {
+  const start = performance.now()
+  runList()
+  listSamples.push(performance.now() - start)
+}
+
+listSamples.sort((a, b) => a - b)
+const listMedian = listSamples[Math.floor(listSamples.length / 2)] ?? 0
+const listP95 = listSamples[Math.floor(listSamples.length * 0.95)] ?? 0
+
+process.stdout.write(
+  `    50 tasks  ${(runList() / 1024).toFixed(1)} KB  median ${listMedian.toFixed(3)} ms  p95 ${listP95.toFixed(3)} ms\n`,
+)

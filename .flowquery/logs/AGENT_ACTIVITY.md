@@ -4,6 +4,33 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M8 hardening and release preparation (Bob, current session)
+
+**Authorised:** M8 — hardening.
+
+**Performed:**
+- `middleware/security.ts`: CSP, nosniff, referrer, frame, COOP, permissions, HSTS on API responses.
+- `public/_headers`: the same policy for the static SPA document, which the Worker never sees.
+- Request-id middleware (`X-Request-Id`), `onError` returning a generic 500 with the id, and the catch-all 404 carrying it too.
+- Callback rate limit now checked *before* the GitHub exchange rather than only counted.
+- `benchmarks/board-view.ts` extended with the agent task list.
+- `docs/SECURITY_REVIEW.md` and `docs/RUNBOOK.md`.
+
+**Verified (actual output):**
+- 149 tests, 12 files; typecheck, lint, build clean.
+- Headers present on API responses; the `_headers` policy matches the Worker policy exactly (asserted by a test).
+- Strict CSP (`script-src 'self'`) does **not** break the dev app: 9 cards, 5 columns, zero console errors.
+- Restore drill on the final schema: export 12.7 KB → delete all `.wrangler/state` → import → counts identical, `PRAGMA foreign_key_check` empty, and the agent token still authenticated afterwards (200, 9 tasks).
+- Bench: board view 0.033 ms @ 9 and 0.578 ms @ 200; agent task list 50 tasks 0.137 ms.
+
+**Found:** the SPA document would have shipped with no CSP at all, because static assets bypass Worker middleware. Fixed with `public/_headers` plus a drift test.
+
+**Not done:** no deployment, no remote repository, no resource creation, no cost.
+
+**Outcome:** M8 complete; the build is finished and awaiting a deployment decision.
+
+---
+
 ## 2026-11-03 — M7 agent API and tokens (Bob, current session)
 
 **Authorised:** M7 — Bob's board-scoped API.

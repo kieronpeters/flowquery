@@ -93,8 +93,15 @@ authRoutes.get('/auth/callback', async (c) => {
   const clientSecret = c.env.GITHUB_CLIENT_SECRET
   if (!clientId || !clientSecret) return loginFailed('configuration')
 
+  // The callback is the expensive half: check the limit before contacting
+  // GitHub, not after.
+  const key = clientKey(c)
+  if ((await store.countAttempts(key, now - RATE_WINDOW_MS)) >= RATE_LIMIT) {
+    return loginFailed('rate_limited')
+  }
+
   try {
-    await store.recordAttempt(clientKey(c), now)
+    await store.recordAttempt(key, now)
 
     const profile = await completeGithubSignIn({
       clientId,

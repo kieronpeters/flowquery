@@ -70,16 +70,16 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 - [x] `FLOWQUERY_API_TOKEN` documented in the README
 - [x] Verified end to end from a shell with a UI-created token
 
-## Awaiting approval
-
 ### M8 — Hardening and release preparation
-- [ ] Security headers on HTML responses; review every error shape
-- [ ] Request ids in error responses; no stack traces or internal detail
-- [ ] Rate limiting reviewed across the auth endpoints
-- [ ] Backup and restore drill on the final schema, including agent tokens
-- [ ] Performance pass: new endpoints measured against 10 ms
-- [ ] Full regression run and a written runbook (setup, backup, restore, rollback)
-- [ ] Final security review of the two doors
+- [x] Security headers on API responses and on the static SPA document (`public/_headers`)
+- [x] A test that the two policies cannot drift apart
+- [x] `X-Request-Id` on every response; request id echoed in 404 and 500 bodies
+- [x] Error handler that logs detail and returns none of it
+- [x] Callback rate limit checked before contacting GitHub
+- [x] Restore drill on the final schema, including agent tokens
+- [x] Performance pass: board view, agent task list and auth path measured
+- [x] `docs/SECURITY_REVIEW.md`: 20 checks with results and accepted risks
+- [x] `docs/RUNBOOK.md`: setup, backup, restore, incidents, deployment checklist
 
 ## Not yet authorised
 

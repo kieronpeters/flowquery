@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 
 import { COLUMNS } from '../shared/columns'
 import type { Bindings } from './env'
+import { securityHeaders } from './middleware/security'
 import { openApiDocument } from './openapi'
 import { agentRoutes } from './routes/agent'
 import { authRoutes } from './routes/auth'
@@ -9,6 +10,40 @@ import { boardRoutes } from './routes/boards'
 import { profileRoutes } from './routes/profiles'
 
 export const app = new Hono<{ Bindings: Bindings }>()
+
+/**
+ * Request id.
+ *
+ * Every response carries it as a header, so a user-visible failure can be
+ * matched to a log line without the response ever containing internal detail.
+ */
+app.use('*', async (c, next) => {
+  c.header('X-Request-Id', crypto.randomUUID())
+  await next()
+})
+
+app.use('*', securityHeaders)
+
+/** Unexpected failures: log the detail, return none of it. */
+app.onError((error, c) => {
+  console.error(
+    'Unhandled error',
+    error instanceof Error ? error.name : 'unknown',
+    c.req.method,
+    new URL(c.req.url).pathname,
+  )
+
+  return c.json(
+    {
+      error: {
+        code: 'INTERNAL',
+        message: 'Something went wrong on our side.',
+        requestId: c.res.headers.get('X-Request-Id') ?? undefined,
+      },
+    },
+    500,
+  )
+})
 
 /**
  * CSRF guard for state-changing requests.
@@ -62,7 +97,16 @@ app.get('/api/v1/columns', (c) => c.json({ columns: COLUMNS }))
 
 // Unknown API paths get JSON, never the SPA shell.
 app.all('/api/*', (c) =>
-  c.json({ error: { code: 'NOT_FOUND', message: 'No such endpoint.' } }, 404),
+  c.json(
+    {
+      error: {
+        code: 'NOT_FOUND',
+        message: 'No such endpoint.',
+        requestId: c.res.headers.get('X-Request-Id') ?? undefined,
+      },
+    },
+    404,
+  ),
 )
 
 export type AppType = typeof app

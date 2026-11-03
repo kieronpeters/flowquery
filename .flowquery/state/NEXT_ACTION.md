@@ -1,47 +1,50 @@
 # Next Action
 
-**M7 is complete. Bob has an API. Approve M8 to finish the build.**
+**M8 is complete. The build is finished. Deployment is the only milestone left — and it needs your explicit approval.**
 
-## 1. Try it yourself
+## 1. Before deployment: two unverified paths
 
-1. `npm run db:reset && npm run dev`, sign in.
-2. On a board row, click **Tokens**, create one, and copy the value — it is shown once.
-3. In a shell:
+Neither is a known defect, and neither can be closed by me.
 
-```bash
-export FLOWQUERY_API_TOKEN="fq_..."
-curl -s -H "Authorization: Bearer $FLOWQUERY_API_TOKEN" http://localhost:5173/api/v1/agent/tasks?status=backlog
-```
+| Gap | How to close it |
+|---|---|
+| **Live GitHub sign-in** | Create the OAuth app, fill `.dev.vars`, sign in once. Five minutes. |
+| **Drag-and-drop gesture** | Open a board, drag a card across and within a column. Ten seconds. |
 
-That is the workflow the whole project was built for: you read the backlog, Bob refines it.
+I recommend doing both **before** deploying, so that if something is wrong you find it on `localhost` rather than on a live URL with your real data in it.
 
-## 2. Two manual checks still outstanding
+## 2. M9 — deployment, if and when you approve it
 
-**Drag-and-drop** and the **live GitHub sign-in**. Both are unverified by automation and both are recorded as open in the README, phase status and backlog. The sign-in is now the last thing between you and using this for real work.
+What it involves, and what it costs:
 
-## 3. Approve M8 — hardening and release preparation
+| Item | Detail | Cost |
+|---|---|---|
+| D1 database | Create the real database, replace the placeholder id | Free |
+| Worker | `wrangler deploy`, Free plan | Free |
+| URL | `<name>.workers.dev` | Free |
+| Secrets | `wrangler secret put GITHUB_CLIENT_SECRET`, set `AUTH_ALLOWLIST` | Free |
+| OAuth app | Add the production callback URL | Free |
+| Domain | Not required | — |
 
-The last milestone before deployment:
+**Total recurring cost: $0.** The checklist is in `docs/RUNBOOK.md` §8.
 
-- Security headers (CSP, nosniff, referrer policy) and a review of every response
-- Error handling: no stack traces, consistent shapes, request ids
-- Rate limiting reviewed across the auth endpoints
-- **Backup and restore drill repeated on the final schema**, including the token table
-- Performance pass with the new endpoints measured against the 10 ms budget
-- Full regression run and a written runbook (setup, backup, restore, rollback)
-- A final security review of the two doors
+## 3. What I will do during M9
 
-## What I will specifically look for
+1. Walk the checklist with you, item by item, before anything is created.
+2. Create only what is needed: one D1 database, one Worker.
+3. Apply migrations; seed **nothing** (the seed inserts a placeholder user).
+4. Verify a stranger cannot register.
+5. Run the restore drill against the remote database.
+6. Record the deployment version, timestamp and rollback procedure.
 
-Not "does it work" — 142 tests answer that. The questions for M8 are:
+## 4. What I will not do
 
-1. Can any error response leak internal detail?
-2. Can a revoked token be used because of a caching or timing window?
-3. Does a restore actually produce a working board, or just matching row counts?
-4. What happens when D1 is slow or a quota is hit — does the UI degrade or break?
+- No paid plan, no domain, no add-on, no billing activation.
+- No automatic upgrade path.
+- No deployment without a written "yes" from you for this specific step.
 
-## Not in M8
+## A recommendation
 
-Deployment (M9, separate approval). Notifications (dropped).
+Deploy to a `workers.dev` address first and use it for a week with the two of you. If it holds up, then consider whether it ever needs a domain. A domain is a recurring cost and a recurring decision; there is no reason to make it before the thing has proven useful.
 
-**Current gate: owner review of M7.**
+**Current gate: owner review of M8.**

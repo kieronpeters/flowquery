@@ -2,8 +2,8 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M7 complete — Bob's agent API. Awaiting owner approval for M8 (hardening).
-**Implementation authorised:** M1–M7 (complete). M8 onward: no.
+**Current phase:** M8 complete — hardened and release-ready. Awaiting owner approval for M9 (deployment).
+**Implementation authorised:** M1–M8 (complete). M9: not authorised.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
 **Deployment:** None
@@ -41,7 +41,7 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (**142 tests**), `build`, `format:check` all pass.
+- `typecheck`, `lint`, `test` (**149 tests**), `build`, `format:check` all pass.
 - D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
 - Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
 - Board management implemented: list, create, rename, permanent delete with typed-name confirmation; cascade verified against the real schema.
@@ -54,6 +54,11 @@ Register: `docs/DECISIONS.md`.
 - **The agent namespace has no board parameter at all** — scope comes from the token row. Isolation is structural, not a check.
 - Isolation suite: a second board plus a second token proves read, update, move, delete and comment attempts across boards all return 404, and that a session cookie and a bearer token cannot cross doors.
 - Verified end to end outside the test suite: created a token in the dashboard, used it from a shell to read the board, filter the backlog, create a task and comment, then revoked it and confirmed 401.
+- Hardened (M8): CSP and security headers on API responses *and* on the static SPA document via `public/_headers`, with a test that the two policies cannot drift; `X-Request-Id` on every response; an error handler that logs detail and returns none.
+- Restore drill repeated on the final schema: export → delete all local state → import → identical counts, no FK violations, and **an existing agent token still authenticated**.
+- `npm run bench` now covers the agent task list: 50 tasks map + serialise in 0.137 ms.
+- `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
+- `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
 - Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.
@@ -98,13 +103,13 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: none, and none authorised.
 
-## Known gaps carried into M8
+## Known gaps carried to deployment
 
 - **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
 - **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
-- Activity writes are best-effort: a failed insert is logged, not retried, and does not fail the user's action.
-- No human task list endpoint with filters (the agent namespace has one; the board view covers the UI).
-- Seeded placeholder user (`usr_dev_owner`) should be removed once real OAuth users exist.
+- Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.
+- Activity writes are best-effort by design.
+- Seeded placeholder user (`usr_dev_owner`) must not exist in a production database.
 - `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
-- `repository/SETUP_QUESTIONS.md` predates the current plan; reconcile or mark historical.
+- `repository/SETUP_QUESTIONS.md` predates the current plan.
 - `memory/` mirror is neutralised but still present; delete once history is comfortable.

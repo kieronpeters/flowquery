@@ -49,7 +49,7 @@ A human session cannot call `/api/v1/agent/*`. A bearer token cannot call anythi
 | 429 | `RATE_LIMITED` | Too many attempts |
 | 503 | `UNAVAILABLE` | Database or dependency failure |
 
-`requestId` is always present and appears in server logs, so a user-visible error can be traced without exposing internals.
+`requestId` is present on server errors and on the catch-all `404`, and every response carries the same value in the `X-Request-Id` header. Field-level `400`s rely on the header to avoid duplicating the value in every error body.
 
 ## 3. Authentication endpoints (human)
 
