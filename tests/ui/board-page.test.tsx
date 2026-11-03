@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BoardPage } from '../../src/app/BoardPage'
-import type { BoardView, TaskDto } from '../../src/shared/api-types'
+import type { BoardTheme, BoardView, TaskDto } from '../../src/shared/api-types'
 
 /**
  * The board page: rendering, opening a task, and the keyboard move path that
@@ -87,9 +87,9 @@ const movedBoard: BoardView = {
 
 type Call = { url: string; method: string; body: unknown }
 
-function mockApi(overrides: { moveStatus?: number } = {}) {
+function mockApi(overrides: { moveStatus?: number; theme?: BoardTheme } = {}) {
   const calls: Call[] = []
-  const initial = boardWith([cardOne], [cardTwo])
+  const initial = { ...boardWith([cardOne], [cardTwo]), theme: overrides.theme ?? {} }
 
   vi.stubGlobal(
     'fetch',
@@ -240,5 +240,26 @@ describe('BoardPage', () => {
       (call) => call.method === 'GET' && call.url.endsWith('/api/v1/boards/brd_demo'),
     )
     expect(boardReads.length).toBeGreaterThan(1)
+  })
+
+  it('applies a board ticket colour to every card', async () => {
+    mockApi({ theme: { tickets: '#1e2433' } })
+    renderBoard()
+
+    const backlog = await screen.findByRole('region', { name: 'Backlog' })
+    expect(backlog.style.getPropertyValue('--card-bg')).toBe('#1e2433')
+    expect(backlog.style.getPropertyValue('--card-fg')).toBe('#e6e9f2')
+  })
+
+  it('tints cards with their own column when no ticket colour is set', async () => {
+    mockApi({ theme: { columns: { backlog: '#dff2e4' } } })
+    renderBoard()
+
+    const backlog = await screen.findByRole('region', { name: 'Backlog' })
+    const tint = backlog.style.getPropertyValue('--card-bg')
+
+    // A pale column lifts toward white, and the ink flips to dark.
+    expect(tint).not.toBe('#dff2e4')
+    expect(backlog.style.getPropertyValue('--card-fg')).toBe('#0b1020')
   })
 })

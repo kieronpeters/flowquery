@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -26,7 +26,15 @@ describe('ThemePanel', () => {
   it('offers a swatch group for the board and each column', () => {
     renderPanel()
 
-    for (const name of ['Board background', 'Backlog', 'To Do', 'In Progress', 'Review', 'Done']) {
+    for (const name of [
+      'Board background',
+      'Backlog',
+      'To Do',
+      'In Progress',
+      'Review',
+      'Done',
+      'Tickets',
+    ]) {
       expect(screen.getByRole('group', { name: `${name} presets` })).toBeTruthy()
     }
   })
@@ -53,6 +61,36 @@ describe('ThemePanel', () => {
       columns: { todo: '#4a1f2a' },
     })
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('saves a ticket colour alongside the rest of the theme', async () => {
+    const { onSave } = renderPanel()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Indigo for Tickets' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
+
+    expect(onSave).toHaveBeenCalledWith({ tickets: '#2a2350' })
+  })
+
+  it('keeps the custom picker hidden until the Custom swatch is pressed', async () => {
+    renderPanel()
+
+    expect(screen.queryByLabelText('Pick a custom colour for Tickets')).toBeNull()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Custom colour for Tickets' }))
+    expect(screen.getByLabelText('Pick a custom colour for Tickets')).toBeTruthy()
+  })
+
+  it('uses a colour chosen from the custom picker', async () => {
+    const { onSave } = renderPanel()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Custom colour for Tickets' }))
+    fireEvent.change(screen.getByLabelText('Pick a custom colour for Tickets'), {
+      target: { value: '#123456' },
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Save colours' }))
+
+    expect(onSave).toHaveBeenCalledWith({ tickets: '#123456' })
   })
 
   it('clears a surface back to the default', async () => {

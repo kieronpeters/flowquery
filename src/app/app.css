@@ -600,6 +600,24 @@ a {
   outline-offset: 1px;
 }
 
+/* The custom picker is a swatch too, so the palette stays one row. */
+.swatch-custom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.swatch-custom[aria-expanded='true'] {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--text);
+}
+
 .theme-colour {
   width: 2.5rem;
   height: 1.8rem;

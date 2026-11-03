@@ -4,6 +4,25 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — Ticket colours, readable presets, custom picker behind a button
+
+**Requested:** cards should be customisable with the same colour scheme, with default text-colour contrasts that work well as presets, and a custom picker available from within the preset row.
+
+**Built (DEC-033 extended):**
+- `boards.theme.tickets` — one card background for the whole board. Validation and parsing in `services/boards.ts` and `services/board-view.ts`; unknown key rejection still applies.
+- Cards tint with their own column when no ticket colour is set; a board ticket colour overrides every column.
+- Ink is now chosen by **highest WCAG contrast** rather than a luminance threshold, so mid-tones get the better of the two inks instead of an approximation.
+- `PRESETS` moved into `theme.ts` (was duplicated in the panel) and exported; the panel renders 12 swatches plus a dashed “+” swatch that reveals the native picker for that row only.
+- Drag overlay follows the same colour as the card it came from.
+
+**Tests added:** ticket validation (accepted alone, rejected when not hex, cleared by `{}`), every preset at AA contrast or better as both a ticket and a column colour, the Custom button staying hidden until pressed, a custom value reaching the save payload, and the board applying ticket/column tints.
+
+**Verified in a browser:** Indigo tickets `#2a2350` over teal and default columns with light ink; Paper tickets `#f4efe6` with dark ink and 72% dark description text; seven panel rows, 12 swatches each, exactly one picker visible after pressing Custom.
+
+**197 tests pass** (was 188). No deployment, no cloud cost.
+
+---
+
 ## 2026-11-03 — Drag visibility fix and board colours (owner-reported)
 
 **Reported:** dragging a card from Backlog across to another column made it vanish mid-drag, though dropping still worked.

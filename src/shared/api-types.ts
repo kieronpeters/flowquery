@@ -55,6 +55,8 @@ export type BoardTheme = {
   background?: string
   /** One colour per column, keyed by column. */
   columns?: Partial<Record<ColumnKey, string>>
+  /** Card background for the whole board. Falls back to a tint of the column. */
+  tickets?: string
 }
 
 export type ProfileDto = {

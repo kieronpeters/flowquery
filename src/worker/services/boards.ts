@@ -117,7 +117,7 @@ export async function setBoardTheme(
   }
 
   const record = body as Record<string, unknown>
-  const allowed = new Set(['background', 'columns'])
+  const allowed = new Set(['background', 'columns', 'tickets'])
 
   for (const key of Object.keys(record)) {
     if (!allowed.has(key)) return { kind: 'invalid', message: `Unknown theme key: ${key}.` }
@@ -151,6 +151,13 @@ export async function setBoardTheme(
     }
 
     theme.columns = columns
+  }
+
+  if (record.tickets !== undefined && record.tickets !== null) {
+    if (typeof record.tickets !== 'string' || !HEX.test(record.tickets)) {
+      return { kind: 'invalid', message: 'tickets must be a #rrggbb colour.' }
+    }
+    theme.tickets = record.tickets.toLowerCase()
   }
 
   const updated = await updateBoardTheme(db, {

@@ -77,8 +77,11 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 | `GET` | `/boards/{boardId}` | **Board view:** board metadata, the five columns in order, and each column's tasks ordered by position. Descriptions are truncated at 500 characters with `descriptionTruncated` set. `404` if absent. |
 | `PATCH` | `/boards/{boardId}` | Rename. Body `{ name }`. ID is unchanged (`BOARD-003`). |
 | `DELETE` | `/boards/{boardId}` | **Permanent.** Requires `{ "confirmName": "<exact board name>" }` — the typed name *is* the confirmation. `409` if it does not match. Cascades to tasks, comments, activity and tokens. |
+| `PUT` | `/boards/{boardId}/theme` | Board appearance. Body `{ background?, columns?, tickets? }`; colours are `#rrggbb` and stored lower case. Keys absent from the body are cleared, so `{}` restores every default. `400` on an unknown key, column or colour format. |
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
+
+Appearance is board administration, so it is human-only: the agent namespace has no theme route at all, and a board token calling one gets `404` (`DEC-033`). Card ink is not stored — the client derives it from contrast against the stored colour, so a board can never persist an unreadable combination.
 
 > **Implementation status (post-M8):** everything in this document is implemented, including the agent door. `/api/v1/openapi.json` serves the contract. The one absent piece is a human task **list** endpoint — the board view covers it, and the agent namespace has `/agent/tasks` with filters.
 

@@ -2,34 +2,14 @@ import { useState } from 'react'
 
 import type { BoardTheme } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
-import { cardBackground, inkFor } from './theme'
-
-/**
- * Preset surfaces.
- *
- * Seven base tones plus a few varieties, including three light ones so the
- * luminance-aware ink is exercised rather than theoretical. Clicking a swatch
- * is one action; the native picker stays for anything else.
- */
-const PRESETS = [
-  { name: 'Midnight', value: '#0b1020' },
-  { name: 'Slate', value: '#141a2e' },
-  { name: 'Steel', value: '#2b3038' },
-  { name: 'Indigo', value: '#2a2350' },
-  { name: 'Violet', value: '#3b2f63' },
-  { name: 'Teal', value: '#123c3a' },
-  { name: 'Forest', value: '#123524' },
-  { name: 'Amber', value: '#4a3617' },
-  { name: 'Rose', value: '#4a1f2a' },
-  { name: 'Paper', value: '#f4efe6' },
-  { name: 'Mint', value: '#dff2e4' },
-  { name: 'Sky', value: '#dce9f7' },
-] as const
+import { PRESETS, cardBackground, inkFor } from './theme'
 
 type Surface = {
   id: string
   label: string
   value: string | undefined
+  /** Colour the preview shows behind "Aa". */
+  preview: string | undefined
   onChange: (value: string | undefined) => void
 }
 
@@ -39,6 +19,9 @@ type Surface = {
  * Every colour is optional; clearing a surface removes its override rather
  * than storing a copy of the default, so the app can change its own defaults
  * later without boards freezing the old ones.
+ *
+ * Presets are the primary action — one click each. The native picker is
+ * behind a per-row "Custom" button so the common path stays uncluttered.
  */
 export function ThemePanel({
   initial,
@@ -51,6 +34,8 @@ export function ThemePanel({
 }) {
   const [background, setBackground] = useState<string | undefined>(initial.background)
   const [columns, setColumns] = useState<Partial<Record<ColumnKey, string>>>(initial.columns ?? {})
+  const [tickets, setTickets] = useState<string | undefined>(initial.tickets)
+  const [custom, setCustom] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,6 +48,10 @@ export function ThemePanel({
     })
   }
 
+  function toggleCustom(id: string) {
+    setCustom((current) => ({ ...current, [id]: !current[id] }))
+  }
+
   async function save() {
     if (busy) return
     setBusy(true)
@@ -72,6 +61,7 @@ export function ThemePanel({
       const theme: BoardTheme = {}
       if (background) theme.background = background
       if (Object.keys(columns).length > 0) theme.columns = columns
+      if (tickets) theme.tickets = tickets
 
       const message = await onSave(theme)
       if (message) setError(message)
@@ -82,13 +72,27 @@ export function ThemePanel({
   }
 
   const surfaces: Surface[] = [
-    { id: 'board', label: 'Board background', value: background, onChange: setBackground },
+    {
+      id: 'board',
+      label: 'Board background',
+      value: background,
+      preview: background,
+      onChange: setBackground,
+    },
     ...COLUMNS.map((column) => ({
       id: column.key,
       label: column.name,
       value: columns[column.key],
+      preview: columns[column.key],
       onChange: (value: string | undefined) => setColumn(column.key, value),
     })),
+    {
+      id: 'tickets',
+      label: 'Tickets',
+      value: tickets,
+      preview: tickets,
+      onChange: setTickets,
+    },
   ]
 
   return (
@@ -103,60 +107,77 @@ export function ThemePanel({
       </div>
 
       <p className="token-note">
-        Saved with this board and visible to everyone who can open it. Pick a swatch or use the
-        colour field for anything else. Text and cards adjust automatically so they stay readable.
+        Saved with this board and visible to everyone who can open it. Pick a swatch, or press
+        Custom for a colour of your own. Text and card shading adjust automatically so they stay
+        readable.
       </p>
 
-      {surfaces.map((surface) => (
-        <div className="theme-row" key={surface.id}>
-          <span className="theme-label">{surface.label}</span>
+      {surfaces.map((surface) => {
+        const showingCustom = custom[surface.id] === true
 
-          <div className="theme-swatches" role="group" aria-label={`${surface.label} presets`}>
-            {PRESETS.map((preset) => (
+        return (
+          <div className="theme-row" key={surface.id}>
+            <span className="theme-label">{surface.label}</span>
+
+            <div className="theme-swatches" role="group" aria-label={`${surface.label} presets`}>
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  className="swatch"
+                  style={{ background: preset.value }}
+                  aria-label={`${preset.name} for ${surface.label}`}
+                  aria-pressed={surface.value === preset.value}
+                  onClick={() => surface.onChange(preset.value)}
+                />
+              ))}
+
               <button
-                key={preset.value}
                 type="button"
-                className="swatch"
-                style={{ background: preset.value }}
-                aria-label={`${preset.name} for ${surface.label}`}
-                aria-pressed={surface.value === preset.value}
-                onClick={() => surface.onChange(preset.value)}
+                className="swatch swatch-custom"
+                aria-label={`Custom colour for ${surface.label}`}
+                aria-expanded={showingCustom}
+                onClick={() => toggleCustom(surface.id)}
+              >
+                +
+              </button>
+            </div>
+
+            {showingCustom && (
+              <input
+                className="theme-colour"
+                type="color"
+                aria-label={`Pick a custom colour for ${surface.label}`}
+                value={surface.value ?? '#141a2e'}
+                onChange={(event) => surface.onChange(event.target.value)}
               />
-            ))}
+            )}
+
+            <span
+              className="theme-preview"
+              style={
+                surface.value
+                  ? {
+                      background: cardBackground(surface.value),
+                      color: inkFor(cardBackground(surface.value)),
+                    }
+                  : undefined
+              }
+            >
+              Aa
+            </span>
+
+            <button
+              className="button"
+              type="button"
+              onClick={() => surface.onChange(undefined)}
+              disabled={!surface.value}
+            >
+              Default
+            </button>
           </div>
-
-          <input
-            className="theme-colour"
-            type="color"
-            aria-label={`Custom colour for ${surface.label}`}
-            value={surface.value ?? '#141a2e'}
-            onChange={(event) => surface.onChange(event.target.value)}
-          />
-
-          <span
-            className="theme-preview"
-            style={
-              surface.value
-                ? {
-                    background: cardBackground(surface.value),
-                    color: inkFor(cardBackground(surface.value)),
-                  }
-                : undefined
-            }
-          >
-            Aa
-          </span>
-
-          <button
-            className="button"
-            type="button"
-            onClick={() => surface.onChange(undefined)}
-            disabled={!surface.value}
-          >
-            Default
-          </button>
-        </div>
-      ))}
+        )
+      })}
 
       {error && (
         <p className="alert" role="alert">
@@ -179,6 +200,7 @@ export function ThemePanel({
           onClick={() => {
             setBackground(undefined)
             setColumns({})
+            setTickets(undefined)
           }}
           disabled={busy}
         >

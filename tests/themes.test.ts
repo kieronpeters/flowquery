@@ -5,7 +5,7 @@ import { parseAllowlist } from '../src/worker/auth/allowlist'
 import { app } from '../src/worker/app'
 import { createD1AuthStore } from '../src/worker/repositories/auth-store'
 import { completeSignIn } from '../src/worker/services/auth'
-import { cardBackground, inkFor, luminance, mix } from '../src/app/theme'
+import { PRESETS, cardBackground, contrastRatio, inkFor, luminance, mix } from '../src/app/theme'
 import { createSqliteD1 } from './helpers/sqlite-d1'
 
 /**
@@ -57,6 +57,7 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
     const response = await put({
       background: '#101820',
       columns: { backlog: '#1F2A44', done: '#123524' },
+      tickets: '#1E2433',
     })
 
     expect(response.status).toBe(200)
@@ -64,11 +65,21 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
     expect(body.theme).toEqual({
       background: '#101820',
       columns: { backlog: '#1f2a44', done: '#123524' },
+      tickets: '#1e2433',
     })
 
     const board = await app.request('/api/v1/boards/brd_demo', { headers: { cookie } }, env(db))
-    const view = (await board.json()) as { theme: { background?: string } }
+    const view = (await board.json()) as { theme: { background?: string; tickets?: string } }
     expect(view.theme.background).toBe('#101820')
+    expect(view.theme.tickets).toBe('#1e2433')
+  })
+
+  it('accepts a ticket colour on its own', async () => {
+    const response = await put({ tickets: '#F4EFE6' })
+
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { theme: Record<string, unknown> }
+    expect(body.theme).toEqual({ tickets: '#f4efe6' })
   })
 
   it('normalises upper case to lower case', async () => {
@@ -99,6 +110,9 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
       { background: 'url(https://example.com/x.png)' },
       { background: '#12345g' },
       { columns: { backlog: 'rgb(1,2,3)' } },
+      { tickets: 'red' },
+      { tickets: '#1234' },
+      { tickets: '#12345z' },
     ]
 
     for (const body of bad) {
@@ -166,6 +180,31 @@ describe('theme survives a malformed stored document', () => {
 
     const view = (await board.json()) as { theme: Record<string, unknown> }
     expect(view.theme).toEqual({})
+  })
+})
+
+describe('colour presets', () => {
+  it('every preset is a six-digit hex colour with a unique name', () => {
+    const names = new Set<string>()
+
+    for (const preset of PRESETS) {
+      expect(preset.value).toMatch(/^#[0-9a-f]{6}$/)
+      expect(names.has(preset.name)).toBe(false)
+      names.add(preset.name)
+    }
+  })
+
+  it('every preset keeps ticket text at AA contrast or better', () => {
+    for (const preset of PRESETS) {
+      expect(contrastRatio(preset.value, inkFor(preset.value))).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('every preset keeps card text readable when used as a column or page colour', () => {
+    for (const preset of PRESETS) {
+      const card = cardBackground(preset.value)
+      expect(contrastRatio(card, inkFor(card))).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
 
