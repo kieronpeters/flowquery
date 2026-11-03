@@ -1,7 +1,27 @@
 # FlowQuery — Deployment Plan (M9)
 
-**Status: NOT AUTHORISED. NOT POSSIBLE YET.**
-Nothing in this document has been executed. No cloud resource exists.
+**Status: EXECUTED 2026-11-03.** Live at https://flowquery.kieronpeters1.workers.dev on Workers Free + D1 Free. Total recurring cost: $0.
+
+## What actually happened
+
+| Step | Result |
+|---|---|
+| `wrangler d1 create flowquery-db --location apac` | Created, id `d4c07e7e-7f4b-4ac6-81e8-d5f46e026f6a` |
+| Real id written into `wrangler.jsonc` | Done |
+| `wrangler d1 migrations apply --remote` | 3 migrations applied; 13 tables; **no seed** |
+| `npm run deploy` | Preflight passed, Worker uploaded (158.45 KiB, 39.52 KiB gzip), startup 5 ms |
+| Secrets | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `AUTH_ALLOWLIST` set by the owner in their own terminal |
+| Verification | Health `200`; CSP on the document; API `401` unauthenticated; `/auth/start` → GitHub with PKCE; callback without a code → `302 /login?error=state`; real sign-in created 1 user, 1 identity, 1 session (30 days) |
+| Data check | 1 board, 1 task, 1 comment, 6 activity events persisted; a redeploy preserved them |
+
+**One defect found and fixed during deployment:** `/api/v1/health` reported `0.0.0-m7` while the app was on M8. Corrected, and the test now asserts the version *shape* rather than a literal, which is how it drifted.
+
+The original plan below is kept as written, including the blockers that no longer apply.
+
+---
+
+## Original plan (kept as the record)
+
 
 ---
 

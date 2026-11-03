@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M8 complete — hardened and release-ready. 167 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. **Nothing is deployed**; the deployment plan is written and awaits approval.
+**Status:** M9 complete — **deployed** at https://flowquery.kieronpeters1.workers.dev on Cloudflare Workers Free and D1 Free, $0 recurring. 233 tests (server, real-schema and UI), a verified restore drill, security headers on both the API and the static document, and a written runbook. Sign-in verified end to end against the live database.
 
 ---
 
@@ -23,7 +23,7 @@ Two human administrators share a dashboard listing every board. Each board has f
 | 7 | [`.flowquery/state/PROJECT_STATE.md`](.flowquery/state/PROJECT_STATE.md) | Where the project actually is |
 | 8 | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | Setup, backup, restore, incidents |
 | 9 | [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md) | What was checked, what was found, what is accepted |
-| 10 | [`docs/DEPLOYMENT_PLAN.md`](docs/DEPLOYMENT_PLAN.md) | The M9 plan — not authorised, not executed |
+| 10 | [`docs/DEPLOYMENT_PLAN.md`](docs/DEPLOYMENT_PLAN.md) | The M9 plan, and the record of how it actually went |
 
 ## What is settled
 

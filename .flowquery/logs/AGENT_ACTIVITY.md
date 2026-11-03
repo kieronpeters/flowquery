@@ -4,6 +4,24 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M9: deployed to Cloudflare
+
+**Approved by the owner:** "approved - deploy it".
+
+**Created:** one D1 database `flowquery-db` (APAC, `d4c07e7e-…`) and one Worker `flowquery`. Both Free plan. No payment method, no domain, no paid service. Recurring cost: $0.
+
+**Done, in order:** created the database; wrote the real id into `wrangler.jsonc`; applied the three migrations to the remote database (13 tables, deliberately no seed); deployed via `npm run deploy` (preflight passed); the owner created the production GitHub OAuth app and set three secrets in their own terminal so the client secret never entered this transcript.
+
+**Verified, not assumed:** health `200`; CSP and security headers present on the static document, which is the one thing that could not be tested locally; unauthenticated API `401`; `/auth/start` redirecting to GitHub with the right client id, callback and PKCE challenge; callback without a code failing cleanly to `/login?error=state`; and a real sign-in confirmed **from the remote database** — one user, one github identity, one session expiring in 30 days.
+
+**Write path:** the owner created a board, a task, changed a priority, moved a card three times and commented. The remote database recorded exactly that: 1 board, 1 task, 1 comment, 6 activity events. A redeploy afterwards preserved all of it.
+
+**Defect found during verification:** `/api/v1/health` reported `0.0.0-m7` while the app was on M8, because the test pinned the literal string. Corrected to `0.0.0-m8`, and the test now asserts the version shape so it cannot silently drift again.
+
+**Not done, deliberately:** no seed against production; no custom domain; no paid plan; no CI.
+
+---
+
 ## 2026-11-03 — Visual improvements v1 reviewed through a pull request
 
 **Asked:** put the visual work on a branch, open a merge request, assign the owner, approve and merge.

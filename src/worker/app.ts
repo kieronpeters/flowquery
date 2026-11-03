@@ -87,7 +87,7 @@ app.get('/api/v1/health', (c) =>
   c.json({
     status: 'ok',
     service: 'flowquery',
-    version: '0.0.0-m7',
+    version: '0.0.0-m8',
     time: new Date().toISOString(),
   }),
 )

@@ -14,10 +14,10 @@
     {
       "binding": "DB",
       "database_name": "flowquery-db",
-      // Local development only. This placeholder is never used remotely because
-      // no deployment exists. A real database_id is created at M9, after the
-      // owner approves deployment.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created at M9 (2026-11-03) in APAC, per DEC-026. Local development
+      // uses the same database name under .wrangler/state; this id is the
+      // remote one and is only used by `wrangler deploy` and --remote commands.
+      "database_id": "d4c07e7e-7f4b-4ac6-81e8-d5f46e026f6a",
       "migrations_dir": "migrations",
     },
   ],

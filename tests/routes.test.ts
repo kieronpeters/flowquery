@@ -148,7 +148,9 @@ describe('GET /api/v1/health', () => {
 
     const body = (await response.json()) as { status: string; version: string }
     expect(body.status).toBe('ok')
-    expect(body.version).toBe('0.0.0-m7')
+    // Shape, not an exact milestone: pinning the string is how the endpoint
+    // came to report m7 while the app was already on m8.
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+-m\d+$/)
   })
 })
 

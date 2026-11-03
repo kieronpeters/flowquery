@@ -1,45 +1,38 @@
 # Next Action
 
-**M8 is complete. M9 (deployment) is planned but blocked, and it needs three things from you.**
+**M9 is complete. FlowQuery is live at https://flowquery.kieronpeters1.workers.dev, on Free plans, costing $0.**
 
 ---
 
-## 1. The deployment cannot start yet
+## What is running
 
-| Blocker | Detail |
+| | |
 |---|---|
-| **Not authenticated** | `wrangler whoami` → "You are not authenticated". No resource can be created until you run `npx wrangler login` and complete the browser step. |
-| **No production OAuth app** | The callback URL has to match the deployed hostname, so a production app (or a second callback on the existing one) is required before sign-in works. |
-| **No approval** | Creating cloud resources needs your explicit "yes" for that step, not a general "continue". |
+| Worker | `flowquery`, Free plan, `6e50f85b` → `41cb7410` after the health fix |
+| Database | D1 `flowquery-db`, APAC, empty at migration, now holding the owner's first board |
+| Auth | GitHub OAuth app "FlowQuery", allowlist on numeric ids |
+| Cost | $0. No payment method, no paid plan, no domain |
 
-The full plan — exactly what is created, the commands in order, post-deploy checks, rollback — is in `docs/DEPLOYMENT_PLAN.md`. Nothing in it has been run.
+## Verified after deploy
 
-## 2. Two manual checks, still open
+- Health `200` with version `0.0.0-m8`.
+- CSP and security headers present on the static document — the check that could not be made locally.
+- Unauthenticated API `401`; `/auth/start` redirects to GitHub with PKCE `S256`.
+- Callback without a code fails cleanly (`302 /login?error=state`), no 500.
+- Real sign-in: 1 user, 1 identity, 1 session (30 days) in the remote database.
+- A board, a task, a priority change, three moves and a comment all persisted, with six activity events.
+- A redeploy preserved every row.
 
-Both take under a minute and both are better done before deploying:
+## Still worth doing, none of it urgent
 
-1. **Live GitHub sign-in.** ~~Create the OAuth app, fill `.dev.vars`, sign in once on localhost.~~ **Done** — the owner confirmed a live sign-in.
-2. **Drag a card** across columns and within one. **Done** — including the visibility fix; still worth a final pass before deploying.
+1. **Confirm the plan in the dashboard.** Workers & Pages → `flowquery`: should read Free, with no billing method attached. Only you can see that.
+2. **Second administrator.** They are not yet signed in on production. When they are, `users` should reach 2 — a quick way to confirm the allowlist entry for them is right.
+3. **Agent token round trip on production.** Create a token in the UI, call `/api/v1/agent/board` with it, revoke it, confirm `401`. Done locally in M8; not yet against the live Worker.
+4. **A real backup.** `docs/RUNBOOK.md` has the export procedure; the production database has no backup beyond Cloudflare's Time Travel window yet.
+5. **The product name.** "FlowQuery" is still a working title, and it is now in a URL.
 
-If either is broken, you want to find out on localhost rather than on a live URL.
+## Rules that have not changed
 
-## 3. What I did instead of deploying
-
-- Validated the deployment artefact without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files, reports the D1 binding.
-- Wrote `docs/DEPLOYMENT_PLAN.md`.
-- Added `npm run preflight`, which refuses to deploy while the D1 id is the placeholder, `_headers` is malformed, the build is missing, or `.dev.vars` is not ignored. Verified both ways: it fails today and passes once a real id is present.
-- Fixed a serious bug in my own M8 work: the `_headers` file was structurally invalid, so the SPA document would still have received no security headers. Tests now assert structure, not just strings.
-
-## 4. When you are ready
-
-Say so and I will:
-
-1. Walk `docs/DEPLOYMENT_PLAN.md` with you, item by item.
-2. Wait for `npx wrangler login` to complete.
-3. Create one D1 database and one Worker. Nothing else.
-4. Apply migrations; seed nothing.
-5. Verify a stranger cannot register.
-6. Repeat the restore drill against the remote database.
-7. Record the deployment, and how to roll it back.
-
-**Current gate: owner action on login and the OAuth app, then explicit approval for M9.**
+- Zero recurring cost. No Workers Paid, no paid add-on, no domain, no billing activation without explicit approval.
+- No seed against production. The demo data exists only locally.
+- Bob reaches one board by token; appearance and board administration stay human-only.
