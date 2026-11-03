@@ -26,6 +26,7 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 - `npm run dev` — `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON.
 - `opencode api get /api/agent` — Bob (primary) + 15 specialists discovered.
 - `npm audit --omit=dev` — 0 vulnerabilities.
+- Fresh clone to a temp directory: `npm ci`, `typecheck`, `lint`, `test`, `build` all passed.
 
 **Not done:** no product features, no schema, no D1 binding, no auth, no remote, no deployment, no paid service.
 

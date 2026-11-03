@@ -58,6 +58,10 @@ Verified behaviour at `npm run dev` (recorded from actual runs on Windows):
 | `GET /api/v1/health` | `200 application/json` |
 | `GET /api/v1/does-not-exist` | `404 application/json` |
 
+A fresh clone was verified end to end: `npm ci`, `typecheck`, `lint`, `test` and `build` all completed successfully with zero failures.
+
+> **Note on npm output:** npm 11 may warn that the `workerd` and `esbuild` install scripts "are not yet covered by allowScripts". This is expected on this machine and does not affect the build, test or lint commands above. No action is required.
+
 `run_worker_first` is scoped to `/api/*`, so page navigation never invokes the Worker and therefore never consumes the free request quota. See `docs/ARCHITECTURE.md` §2.
 
 ## Repository layout

@@ -40,6 +40,8 @@ npm run format:check
 
 All of the following were run and produced the stated results: typecheck pass, lint pass, 2 tests pass, build pass (worker 57.83 kB / client 220.80 kB), format check pass, dev server serving `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON, and `opencode api get /api/agent` listing Bob plus 15 specialists.
 
+Additionally, a fresh `git clone` into a temporary directory was verified: `npm ci`, `typecheck`, `lint`, `test` and `build` all succeeded from the committed state alone.
+
 ## Decisions made during M1 (all in the register)
 
 - `run_worker_first` scoped to `/api/*` only, so page views never consume the request quota (DEC-016).

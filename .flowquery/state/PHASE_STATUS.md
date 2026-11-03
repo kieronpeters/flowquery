@@ -31,6 +31,7 @@ Commands run, with real results:
 | `npm run format:check` | All files match Prettier style |
 | `npm run dev` | Served `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON |
 | `opencode api get /api/agent` | Bob (primary) + 15 specialists discovered |
+| Fresh `git clone` + `npm ci` | `typecheck`, `lint`, `test`, `build` all passed from the committed state |
 
 ## Explicitly not done
 
