@@ -20,7 +20,7 @@ function makeEvents(count: number): ActivityDto[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `act_${index}`,
     taskId: 'tsk_1',
-    actorType: 'human' as const,
+    actorType: index % 2 === 0 ? ('human' as const) : ('agent' as const),
     actorName: index % 2 === 0 ? 'Kieron' : 'Bob',
     eventType: 'task.created',
     payload: { title: `Card ${index}`, status: 'backlog' },
@@ -171,6 +171,15 @@ describe('ActivityFeed', () => {
 
     // 12 events is two pages; the second is the last, so Next is disabled.
     expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true)
+  })
+
+  it('marks each actor as human or agent, not just by name', async () => {
+    mockApi({ total: 2 })
+    renderFeed()
+    await openFeed()
+
+    expect(await screen.findByText('Kieron (human)')).toBeTruthy()
+    expect(screen.getByText('Bob (agent)')).toBeTruthy()
   })
 
   it('lists everyone who has acted as a checkbox', async () => {

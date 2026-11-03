@@ -73,6 +73,18 @@ function when(iso: string): string {
 }
 
 /**
+ * How the actor is described after their name.
+ *
+ * A human and an agent can share a name — a token labelled "Bob" and a person
+ * called Bob — so the kind is always shown, not inferred from the name.
+ */
+const ACTOR_KIND: Record<ActivityDto['actorType'], string> = {
+  human: 'human',
+  agent: 'agent',
+  system: 'system',
+}
+
+/**
  * Board activity, folded away until asked for.
  *
  * Closed by default and fetched only when opened: most board visits do not
@@ -303,7 +315,9 @@ export function ActivityFeed({
               <ol className="activity-list">
                 {events.map((event) => (
                   <li key={event.id} className="activity-item">
-                    <span className="activity-who">{event.actorName}</span>{' '}
+                    <span className="activity-who">
+                      {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
+                    </span>{' '}
                     <span className="activity-what">{describe(event, profiles)}</span>{' '}
                     <time className="activity-when" dateTime={event.createdAt}>
                       {when(event.createdAt)}
