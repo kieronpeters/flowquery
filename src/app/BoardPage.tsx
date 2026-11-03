@@ -1,9 +1,27 @@
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCorners,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { BoardView, ProfileDto, TaskDto } from '../shared/api-types'
-import type { ColumnKey } from '../shared/columns'
-import { TaskDrawer } from './TaskDrawer'
+import { COLUMNS, type ColumnKey } from '../shared/columns'
+import { applyMove, locate } from './board-state'
+import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 
 type LoadState =
   | { kind: 'loading' }
@@ -32,10 +50,18 @@ function formatDueDate(value: string): string {
   })
 }
 
-function TaskCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
+function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+  })
+
   return (
-    <li>
-      <button className="card" type="button" onClick={onOpen}>
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={isDragging ? 'card-item dragging' : 'card-item'}
+    >
+      <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
         <span className="card-title">{task.title}</span>
 
         {task.description && (
@@ -63,6 +89,12 @@ export function BoardPage() {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [profiles, setProfiles] = useState<ProfileDto[]>([])
   const [drawer, setDrawer] = useState<DrawerState>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   const load = useCallback(
     async (options: { silent?: boolean } = {}) => {
@@ -109,6 +141,112 @@ export function BoardPage() {
     }
   }, [])
 
+  /**
+   * Optimistic move: show the result immediately, then replace the board with
+   * the server's authoritative ordering. On conflict or failure, refetch rather
+   * than trying to repair the optimistic view locally.
+   */
+  const performMove = useCallback(
+    async (taskId: string, status: ColumnKey, position: number, expectedVersion: number) => {
+      setState((current) =>
+        current.kind === 'ok'
+          ? { kind: 'ok', view: applyMove(current.view, taskId, status, position) }
+          : current,
+      )
+
+      try {
+        const response = await fetch(
+          `/api/v1/boards/${boardId}/tasks/${encodeURIComponent(taskId)}/move`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ status, position, expectedVersion }),
+          },
+        )
+
+        if (response.status === 409) {
+          setNotice('Someone changed that task first, so the board was refreshed.')
+          await load({ silent: true })
+          return
+        }
+
+        if (!response.ok) {
+          setNotice('That move did not stick. The board was refreshed.')
+          await load({ silent: true })
+          return
+        }
+
+        const body = (await response.json()) as { board: BoardView }
+        setState({ kind: 'ok', view: body.board })
+        setNotice(null)
+      } catch {
+        setNotice('The board could not be reached. Refresh to resync.')
+        await load({ silent: true })
+      }
+    },
+    [boardId, load],
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || state.kind !== 'ok') return
+
+    const view = state.view
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    const task = view.columns.flatMap((column) => column.tasks).find((item) => item.id === activeId)
+    if (!task) return
+
+    const overColumn =
+      view.columns.find((column) => column.key === overId) ??
+      view.columns.find((column) => column.tasks.some((item) => item.id === overId))
+    if (!overColumn) return
+
+    const position =
+      overColumn.key === overId
+        ? overColumn.tasks.length
+        : overColumn.tasks.findIndex((item) => item.id === overId)
+
+    if (overColumn.key === task.status && position === task.position) return
+
+    void performMove(activeId, overColumn.key, position, task.version)
+  }
+
+  /** Keyboard alternative to dragging (TASK-008). */
+  const moveRelative = useCallback(
+    async (taskId: string, direction: MoveDirection): Promise<string | null> => {
+      if (state.kind !== 'ok') return 'The board is still loading.'
+
+      const view = state.view
+      const task = view.columns.flatMap((column) => column.tasks).find((item) => item.id === taskId)
+      const here = locate(view, taskId)
+      if (!task || !here) return 'That task is no longer on the board.'
+
+      const columnIndex = COLUMNS.findIndex((column) => column.key === here.status)
+
+      if (direction === 'up' || direction === 'down') {
+        const position = direction === 'up' ? here.index - 1 : here.index + 1
+        if (position < 0) return 'Already at the top of this column.'
+        if (position >= here.count) return 'Already at the bottom of this column.'
+        await performMove(taskId, here.status, position, task.version)
+        return null
+      }
+
+      const targetIndex = direction === 'left' ? columnIndex - 1 : columnIndex + 1
+      if (targetIndex < 0) return 'Already in the first column.'
+      if (targetIndex >= COLUMNS.length) return 'Already in the last column.'
+
+      const targetKey = COLUMNS[targetIndex]!.key
+      const targetColumn = view.columns.find((column) => column.key === targetKey)
+      if (!targetColumn) return 'That column could not be found.'
+
+      await performMove(taskId, targetKey, targetColumn.tasks.length, task.version)
+      return null
+    },
+    [performMove, state],
+  )
+
   if (state.kind === 'loading') {
     return (
       <main className="page">
@@ -152,42 +290,29 @@ export function BoardPage() {
       <div className="board-heading">
         <h1>{board.name}</h1>
         <p className="lede">
-          {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'}
+          {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag a card, or open it and
+          use the move buttons
         </p>
       </div>
 
-      <div className="board">
-        {columns.map((column) => (
-          <section className="column" key={column.key} aria-labelledby={`column-${column.key}`}>
-            <header className="column-header">
-              <h2 id={`column-${column.key}`}>{column.name}</h2>
-              <span className="count">{column.taskCount}</span>
-            </header>
+      {notice && (
+        <p className="alert alert-neutral" role="status">
+          {notice}
+        </p>
+      )}
 
-            {column.tasks.length === 0 ? (
-              <p className="empty">No tasks</p>
-            ) : (
-              <ul className="card-list">
-                {column.tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onOpen={() => setDrawer({ kind: 'edit', taskId: task.id })}
-                  />
-                ))}
-              </ul>
-            )}
-
-            <button
-              className="add-task"
-              type="button"
-              onClick={() => setDrawer({ kind: 'create', status: column.key })}
-            >
-              + Add task
-            </button>
-          </section>
-        ))}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+        <div className="board">
+          {columns.map((column) => (
+            <Column
+              key={column.key}
+              column={column}
+              onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
+              onAdd={() => setDrawer({ kind: 'create', status: column.key })}
+            />
+          ))}
+        </div>
+      </DndContext>
 
       {drawer && boardId && (
         <TaskDrawer
@@ -196,8 +321,55 @@ export function BoardPage() {
           profiles={profiles}
           onClose={() => setDrawer(null)}
           onChanged={() => load({ silent: true })}
+          onMoveRelative={(direction) =>
+            drawer.kind === 'edit' ? moveRelative(drawer.taskId, direction) : Promise.resolve(null)
+          }
         />
       )}
     </main>
+  )
+}
+
+function Column({
+  column,
+  onOpen,
+  onAdd,
+}: {
+  column: BoardView['columns'][number]
+  onOpen: (taskId: string) => void
+  onAdd: () => void
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.key })
+
+  return (
+    <section
+      ref={setNodeRef}
+      className={isOver ? 'column over' : 'column'}
+      aria-labelledby={`column-${column.key}`}
+    >
+      <header className="column-header">
+        <h2 id={`column-${column.key}`}>{column.name}</h2>
+        <span className="count">{column.taskCount}</span>
+      </header>
+
+      <SortableContext
+        items={column.tasks.map((task) => task.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {column.tasks.length === 0 ? (
+          <p className="empty">Drop a task here</p>
+        ) : (
+          <ul className="card-list">
+            {column.tasks.map((task) => (
+              <SortableCard key={task.id} task={task} onOpen={() => onOpen(task.id)} />
+            ))}
+          </ul>
+        )}
+      </SortableContext>
+
+      <button className="add-task" type="button" onClick={onAdd}>
+        + Add task
+      </button>
+    </section>
   )
 }

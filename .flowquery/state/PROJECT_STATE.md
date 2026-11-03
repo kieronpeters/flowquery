@@ -2,8 +2,8 @@
 
 **Application:** FlowQuery (working name; clearance not pursued)
 **Primary coordinator:** Bob — the current OpenCode session
-**Current phase:** M5a complete — task management. Awaiting owner approval for M5b.
-**Implementation authorised:** M1–M4, M5a (complete). M5b onward: no.
+**Current phase:** M5 complete — Kanban board, tasks, ordering and drag-and-drop. Awaiting owner approval for M6.
+**Implementation authorised:** M1–M5 (complete). M6 onward: no.
 **Git repository:** Local only, branch `main`. No remote.
 **Cloud resources:** None
 **Deployment:** None
@@ -41,15 +41,16 @@ Register: `docs/DECISIONS.md`.
 
 - Git on `main`; local only, no remote.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
-- `typecheck`, `lint`, `test` (**64 tests**), `build`, `format:check` all pass.
+- `typecheck`, `lint`, `test` (**92 tests**), `build`, `format:check` all pass.
 - D1 bound locally; `0001_init.sql` + `0002_auth_attempts.sql` applied; seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user.
 - Authentication implemented: GitHub OAuth + PKCE, numeric-id allowlist, opaque sessions stored as SHA-256, `__Host-` cookie, sign-out invalidation, Origin check, rate limiting.
 - Board management implemented: list, create, rename, permanent delete with typed-name confirmation; cascade verified against the real schema.
-- Task management implemented (M5a): create, read, partial update, delete; validation for title/description/priority/assignee/due date; optimistic concurrency via `expectedVersion`; a status change appends to the end of the target column.
-- Task detail drawer serves both create and edit, with two-step delete confirmation.
+- Task management implemented: create, read, partial update, delete; validation; optimistic concurrency via `expectedVersion`.
+- Ordering implemented: `move` endpoint, atomic guarded update then idempotent full renumber, drag-and-drop with dnd-kit, and a keyboard alternative in the drawer.
+- Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
-- Dashboard and task drawer verified in a browser: create, reopen to confirm persistence, change column, delete with confirmation; zero console errors.
-- Read path proven end to end: SPA → `/api/v1/boards/:id` → service → repository → D1 → rendered board with five columns.
+- Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.
+- **Not verified by automation:** the drag gesture itself (see gaps).
 - Export → total state loss → import restored identical data with foreign keys intact (M2).
 - Measured: board view 0.032 ms at 9 tasks, 1.457 ms at 500; auth path ~0.04 ms.
 - OpenCode discovers Bob as primary and 15 specialists as subagents.
@@ -88,12 +89,12 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
 Remote: none, and none authorised.
 
-## Known gaps carried into M5b
+## Known gaps carried into M6
 
 - **Live sign-in untested.** The OAuth callback is covered with a stubbed GitHub and the redirect was verified on a dev server; a real round trip needs the owner's credentials.
-- No drag-and-drop, no intra-column reordering, no explicit keyboard move control (M5b).
+- **Drag-and-drop gesture untested by automation.** Sortable wiring present, behaviour verified through the keyboard move buttons and API tests. Needs a human click-drag.
 - No comments or activity UI (M6).
-- No task list endpoint; the board view returns tasks per column.
+- No task list endpoint with filters (needed for M7).
 - Seeded placeholder user (`usr_dev_owner`) should be removed once real OAuth users exist.
 - `design/DESIGN_DIRECTION.md` still describes a richer product; trim it to the MVP shell.
 - `repository/SETUP_QUESTIONS.md` predates the current plan; reconcile or mark historical.

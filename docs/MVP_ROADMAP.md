@@ -83,7 +83,7 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 
 ## M5 — Kanban board and task CRUD — L
 
-**Status: M5a complete 2026-11-03.** M5b (ordering, drag-and-drop, keyboard move) outstanding.
+**Status: complete 2026-11-03** (delivered as M5a task CRUD, then M5b ordering).
 
 **Goal:** FlowQuery is usable for real work.
 

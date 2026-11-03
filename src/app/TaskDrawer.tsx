@@ -14,6 +14,8 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 type Mode = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string }
 
+export type MoveDirection = 'up' | 'down' | 'left' | 'right'
+
 type Form = {
   title: string
   description: string
@@ -44,8 +46,9 @@ export function TaskDrawer(props: {
   profiles: ProfileDto[]
   onClose: () => void
   onChanged: () => Promise<void> | void
+  onMoveRelative?: (direction: MoveDirection) => Promise<string | null>
 }) {
-  const { boardId, mode, profiles, onClose, onChanged } = props
+  const { boardId, mode, profiles, onClose, onChanged, onMoveRelative } = props
 
   const [form, setForm] = useState<Form>(
     mode.kind === 'create' ? { ...EMPTY, status: mode.status } : EMPTY,
@@ -54,7 +57,10 @@ export function TaskDrawer(props: {
   const [loading, setLoading] = useState(mode.kind === 'edit')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [moveError, setMoveError] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  // Bumped after a move so the drawer reloads the task's new position and version.
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     if (mode.kind !== 'edit') return
@@ -89,7 +95,7 @@ export function TaskDrawer(props: {
     return () => {
       cancelled = true
     }
-  }, [boardId, mode])
+  }, [boardId, mode, reloadToken])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -140,6 +146,25 @@ export function TaskDrawer(props: {
 
       await onChanged()
       onClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function move(direction: MoveDirection) {
+    if (!onMoveRelative || busy) return
+
+    setBusy(true)
+    setMoveError(null)
+
+    try {
+      const message = await onMoveRelative(direction)
+      if (message) {
+        setMoveError(message)
+        return
+      }
+      // The task's column, position and version all changed; reload it.
+      setReloadToken((token) => token + 1)
     } finally {
       setBusy(false)
     }
@@ -270,6 +295,60 @@ export function TaskDrawer(props: {
                 />
               </label>
             </div>
+
+            {mode.kind === 'edit' && onMoveRelative && (
+              <div className="move-row">
+                <span className="field-label">Move</span>
+                <div className="move-buttons">
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void move('left')}
+                    disabled={busy}
+                    aria-label="Move to the previous column"
+                    title="Previous column"
+                  >
+                    ←
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void move('up')}
+                    disabled={busy}
+                    aria-label="Move up one place"
+                    title="Move up"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void move('down')}
+                    disabled={busy}
+                    aria-label="Move down one place"
+                    title="Move down"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void move('right')}
+                    disabled={busy}
+                    aria-label="Move to the next column"
+                    title="Next column"
+                  >
+                    →
+                  </button>
+                  <span className="move-hint">column · order</span>
+                </div>
+                {moveError && (
+                  <p className="alert" role="alert">
+                    {moveError}
+                  </p>
+                )}
+              </div>
+            )}
 
             {error && (
               <p className="alert" role="alert">

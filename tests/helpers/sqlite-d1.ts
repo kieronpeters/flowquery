@@ -59,6 +59,17 @@ export function createSqliteD1(options: { seed?: boolean } = {}): D1Database {
 
       return statement
     },
+
+    /**
+     * Sequential execution, not transactional. Real D1 wraps a batch in a
+     * transaction; this does not, so do not write a test that claims to prove
+     * batch atomicity — it would be testing this helper.
+     */
+    async batch(statements: { run: () => Promise<unknown> }[]) {
+      const results = []
+      for (const statement of statements) results.push(await statement.run())
+      return results
+    },
   }
 
   return facade as unknown as D1Database

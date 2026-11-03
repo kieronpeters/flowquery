@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M5a complete — task management (CRUD, detail panel, concurrency).
-**Next gate:** owner approval for M5b (ordering, drag-and-drop, keyboard move).
+**Current phase:** M5 complete — Kanban board, tasks, ordering and drag-and-drop.
+**Next gate:** owner approval for M6 (comments and activity).
 **Last updated:** 2026-11-03.
 
 ## Phase history
@@ -17,36 +17,35 @@
 | M2 Walking skeleton | Complete | D1 schema, seeds, read-only board, CPU measurement, restore drill |
 | M3 Human authentication | Complete | GitHub OAuth + PKCE, allowlist, sessions, CSRF, rate limiting |
 | M4 Boards and dashboard | Complete | Board list, create, rename, permanent delete with cascade |
-| **M5a Task management** | **Complete 2026-11-03** | Task CRUD, detail drawer, validation, optimistic concurrency |
-| M5b Ordering and drag-and-drop | Not started | Requires owner approval |
-| M6–M8 | Not started | — |
+| M5a Task management | Complete | Task CRUD, detail drawer, validation, concurrency |
+| **M5b Ordering and drag-and-drop** | **Complete 2026-11-03** | Move endpoint, pure ordering, dnd-kit, keyboard alternative |
+| M6 Comments and activity | Not started | Requires owner approval |
+| M7–M8 | Not started | — |
 | M9 Deployment | Not started | Requires explicit deployment approval |
 
-## M5a completion evidence
+## M5b completion evidence
 
 | Check | Result |
 |---|---|
-| `npm run typecheck` | Pass |
-| `npm run lint` | Pass, no findings |
-| `npm test` | **64 tests passed**, 5 files |
-| `npm run build` | Pass — worker 78 kB, client 278 kB |
-| Create with defaults | `201`, status backlog, position appended, version 1 |
-| Create into a chosen column | `201`, lands in that column |
-| Title/description/priority/status/date/assignee validation | 9 invalid cases → `400` with the offending field identified |
-| Full description | Single-task read returns 900 characters; board view truncates to 500 and flags it |
-| Cross-board task read | `404` |
-| Update | Fields applied, version incremented to 2 |
-| Clear assignee/due date | Both accept `null` |
-| Status change | Moves to the end of the target column (position recomputed) |
-| Stale `expectedVersion` | `409`, and the task is unchanged |
-| Delete | `204`, task gone, its comments cascade |
-| `GET /profiles` | 18 profiles; `401` without a session |
-| Browser | Drawer create → card appears; reopen shows every saved field; column change moves the card; two-step delete removes it; zero console errors |
+| `npm run typecheck` / `lint` / `build` | Pass |
+| `npm test` | **92 tests passed**, 7 files |
+| Ordering unit tests | 13 cases: move up/down/start/end, clamping, no-op, empty column, no duplication, round-trip, invariants over a move sequence |
+| Reorder within a column | Positions become the expected order; both DOM and API agree |
+| Cross-column move | Lands at the requested index; source column closes the gap |
+| Move beyond the end | Appends |
+| Sequence of six moves | Positions stay unique and contiguous; task count unchanged at 9 |
+| Stale `expectedVersion` on move | `409`, nothing moved |
+| Invalid status or index | `400` |
+| Wrong board | `404`, task unmoved |
+| Unauthenticated move | `401` |
+| Browser: drawer move down | Order changed, positions 0/1/2 contiguous, confirmed via API |
+| Browser: drawer move to next column | Landed at the end of To Do, drawer reloaded to the new status, version incremented |
+| Browser: drag-and-drop gesture | **Not completed by automation** — sortable attributes and live region present, but synthetic pointer events cannot drive dnd-kit's pointer capture, and automated key events announced a pickup without a completed drop |
 
 ## Design note
 
-The task drawer is one component for both create and edit, so the fields and validation cannot drift apart. A status change is treated as "status + position" together, which is why a move can never leave a position pointing into a column the task no longer occupies.
+The move applies a version-guarded update **first**, then renumbers both affected columns. If the guard fails, nothing else is touched. The renumber writes explicit positions for the whole column and is idempotent, so a retry repairs rather than compounds an inconsistency.
 
 ## Explicitly not done
 
-No drag-and-drop, no intra-column reordering, no keyboard move control. No comments or activity UI. No agent API or tokens. No remote repository, deployment or cost.
+No comments or activity UI. No agent API or tokens. No notifications. No remote repository, deployment or cost.

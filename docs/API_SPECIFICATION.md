@@ -80,7 +80,7 @@ Session cookie: `__Host-fq_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path
 
 Deletion deliberately requires typing the board name: it is irreversible (`BOARD-004`, `BOARD-005`).
 
-> **Implementation status (M5a):** task create, read, partial update and delete are implemented and session-gated, along with `GET /profiles`. The task **list** endpoint and drag-and-drop reordering are not: the board view already returns tasks per column, and reordering lands in M5b. Agent tokens remain unimplemented (M7).
+> **Implementation status (M5b):** board and task management are implemented end to end, including moves with drag-and-drop and a keyboard alternative. The task **list** endpoint is still not implemented — the board view returns tasks per column, and the agent API (M7) will add filtering. Agent tokens remain unimplemented (M7).
 
 ## 5. Agent tokens (human)
 
@@ -181,7 +181,7 @@ There is **no** `POST /agent/boards`, `PATCH /agent/boards/*` or `DELETE /agent/
 
 Response returns the authoritative ordering for the affected columns so the client can reconcile an optimistic update.
 
-> **M5a behaviour:** a `PATCH` that changes `status` appends the task to the **end** of the target column. Explicit `position` and intra-column reordering arrive with drag-and-drop in M5b.
+> **Implemented behaviour:** `position` is the task's final index in the target column (0-based). Out-of-range values clamp. The response returns the **whole board view**, not just the affected columns, so the client replaces its state with one authoritative ordering instead of merging two views. A `PATCH` that changes `status` still appends to the end of the target column; `move` is the endpoint that controls index.
 
 ### Update task
 

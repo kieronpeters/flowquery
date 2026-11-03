@@ -43,18 +43,26 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 ## Awaiting approval
 
 ### M5b — Ordering and movement
-- [ ] Move between the five fixed columns with drag-and-drop (dnd-kit)
-- [ ] Reorder within a column
-- [ ] Explicit keyboard move control (TASK-008)
-- [ ] Pure ordering function, unit tested in isolation
-- [ ] Atomic renumbering in one `db.batch()`
-- [ ] Optimistic updates with `409` reconciliation
-- [ ] Tests asserting positions stay unique and contiguous after every operation
-- [ ] Tests for TASK-007, TASK-008, TASK-009
+- [x] `POST /api/v1/boards/:boardId/tasks/:taskId/move`
+- [x] Pure ordering functions in `src/shared/ordering.ts`, 13 unit tests
+- [x] Version-guarded move, then idempotent full renumber of affected columns
+- [x] Drag-and-drop with dnd-kit (sortable columns and cards)
+- [x] Keyboard alternative in the drawer: ← → across columns, ↑ ↓ within
+- [x] Optimistic update, reconciled with the server's board view
+- [x] Tests for TASK-007, TASK-008, TASK-009 (10 cases)
+- [ ] Drag gesture verified by a human (automation could not complete a drop)
+
+## Awaiting approval
+
+### M6 — Comments and activity
+- [ ] Comment add/list on a task, attributed to the acting human or Bob
+- [ ] `GET /api/v1/boards/:boardId/activity`, newest first, paginated
+- [ ] Activity recorded for create, edit, move, assign, reprioritise, comment, delete
+- [ ] Board UI: comments in the drawer; activity feed
+- [ ] Tests for COM-001…003 and ACT-001…004
 
 ## Not yet authorised
 
-### M6 — Comments and activity
 ### M7 — Agent API and tokens (isolation tests, OpenAPI)
 ### M8 — Hardening, final restore drill, performance pass
 ### M9 — Deployment (separate approval; `workers.dev`; replace placeholder database id)

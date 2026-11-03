@@ -526,6 +526,48 @@ a {
   color: var(--text);
 }
 
+/* Drag and drop ----------------------------------------------------------- */
+
+.card-item {
+  touch-action: none;
+}
+
+.card-item.dragging {
+  opacity: 0.35;
+}
+
+.column.over {
+  border-color: var(--accent);
+  background: rgba(139, 124, 246, 0.06);
+}
+
+.move-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.25rem;
+}
+
+.move-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.move-buttons .button {
+  margin-top: 0;
+  min-width: 2.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.move-hint {
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 /* Task drawer ------------------------------------------------------------- */
 
 .add-task {

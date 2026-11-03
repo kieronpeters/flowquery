@@ -1,41 +1,35 @@
 # Next Action
 
-**M5a is complete. One approval needed: M5b.**
+**M5 is complete. Two things from you before M6.**
 
-## 1. Approve M5b — ordering and movement
+## 1. Ten seconds of manual checking
 
-This is the last piece of the Kanban experience, and the riskiest code in the project.
+Two things automation could not verify:
 
-- Drag-and-drop between the five columns and within a column (dnd-kit)
-- Explicit keyboard move control, so drag-and-drop is never the only way (TASK-008)
-- Atomic position renumbering in a single `db.batch()`
-- Optimistic updates with `409` reconciliation
-- Tests for TASK-007, TASK-008, TASK-009, TASK-012
+**Drag-and-drop.** Open a board and drag a card to another column, and drag one within its column. It should move immediately and stay put. The move logic itself is verified — an API call, a pure ordering function with 13 tests, and the drawer's move buttons all pass — but the drag gesture needs a human.
 
-The concurrency half of TASK-012 already works — `expectedVersion` returns `409` today — so M5b adds the ordering rules and the UI.
-
-## 2. Still outstanding: a live GitHub sign-in
-
-Carried from M3. Five minutes:
+**The live GitHub sign-in.** Carried since M3, and now blocking any realistic use of the app. Five minutes:
 
 1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
    - Homepage URL: `http://localhost:5173`
    - Authorization callback URL: `http://localhost:5173/api/v1/auth/callback`
-2. `cp .dev.vars.example .dev.vars` and fill in the client id/secret plus `AUTH_ALLOWLIST="<your id>:Kieron,<friend id>:Friend"`.
+2. `cp .dev.vars.example .dev.vars`, fill in client id/secret and `AUTH_ALLOWLIST="<your id>:Kieron,<friend id>:Friend"`.
 3. `npm run db:reset && npm run dev`.
 
-## A recommendation about M5b
+## 2. Approve M6 — comments and activity
 
-Position renumbering is the one place where a bug silently corrupts a board: tasks can vanish from view, or two tasks can claim the same slot. I plan to:
+- Comments per task: add, list, attributed to the acting human or Bob
+- Append-only activity: created, edited, moved, assigned, reprioritised, commented, deleted
+- Board-level activity feed, newest first, paginated
+- Comment body rendered as text, never HTML
+- Tests for COM-001…003 and ACT-001…004
 
-1. Compute the new ordering in the service layer as a pure function, tested independently.
-2. Apply it with `db.batch()` so a half-applied reorder cannot exist.
-3. Assert in tests that positions are contiguous and unique after every operation.
+## A caution about M6
 
-That is more structure than the rest of the code, and it is deliberate.
+Activity is the one place where "helpful" enrichment becomes a liability: once you start recording diffs of every field, the payload grows and the history becomes noisy. I plan to record **what changed and by whom**, with a small structured payload (`from`/`to`), and nothing else. If the history later feels thin, adding detail is easy; removing it is not.
 
-## Not in M5b
+## Not in M6
 
-Comments and activity history (M6), agent API (M7), notifications (dropped).
+The agent API (M7), notifications (dropped), per-user preferences.
 
-**Current gate: owner review of M5a.**
+**Current gate: owner review of M5.**

@@ -9,10 +9,15 @@ import {
   deleteTask,
   getActiveProfile,
   getTaskById,
+  guardedMove,
   insertTask,
+  listColumnTaskIds,
   nextPosition,
+  renumberColumn,
   updateTask,
 } from '../repositories/tasks'
+import { loadBoardView } from './board-view'
+import { moveWithin } from '../../shared/ordering'
 import { toTaskDto } from './task-dto'
 
 export const TITLE_MAX = 200
@@ -285,4 +290,100 @@ export async function removeTask(
   input: { boardId: string; taskId: string },
 ): Promise<boolean> {
   return await deleteTask(db, input.boardId, input.taskId)
+}
+
+export type MoveResult =
+  | { kind: 'ok'; board: Awaited<ReturnType<typeof loadBoardView>>; task: TaskDto }
+  | { kind: 'invalid'; fields: FieldErrors }
+  | { kind: 'not_found' }
+  | { kind: 'conflict' }
+
+/**
+ * Moves a task to a column and index (TASK-007, TASK-009).
+ *
+ * Order matters:
+ *  1. the version-guarded update runs first, so a stale client changes nothing;
+ *  2. only then are the affected columns renumbered, and idempotently.
+ */
+export async function moveTask(
+  db: D1Database,
+  input: {
+    boardId: string
+    taskId: string
+    body: Record<string, unknown>
+    now?: number
+  },
+): Promise<MoveResult> {
+  const fields: FieldErrors = {}
+
+  const status = validateStatus(input.body.status)
+  if (!status.ok) fields.status = status.message
+
+  const rawPosition = input.body.position
+  if (typeof rawPosition !== 'number' || !Number.isInteger(rawPosition) || rawPosition < 0) {
+    fields.position = 'Position must be a non-negative integer.'
+  }
+
+  let expectedVersion: number | undefined
+  if ('expectedVersion' in input.body) {
+    const raw = input.body.expectedVersion
+    if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) {
+      fields.expectedVersion = 'Must be a positive integer.'
+    } else {
+      expectedVersion = raw
+    }
+  }
+
+  if (!status.ok || Object.keys(fields).length > 0) return { kind: 'invalid', fields }
+
+  const task = await getTaskById(db, input.boardId, input.taskId)
+  if (!task) return { kind: 'not_found' }
+
+  const target = status.value
+  const sameColumn = target === task.status
+  const now = input.now ?? Date.now()
+
+  // Works for both cases: within a column the id is removed then reinserted;
+  // across columns it is simply inserted at the requested index.
+  const finalTarget = moveWithin(
+    await listColumnTaskIds(db, input.boardId, target),
+    input.taskId,
+    rawPosition as number,
+  )
+
+  const movedPosition = finalTarget.indexOf(input.taskId)
+  if (movedPosition === -1) return { kind: 'not_found' }
+
+  const outcome = await guardedMove(db, {
+    boardId: input.boardId,
+    taskId: input.taskId,
+    status: target,
+    position: movedPosition,
+    expectedVersion,
+    now,
+  })
+
+  if (outcome === 'not_found') return { kind: 'not_found' }
+  if (outcome === 'conflict') return { kind: 'conflict' }
+
+  if (!sameColumn) {
+    const sourceIds = await listColumnTaskIds(db, input.boardId, task.status)
+    await renumberColumn(
+      db,
+      input.boardId,
+      task.status,
+      sourceIds.filter((id) => id !== input.taskId),
+    )
+  }
+
+  await renumberColumn(db, input.boardId, target, finalTarget)
+
+  const [board, updated] = await Promise.all([
+    loadBoardView(db, input.boardId),
+    getTaskById(db, input.boardId, input.taskId),
+  ])
+
+  if (!board || !updated) return { kind: 'not_found' }
+
+  return { kind: 'ok', board, task: await toDto(db, updated) }
 }

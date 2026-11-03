@@ -176,3 +176,79 @@ export async function getActiveProfile(
     .bind(profileId)
     .first<ProfileRow>()
 }
+
+/** Task ids in a column, in display order. */
+export async function listColumnTaskIds(
+  db: D1Database,
+  boardId: string,
+  status: ColumnKey,
+): Promise<string[]> {
+  const { results } = await db
+    .prepare('SELECT id FROM tasks WHERE board_id = ? AND status = ? ORDER BY position, created_at')
+    .bind(boardId, status)
+    .all<{ id: string }>()
+
+  return (results ?? []).map((row) => row.id)
+}
+
+export type MoveOutcome = 'ok' | 'conflict' | 'not_found'
+
+/**
+ * Applies the moved task's new column and position under a version guard.
+ *
+ * This runs *before* renumbering so a stale client cannot shift a whole column
+ * on the strength of an outdated view: if the guard fails, nothing else is
+ * touched.
+ */
+export async function guardedMove(
+  db: D1Database,
+  input: {
+    boardId: string
+    taskId: string
+    status: ColumnKey
+    position: number
+    expectedVersion?: number
+    now: number
+  },
+): Promise<MoveOutcome> {
+  const versionClause = input.expectedVersion === undefined ? '' : ' AND version = ?'
+  const values: unknown[] = [input.status, input.position, input.now, input.taskId, input.boardId]
+  if (input.expectedVersion !== undefined) values.push(input.expectedVersion)
+
+  const result = await db
+    .prepare(
+      `UPDATE tasks
+          SET status = ?, position = ?, version = version + 1, updated_at = ?
+        WHERE id = ? AND board_id = ?${versionClause}`,
+    )
+    .bind(...values)
+    .run()
+
+  if ((result.meta?.changes ?? 0) > 0) return 'ok'
+
+  const existing = await getTaskById(db, input.boardId, input.taskId)
+  return existing ? 'conflict' : 'not_found'
+}
+
+/**
+ * Writes explicit positions for a whole column in one batch.
+ *
+ * A full renumber rather than a minimal diff: it is idempotent, so a retry
+ * repairs any inconsistency instead of compounding it.
+ */
+export async function renumberColumn(
+  db: D1Database,
+  boardId: string,
+  status: ColumnKey,
+  orderedIds: readonly string[],
+): Promise<void> {
+  if (orderedIds.length === 0) return
+
+  const statements = orderedIds.map((id, position) =>
+    db
+      .prepare('UPDATE tasks SET position = ? WHERE id = ? AND board_id = ? AND status = ?')
+      .bind(position, id, boardId, status),
+  )
+
+  await db.batch(statements)
+}

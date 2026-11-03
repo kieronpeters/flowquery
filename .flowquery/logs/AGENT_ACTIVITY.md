@@ -4,6 +4,33 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M5b ordering and drag-and-drop (Bob, current session)
+
+**Authorised:** M5b — ordering, drag-and-drop, keyboard alternative.
+
+**Performed:**
+- `src/shared/ordering.ts`: `moveWithin`, `positionsFor`, `isContiguous` — pure, shared by worker and UI. Moved out of `worker/services` so the client can compute optimistic moves with the same rule.
+- `repositories/tasks.ts`: `listColumnTaskIds`, `guardedMove` (version-checked), `renumberColumn` (batch).
+- `services/tasks.ts`: `moveTask` — guarded update first, then renumber both affected columns.
+- `POST /api/v1/boards/:boardId/tasks/:taskId/move`; response returns the whole board view.
+- UI: dnd-kit sortable columns and cards; optimistic `applyMove`; reconciliation with the server response; notice on 409.
+- Drawer move controls: ← → across columns, ↑ ↓ within, reloading the task after each move.
+
+**Verified (actual output):**
+- 92 tests, 7 files; typecheck, lint, build clean.
+- 13 ordering unit tests including clamping, round-trip and invariant sequences.
+- Reorder within a column and across columns produce expected order; positions contiguous and unique after six consecutive moves; task count unchanged.
+- Stale version on move → 409, nothing moved; wrong board → 404; invalid index → 400; unauthenticated → 401.
+- Browser: drawer ↓ reordered the column (API confirmed positions 0/1/2); drawer → moved the task to the end of To Do, drawer reloaded to `todo`, version incremented to 3.
+
+**Could not verify:** the drag gesture itself. Synthetic pointer events cannot drive dnd-kit (it uses pointer capture), and automated key events announced a pickup but never completed a drop. The sortable attributes and live region are present, so the wiring is mounted; a human click-drag is required. Recorded in `NEXT_ACTION.md` and the README rather than glossed over.
+
+**Not done:** no comments or activity, no agent API, no deployment.
+
+**Outcome:** M5 complete; awaiting approval for M6.
+
+---
+
 ## 2026-11-03 — M5a task management (Bob, current session)
 
 **Authorised:** M5a — task CRUD and detail (owner approved M5; Bob proposed and took the split).

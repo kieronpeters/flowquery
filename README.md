@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** M5a complete — task management. Sign in, manage boards, and create, edit, move and delete tasks through a detail panel. **Drag-and-drop ordering is not built yet** (M5b). Nothing is deployed.
+**Status:** M5 complete — the Kanban experience works: create, edit, drag between columns, reorder, and delete tasks. **Comments and activity history are next** (M6). Nothing is deployed.
 
 ---
 
@@ -47,7 +47,7 @@ npm run dev                      # Vite + Worker on http://localhost:5173
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Vitest — 64 tests, including real-schema tests through SQLite |
+| `npm test` | Vitest — 92 tests, including real-schema tests through SQLite |
 | `npm run typecheck` | `tsc` for both the app and the Worker projects |
 | `npm run lint` | ESLint |
 | `npm run build` | Production build into `dist/` |
@@ -89,6 +89,7 @@ Without these values, `/api/v1/auth/start` returns `503 AUTH_NOT_CONFIGURED` and
 | `GET /api/v1/boards/:id/tasks/:taskId` | `200` with the **full** description (board view truncates at 500 characters) |
 | `POST /api/v1/boards/:id/tasks` | `201` with the task; `400` with field errors |
 | `PATCH /api/v1/boards/:id/tasks/:taskId` | `200`; `409` if `expectedVersion` is stale |
+| `POST /api/v1/boards/:id/tasks/:taskId/move` | `200` with the whole board view; `409` if stale, `400` on a bad index |
 | `DELETE /api/v1/boards/:id/tasks/:taskId` | `204`; cascades to the task's comments |
 | `GET /api/v1/profiles` | `200` with the 18 assignable profiles |
 | `GET /api/v1/auth/start` | `302` to GitHub with PKCE, or `503` if unconfigured |
@@ -104,6 +105,8 @@ The **real GitHub round trip**. The callback is covered by tests with a stubbed 
 The M4 dashboard was verified in a real browser end to end — create, rename, and the typed-name delete confirmation — but with a locally created session rather than a GitHub sign-in.
 
 M5a was also verified in a browser: creating a task through the drawer, reopening it to confirm every field persisted, changing its column, and deleting it with the two-step confirmation.
+
+**M5b drag-and-drop is not verified by automation.** The sortable wiring is present (dnd-kit attributes and its live region are in the DOM) and the board renders under its context without errors, but automated pointer and keyboard events could not complete a drop gesture in this harness. The *movement behaviour* is verified through the drawer's move buttons, which call the same code path, plus the ordering unit tests and the move API tests. A human click-drag is still worth doing.
 
 ## Data
 
