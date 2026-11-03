@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M0 — specification consolidated; owner approval pending.
-**Implementation:** not authorised.
+**Current phase:** M1 complete — repository foundation and project configuration.
+**Next gate:** owner approval for M2.
 **Last updated:** 2026-11-03.
 
 ## Phase history
@@ -10,32 +10,28 @@
 |---|---|---|
 | Initial package assembly | Complete | Project pack, team roster, concept images, early research |
 | Requirements consolidation (v1) | Complete — superseded | Organisation → project → board hierarchy; never implemented |
-| Access-control investigation | Complete — resolved by scope change | The hierarchy was removed rather than secured; authenticated-humans-only chosen |
-| **Specification consolidation (v2)** | **Complete 2026-11-03** | Flat board model documented end to end; full documentation set rewritten; single decisions register |
-| Owner review and approval | **Pending** | Blocks everything |
-| M1 Repository foundation | Not started | Requires approval |
-| M2–M8 Implementation | Not started | Requires M1 |
+| Access-control investigation | Complete — resolved by scope change | Hierarchy removed; authenticated-humans-only chosen |
+| Specification consolidation (v2) | Complete 2026-11-03 | Flat board model documented end to end; single decisions register |
+| Owner review and approval | Complete 2026-11-03 | AUTH-01, AUTH-02, DEC-031, SCOPE-01, DEC-029, DEC-030 approved |
+| **M1 Repository foundation** | **Complete 2026-11-03** | Git, toolchain, structure, OpenCode agents, verified smoke test |
+| M2 Walking skeleton | Not started | Requires owner approval |
+| M3–M8 | Not started | — |
 | M9 Deployment | Not started | Requires explicit deployment approval |
 
-## What was completed on 2026-11-03
+## M1 completion evidence
 
-- Audited all 60+ files in the package; catalogued nine documentation conflicts.
-- Replaced the hierarchy with the flat board model across every authoritative document.
-- Corrected Bob's identity: Bob is the current OpenCode session, not a separate service account and not a spawnable agent.
-- Settled specialist agents as assignee profiles with no accounts, no credentials and no board access — permanently.
-- Replaced "archive" with permanent deletion and documented its consequences.
-- Introduced the zero-recurring-cost constraint as a hard architectural driver.
-- Measured PBKDF2 cost and documented why password authentication is excluded.
-- Consolidated two decision registers into one.
-- Marked superseded documents rather than deleting them (no version control exists yet).
-- Rewrote `.flowquery/` state, backlog, next action, decisions pointer and activity log.
+Commands run, with real results:
 
-## Before M1 can start
-
-1. Owner reviews `docs/MVP_SPECIFICATION.md` and `docs/REQUIREMENTS.md`.
-2. Owner resolves AUTH-01, AUTH-02 and SCOPE-01.
-3. Owner authorises implementation of M1 only.
+| Command | Result |
+|---|---|
+| `npm run typecheck` | Pass (app + worker projects) |
+| `npm run lint` | Pass, no findings |
+| `npm test` | 2 tests passed, 1 file |
+| `npm run build` | Pass — worker 57.83 kB, client 220.80 kB |
+| `npm run format:check` | All files match Prettier style |
+| `npm run dev` | Served `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON |
+| `opencode api get /api/agent` | Bob (primary) + 15 specialists discovered |
 
 ## Explicitly not done
 
-No code. No dependencies. No migrations. No Git repository. No Cloudflare resources. No deployment. No paid service. No domain.
+No product features. No database schema or migration. No D1 binding. No authentication. No remote repository. No push. No Cloudflare resource. No deployment. No domain. No paid service.

@@ -1,34 +1,30 @@
 # Next Action
 
-**Blocked on the owner.** Nothing proceeds until the following three things happen.
+**M1 is complete. Waiting on the owner to review it and approve M2.**
 
-## 1. Review the consolidated specification
+Nothing further will be built until that approval arrives.
 
-Read, in this order:
+## What I need from you
 
-1. `docs/MVP_SPECIFICATION.md` — what the product is, and the superseded-assumptions table at the end.
-2. `docs/REQUIREMENTS.md` — what must be true, as testable statements.
-3. `docs/SECURITY_AND_AUTH.md` — the authentication options and their costs.
-4. `docs/MVP_ROADMAP.md` — the order of work and the M1 exit criteria.
+1. Review the M1 result — the fastest check is to run `npm install`, `npm run dev`, open `http://localhost:5173`, then `npm test`.
+2. Confirm the repository layout and toolchain choices are acceptable.
+3. Approve **M2 only** (walking skeleton), or send corrections.
 
-Confirm the product is what you intend, or tell me what is wrong.
+M1 deliberately did not create a remote repository, deploy anything, or build product features.
 
-## 2. Answer three questions
+## If M2 is approved, it will do
 
-| ID | Question |
-|---|---|
-| AUTH-01 | Which authentication mechanism? The recommendation is in `SECURITY_AND_AUTH.md` §4. |
-| AUTH-02 | Is requiring a GitHub account for you and your friend acceptable? |
-| SCOPE-01 | Do you still want the in-app notification centre, or drop it? |
+- Add the D1 binding (local only, no Cloudflare account needed).
+- Create `migrations/0001_init.sql` implementing the designed schema.
+- Seed the 16 team profiles and one demo board.
+- Add `db:migrate:local` and `db:reset` scripts.
+- Add `GET /api/v1/columns` returning the five fixed columns.
+- Render a read-only board from D1 in the SPA, proving persistence end to end.
+- Remove the M1 placeholder screen.
+- Measure and record CPU time per endpoint against the 10 ms budget.
 
-## 3. Approve M1 only
+## Not in M2
 
-M1 is repository foundation: local Git initialisation, `.gitignore` covering secrets, project structure, toolchain, scripts, OpenCode agent activation, and a README verified from a clean directory. No application logic.
+Authentication (M3), task mutations (M5), the agent API (M7). Those remain gated on their own milestones.
 
-I will not start M1, and will not create a Git repository, until you say so explicitly.
-
-## Then
-
-M1 → M2 walking skeleton → M3 authentication (the real gate) → M4 boards → M5 Kanban → M6 comments/activity → M7 agent API → M8 hardening → M9 deployment (separate approval).
-
-**Current gate: documentation and planning only.**
+**Current gate: owner review of M1.**

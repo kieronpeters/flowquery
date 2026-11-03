@@ -4,6 +4,35 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-03 — M1 repository foundation (Bob, current session)
+
+**Authorised:** M1 only — repository foundation and project configuration. No product implementation.
+
+**Performed:**
+- `git init -b main`; `.gitignore` written and committed before dependencies existed. No remote, no push.
+- Commits: documentation baseline (126 files), owner approvals, M1 foundation.
+- Structure: `src/worker/`, `src/app/`, `tests/`, `migrations/` (intentionally empty until M2).
+- Toolchain installed: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4, ESLint, Prettier.
+- `wrangler.jsonc` with SPA fallback and `run_worker_first: ["/api/*"]` only.
+- `GET /api/v1/health` and a JSON-404 fallback for unknown `/api/*` paths, with 2 tests.
+- OpenCode agents moved from `opencode/agents/` to `.opencode/agents/` (OpenCode V2 discovery path); invalid example config deleted; `opencode.jsonc` added.
+
+**Verified (actual output):**
+- `npm run typecheck` — pass, both projects.
+- `npm run lint` — pass, no findings.
+- `npm test` — 2 passed.
+- `npm run build` — pass; worker 57.83 kB, client 220.80 kB.
+- `npm run format:check` — all files match.
+- `npm run dev` — `/` 200 HTML, `/boards/brd_example` 200 HTML, `/api/v1/health` 200 JSON, `/api/v1/does-not-exist` 404 JSON.
+- `opencode api get /api/agent` — Bob (primary) + 15 specialists discovered.
+- `npm audit --omit=dev` — 0 vulnerabilities.
+
+**Not done:** no product features, no schema, no D1 binding, no auth, no remote, no deployment, no paid service.
+
+**Outcome:** M1 complete; awaiting owner approval for M2.
+
+---
+
 ## 2026-11-03 — Specification consolidation (Bob, current session)
 
 **Trigger:** owner issued a new product direction superseding the organisation/project hierarchy.

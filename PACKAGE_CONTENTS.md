@@ -1,14 +1,23 @@
 # FlowQuery Package Contents
 
-- `MASTER_PROMPT.md` — Bob's current operating prompt.
-- `AGENTS.md` — repository-wide rules and scope guardrails.
-- `docs/MVP_SPECIFICATION.md` — authoritative proposed MVP scope.
-- `docs/PROJECT_BRIEF.md`, `REQUIREMENTS.md`, `ARCHITECTURE.md`, `API_SPECIFICATION.md`, `DATABASE_DESIGN.md`, `SECURITY_AND_QUALITY.md`, `MVP_ROADMAP.md`, `DECISIONS.md` — supporting specifications aligned to the simplified MVP.
-- `team/` — virtual AI team roster and operating model for local OpenCode use.
-- `opencode/` — starter configuration and agent definitions where present.
-- `.flowquery/` — persistent project state, decisions, backlog, next action, logs and handoff templates.
-- `design/` — earlier concept images, illustrative only and not binding scope.
+- `MASTER_PROMPT.md` — Bob's operating prompt. Bob is the current OpenCode session.
+- `AGENTS.md` — repository-wide rules, and the current authorisation gate.
+- `opencode.jsonc` — OpenCode project configuration (V2 schema).
+- `.opencode/agents/` — Bob (primary) plus 15 specialist subagent definitions.
+- `docs/` — authoritative specification, requirements, architecture, database design, API contract, security design, research, decisions, roadmap and process.
+- `src/worker/` — Cloudflare Worker application (Hono router).
+- `src/app/` — React application. A foundation placeholder at M1.
+- `tests/` — Vitest test suite.
+- `migrations/` — D1 migrations. Empty until M2, by design.
+- `team/` — virtual AI team roster, profiles, portraits and operating model.
+- `.flowquery/` — persistent project state, decisions pointer, backlog, handoffs, activity log.
+- `design/` — visual direction and concept images (illustrative, not binding scope).
+- `templates/` — task, sprint and release templates.
+- `repository/` — earlier GitHub setup research. Historical; partly superseded.
+- `memory/` — deprecated mirror of `.flowquery/`. Neutralised; do not read as current state.
 
-No application source code, remote GitHub repository, Cloudflare resource or deployment is included/authorised.
+## Current state
 
-- `IMPLEMENTATION_KICKOFF_PROMPT.md` — copy/paste prompt for Bob to inspect the repository and prepare FlowQuery implementation.
+M1 is complete: repository, toolchain, project configuration and a verified smoke test. There are no product features, no database schema, no authentication and no deployment.
+
+No remote GitHub repository, Cloudflare resource, domain or paid service exists.

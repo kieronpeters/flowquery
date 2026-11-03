@@ -28,9 +28,10 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 - First commit: documentation only
 - Project structure: `src/worker/` (routes, services, repositories, db), `src/app/` (React), `migrations/`, `tests/`
 - Toolchain: TypeScript strict, Vite, Hono, Vitest, ESLint, Prettier
-- Scripts: `dev`, `build`, `test`, `typecheck`, `lint`, `db:migrate:local`
-- OpenCode agents activated (`.opencode/agents/` + valid `opencode.jsonc`)
-- `README.md` with setup instructions verified from a clean directory
+- Scripts: `dev`, `build`, `test`, `typecheck`, `lint`, `format` (`db:migrate:local` arrives in M2 with the D1 binding)
+- OpenCode agents activated (`.opencode/agents/` + valid `opencode.jsonc`), verified discoverable
+- `GET /api/v1/health` as the infrastructure smoke endpoint, with tests for it and for the JSON-404 fallback
+- `README.md` with setup instructions verified from a clean clone
 
 **Exit criteria:** `npm run dev` serves a placeholder page with no Cloudflare account; `npm test` passes; first commit contains no secrets; documented commands have been run and their output recorded.
 
@@ -39,8 +40,8 @@ Sizes are relative effort (S ≈ a session, M ≈ two to three sessions, L ≈ a
 **Goal:** prove React + Worker + D1 + local dev + tests work together before any product logic exists.
 
 - D1 schema migration `0001_init.sql` for the full designed schema
+- `db:migrate:local` and `db:reset` scripts against the new D1 binding
 - Seed: team profiles, one demo board
-- `GET /api/v1/health`
 - `GET /api/v1/columns` (constant)
 - Static assets configured with `not_found_handling: "single-page-application"` and `run_worker_first: ["/api/*"]`
 - SPA shell, router, hard-refresh on `/boards/:boardId` returns the SPA

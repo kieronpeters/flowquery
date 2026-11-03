@@ -2,7 +2,7 @@
 
 A small, private Kanban board for managing development work by two humans and an AI-assisted team.
 
-**Status:** specification consolidated 3 November 2026. **No application code exists.** Implementation is not authorised until the owner approves the next phase.
+**Status:** M1 complete — repository foundation and project configuration. **No product features exist yet.** Board and task implementation begins only after the owner approves M2.
 
 ---
 
@@ -19,45 +19,79 @@ Two human administrators share a dashboard listing every board. Each board has f
 | 3 | [`docs/MVP_SPECIFICATION.md`](docs/MVP_SPECIFICATION.md) | Authoritative product scope |
 | 4 | [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) | Testable requirements |
 | 5 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical design |
-| 6 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | What is settled, proposed and open |
+| 6 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | What is settled and why |
 | 7 | [`.flowquery/state/PROJECT_STATE.md`](.flowquery/state/PROJECT_STATE.md) | Where the project actually is |
 
 ## What is settled
 
 - Flat structure: **boards only** — no organisations, projects or workspaces.
 - Five fixed columns; no column configuration.
-- Permanent board deletion with explicit confirmation.
+- Permanent board deletion with typed confirmation.
 - Two humans with identical full access; registration restricted.
+- Authentication: **GitHub OAuth with a server-side allowlist**, keyed on the immutable GitHub numeric user ID.
 - Bob is the current OpenCode session, using a board-scoped bearer token.
 - Specialist agents are assignee profiles with no accounts and no credentials.
 - Zero recurring cost, `*.workers.dev` address, no domain.
+- No in-app notifications in the MVP.
 
-## What was settled at the M1 gate
+Open decisions: none. The next gate is the owner's review of M1.
 
-| ID | Decision |
+## Development
+
+Requires Node 22 or newer (developed on Node 24). No Cloudflare account is needed for any command below.
+
+```bash
+npm install        # install dependencies
+npm run dev        # Vite + Worker on http://localhost:5173
+npm test           # Vitest
+npm run typecheck  # tsc, app and worker projects
+npm run lint       # ESLint
+npm run build      # production build into dist/
+```
+
+Verified behaviour at `npm run dev` (recorded from actual runs on Windows):
+
+| Request | Result |
 |---|---|
-| AUTH-01 | GitHub OAuth with a server-side allowlist |
-| AUTH-02 | Both administrators use GitHub accounts |
-| DEC-031 | Administrators identified by immutable GitHub numeric user ID |
-| SCOPE-01 | In-app notification centre dropped |
-| DEC-030 | Local Git authorised; no remote, no push |
+| `GET /` | `200 text/html` — SPA shell |
+| `GET /boards/brd_example` | `200 text/html` — deep link served by the SPA fallback |
+| `GET /api/v1/health` | `200 application/json` |
+| `GET /api/v1/does-not-exist` | `404 application/json` |
 
-Nothing is currently open. The next gate is the owner's review of M1.
+`run_worker_first` is scoped to `/api/*`, so page navigation never invokes the Worker and therefore never consumes the free request quota. See `docs/ARCHITECTURE.md` §2.
 
 ## Repository layout
 
 ```text
 AGENTS.md                 repository rules
 MASTER_PROMPT.md          Bob's operating prompt
+opencode.jsonc            OpenCode project configuration
+.opencode/agents/         Bob (primary) and 15 specialist subagents
 docs/                     authoritative specification, design and research
+src/worker/               Worker application (Hono)
+src/app/                  React application (placeholder at M1)
+tests/                    Vitest tests
+migrations/               D1 migrations — empty until M2
 team/                     specialist roster, profiles, portraits
-opencode/                 OpenCode configuration and agent definitions
 .flowquery/               project state, decisions, backlog, handoffs, activity log
 design/                   visual direction and concept images
 templates/                sprint, task and release templates
-repository/               earlier GitHub setup research
-memory/                   stale mirror — not authoritative; .flowquery/ is
+repository/               earlier GitHub research (historical)
+memory/                   deprecated mirror — do not use; .flowquery/ is authoritative
 ```
+
+## Verified toolchain
+
+| Tool | Version |
+|---|---|
+| TypeScript | 6.0.3 |
+| Vite | 8.3.5 |
+| Vitest | 5.1.0 |
+| Wrangler | 4.156.2 |
+| React | 19 |
+| Hono | 4 |
+
+`npm audit` reports 11 moderate findings, all in the ESLint/minimatch developer chain; `npm audit --omit=dev` reports **0 vulnerabilities**. Nothing vulnerable ships in the Worker bundle.
 
 ## Safety
 
