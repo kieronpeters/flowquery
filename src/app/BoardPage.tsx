@@ -2,7 +2,8 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useDroppable,
   useSensor,
@@ -92,6 +93,21 @@ function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
       <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
         <CardBody task={task} />
       </button>
+
+      {/*
+        Touch drag handle. On a phone, dragging has to start somewhere the
+        browser will not treat as a scroll, so this is the only element with
+        `touch-action: none`. It is hidden on devices with a mouse, where the
+        whole card already drags.
+      */}
+      <button
+        className="card-handle"
+        type="button"
+        aria-label={`Drag ${task.title}`}
+        {...listeners}
+      >
+        ⠿
+      </button>
     </li>
   )
 }
@@ -111,7 +127,12 @@ export function BoardPage() {
   const [activityKey, setActivityKey] = useState(0)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Mouse: a few pixels of movement starts the drag, as before.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Touch: a short hold starts the drag, so a swipe still scrolls the page.
+    // Without this, every finger movement on a card was interpreted as a drag
+    // and the board could not be scrolled on a phone at all.
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 

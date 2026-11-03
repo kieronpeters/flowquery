@@ -271,11 +271,43 @@ a {
 @media (max-width: 640px) {
   .board {
     scroll-snap-type: x mandatory;
+    scroll-padding-left: 0.75rem;
   }
 
   .column {
     flex-basis: 85vw;
     scroll-snap-align: start;
+  }
+
+  /* Reclaim the padding the desktop layout can afford. */
+  .board-page {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .board-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  /* The milestone label is noise on a phone and costs a line of width. */
+  .app-header .phase {
+    display: none;
+  }
+
+  /* Sixteen swatches and a button per row do not fit side by side. */
+  .theme-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .theme-label {
+    flex-basis: auto;
+  }
+
+  /* 44px is the smallest comfortable touch target. */
+  .button,
+  .add-task {
+    min-height: 2.75rem;
   }
 }
 
@@ -670,11 +702,56 @@ a {
 /* Drag and drop ----------------------------------------------------------- */
 
 .card-item {
-  touch-action: none;
+  position: relative;
+  /*
+   * Deliberately NOT `touch-action: none`. That was set on every card, so a
+   * finger that landed on a card could not scroll the page - and since cards
+   * fill most of a column, the board was unscrollable on a phone. Only the
+   * drag handle opts out of touch scrolling now.
+   */
 }
 
 .card-item.dragging {
   opacity: 0.35;
+}
+
+/* Touch-only drag handle ------------------------------------------------ */
+
+.card-handle {
+  display: none;
+}
+
+@media (hover: none) {
+  .card-handle {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .card-handle:active {
+    color: var(--text);
+    cursor: grabbing;
+  }
+
+  /* Keep the title clear of the handle. */
+  .card {
+    padding-right: 2.6rem;
+    -webkit-touch-callout: none;
+  }
 }
 
 /* The card that follows the cursor while dragging. */
