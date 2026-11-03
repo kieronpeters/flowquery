@@ -111,7 +111,7 @@ Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
 ## Repository
 
 Local path: `C:\Users\Asus\source\repos\FlowQuery` (confirmed, DEC-029).
-Remote: none, and none authorised.
+Remote: `https://github.com/kieronpeters/flowquery` — **private**, branch `main`, pushed. Created 2026-11-03 with the owner's approval. No CI workflow, by the owner's choice (they did not want to consume Actions minutes).
 
 ## Known gaps carried to deployment
 

@@ -34,7 +34,7 @@ The owner reported that they are signed in to the localhost application with a r
 
 **Closes:** the sign-in gap open since M3. Remaining unverified: the drag gesture, and the Cloudflare deployment.
 
-**Also completed this session:** `cf` CLI authenticated (account e0837f85…), Cloudflare skills installed (21), MCP server registered (pending `/mcps` sign-in).
+**Also completed this session:** GitHub remote created (`github.com/kieronpeters/flowquery`, private, `main` pushed, 25 commits); `cf` CLI authenticated (account e0837f85…); Cloudflare skills installed (21); MCP server registered (pending `/mcps` sign-in). No CI, at the owner's request.
 
 **Not done:** no cloud resource created.
 
