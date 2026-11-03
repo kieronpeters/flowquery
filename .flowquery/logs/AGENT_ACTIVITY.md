@@ -26,6 +26,7 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 - Export (12.2 KB, 10 tables, 31 inserts) → deleted `.wrangler/state` entirely → import → identical counts and board name, `PRAGMA foreign_key_check` empty.
 - `npm run typecheck`, `lint`, `test` (**11 passed**), `build`, `format:check` all pass.
 - Bench: 9 tasks 0.032 ms, 50 → 0.145, 200 → 0.546, 500 → 1.443 (median, assembly + JSON serialisation).
+- Browser check: the board page rendered all 9 tasks across 5 columns with **zero console errors**; DOM confirmed via evaluated `body.innerText` and React root HTML.
 
 **Discovered:** Vitest 5 no longer exports `bench`; local workerd tooling exposes span duration but not CPU, so end-to-end CPU is deferred to M9 and recorded as such.
 

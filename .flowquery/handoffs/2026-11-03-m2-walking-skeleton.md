@@ -58,6 +58,8 @@ The layer boundary is real, not aspirational: there is no SQL in `app.ts`, and n
 
 `db:reset` clean; 18/1/9/1 row counts; board endpoint 200 with correct per-column distribution; 404 for unknown board and unknown API path; SPA deep link 200; export → delete all local state → import restored identical data with an empty `PRAGMA foreign_key_check`; 11 tests; bench 0.032 ms at 9 tasks and 1.443 ms at 500.
 
+The rendered page was also checked in a real browser: nine tasks across five columns, correct priorities, assignees and due dates, and **zero console errors**. The React root contained the expected markup, so this was a genuine render check rather than an HTML-only check.
+
 ## Decisions made during M2
 
 - Status stays an enum on `tasks`; `/columns` is served from a shared constant (DEC-019 confirmed in practice).
