@@ -60,6 +60,7 @@ Register: `docs/DECISIONS.md`.
 - `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
 - `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
 - Deployment artefact validated without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files and reports the D1 binding.
+- `npm run preflight` added as a deployment guard: it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified to fail on the placeholder and pass with a real id.
 - **Deployment is blocked on three things only the owner can provide:** `wrangler login`, a production GitHub OAuth app, and explicit approval. Plan: `docs/DEPLOYMENT_PLAN.md`.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.

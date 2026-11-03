@@ -32,6 +32,8 @@ npm run dev                        # http://localhost:5173
 | `npm run db:migrate:local` | Apply migrations only |
 | `npm run db:seed:local` | Apply seed data only |
 | `npm run db:reset` | **Delete local data**, migrate, seed |
+| `npm run preflight` | Deployment guard: placeholder id, headers, build, secrets |
+| `npm run deploy` | Build → preflight → deploy (needs Cloudflare auth and approval) |
 
 `db:reset` is destructive and local-only. It never touches a remote database.
 
@@ -96,6 +98,7 @@ Not yet applicable: nothing is deployed. When it is:
 ## 8. Pre-deployment checklist (M9)
 
 - [ ] Owner approval, in writing, for deployment
+- [ ] `npm run preflight` passes (it refuses the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`)
 - [ ] Real D1 `database_id` replaces the placeholder in `wrangler.jsonc`
 - [ ] `wrangler secret put GITHUB_CLIENT_SECRET`
 - [ ] `AUTH_ALLOWLIST` holds the two **numeric** GitHub ids

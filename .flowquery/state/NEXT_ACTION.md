@@ -27,7 +27,8 @@ If either is broken, you want to find out on localhost rather than on a live URL
 
 - Validated the deployment artefact without an account: `wrangler deploy --dry-run` bundles 151.18 KiB, reads 6 static files, reports the D1 binding.
 - Wrote `docs/DEPLOYMENT_PLAN.md`.
-- **Found and fixed a serious bug in my own M8 work**: the `_headers` file was structurally invalid — `/* … */` is not a comment in that format, so the SPA document would still have received no security headers. Rewritten with `#` comments and a single `/*` rule, and the tests now assert the *structure*, not just that the strings appear.
+- Added `npm run preflight`, which refuses to deploy while the D1 id is the placeholder, `_headers` is malformed, the build is missing, or `.dev.vars` is not ignored. Verified both ways: it fails today and passes once a real id is present.
+- Fixed a serious bug in my own M8 work: the `_headers` file was structurally invalid, so the SPA document would still have received no security headers. Tests now assert structure, not just strings.
 
 ## 4. When you are ready
 

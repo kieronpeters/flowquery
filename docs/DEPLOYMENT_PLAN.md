@@ -56,9 +56,10 @@ npx wrangler secret put GITHUB_CLIENT_SECRET
 # set with `wrangler versions secret put` / dashboard vars
 
 # 6. Deploy
-npm run build
-npx wrangler deploy
+npm run deploy      # build → preflight → wrangler deploy
 ```
+
+`npm run deploy` runs `scripts/preflight.mjs` first. It refuses to continue if the D1 id is still the placeholder, if `public/_headers` is structurally wrong, if the build output is missing, or if `.dev.vars` is not git-ignored. It has been verified to fail on the placeholder and pass once a real id is present.
 
 ## 5. Post-deploy verification
 

@@ -17,7 +17,9 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Tests:** 152 passing (3 new structural tests).
 
-**Not done:** no deployment, no database, no Worker, no domain, no cost.
+**Also:** added `npm run preflight` so a deployment cannot start with the placeholder D1 id, a malformed `_headers`, a missing build, or an un-ignored `.dev.vars`. Verified both branches — it refuses today, and passes with a real id (config restored byte-identically afterwards, hash checked).
+
+**Not done:** no deployment, no database, no Worker, no domain, no cost. Still unauthenticated.
 
 ---
 
