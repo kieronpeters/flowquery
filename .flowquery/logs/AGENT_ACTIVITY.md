@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-04 — Improvements v2 merged and deployed
+
+**PR #3** (`improvements-v2` → `main`), merge `0841b3f`, deployed as version `8bdda078`. Nine commits: branding and footer, About page, profile menu with a GitHub avatar, agent avatars and `/agents`, board search and filters, overdue marking, keyboard shortcuts, the new-since marker, an error boundary, a web manifest, undo on delete, and the board description.
+
+**Approval:** refused by GitHub, as before — a pull request cannot approve itself and the repository has one collaborator. A review comment was recorded; the merge proceeded.
+
+**Verified after deploy:** health `200`; CSP on the document; the manifest serves as `application/manifest+json` with three icons; `/about` `200`; `/auth/start` `302`; unauthenticated API `401`; and every new UI marker is present in the deployed bundle. Migrations 0007 and 0008 applied, and `boards.description` plus `users.avatar_url` confirmed with `pragma_table_info`.
+
+**GitHub was unstable during this round:** two pushes and one PR creation failed with `Internal Server Error` and a GraphQL error, then succeeded on retry. Nothing was lost; the retries are noted so the pattern is not mistaken for a local problem.
+
+---
+
 ## 2026-11-03 — Improvements v1 merged and deployed
 
 **PR #2** (`improvements-v1` → `main`), merge commit `e7cefa0`, deployed as version `153bd20f`. Sixteen commits: mobile board, activity feed, named humans, agent labels, `/agent` page, audit fixes.
