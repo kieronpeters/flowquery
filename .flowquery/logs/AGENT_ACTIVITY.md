@@ -10,7 +10,11 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Decided with the owner:** pictures stored in D1 rather than R2 (DEC-036); the token dropdown covers the 16 non-human profiles, including the contractor (DEC-037).
 
-**Schema — migration `0009_profile_images.sql`:** a `profile_avatars` table (one row per profile, base64 plus MIME, capped); `agent_tokens.profile_id` added and backfilled by matching the old free-text label to a profile name; a partial unique index allowing one live token per agent per board. Applied locally: 5 commands, no errors. **Not applied to production.**
+**Schema — migration `0009_profile_images.sql`:** a `profile_avatars` table (one row per profile, base64 plus MIME, capped); `agent_tokens.profile_id` added and backfilled by matching the old free-text label to a profile name; a partial unique index allowing one live token per agent per board. Applied locally first: 5 commands, no errors.
+
+**Shipped:** PR #4, merge `7ebf06a`, deployed as version `11046318`. The migration was applied to production **before** the deploy, and the backfill was checked first: Bob's token now carries `profile_id = prf_bob`, and `profile_avatars` plus `idx_tokens_one_live_per_profile` both exist. Verified after deploy: health `200`, CSP present, `/about` `200`, `/auth/start` `302`; anonymous `401` on `/avatars/prf_bob`, `/profiles` and `/boards`; an agent token gets `401` on a picture and `404` trying to issue a token, while `/agent/board` and `/agent/tasks` still return `200`; every new UI marker present in the deployed bundle.
+
+**A note on the post-deploy check:** the first run reported every UI marker missing. It was not a bad deploy — the edge served the previous `index.html` for a moment, so the check fetched an asset name that no longer existed and compared against an error page. Re-run a minute later, all markers were present. Worth remembering before treating a failed marker check as a failed deploy.
 
 **Fixed a real defect on the way:** agent activity is attributed by matching `actor_name` against `team_profiles.display_name`, so a hand-typed token label could silently detach an agent's actions from its name and avatar. The label is now copied from the profile.
 
