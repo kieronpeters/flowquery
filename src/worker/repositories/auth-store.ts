@@ -12,6 +12,8 @@ export type UserRecord = {
   id: string
   email: string
   displayName: string
+  /** GitHub avatar URL, captured at sign-in. Null until the next sign-in for older accounts. */
+  avatarUrl: string | null
   createdAt: number
   lastLoginAt: number | null
 }
@@ -41,11 +43,12 @@ export interface AuthStore {
     id: string
     email: string
     displayName: string
+    avatarUrl?: string | null
     createdAt: number
   }): Promise<void>
   updateUserProfile(
     userId: string,
-    input: { email: string; displayName: string; lastLoginAt: number },
+    input: { email: string; displayName: string; avatarUrl?: string | null; lastLoginAt: number },
   ): Promise<void>
   createIdentity(input: {
     id: string
@@ -84,6 +87,7 @@ type UserRow = {
   id: string
   email: string
   display_name: string
+  avatar_url: string | null
   created_at: number
   last_login_at: number | null
 }
@@ -133,7 +137,7 @@ export function createD1AuthStore(db: D1Database): AuthStore {
     async findUserById(userId) {
       const row = await db
         .prepare(
-          'SELECT id, email, display_name, created_at, last_login_at FROM users WHERE id = ?',
+          'SELECT id, email, display_name, avatar_url, created_at, last_login_at FROM users WHERE id = ?',
         )
         .bind(userId)
         .first<UserRow>()
@@ -143,6 +147,7 @@ export function createD1AuthStore(db: D1Database): AuthStore {
             id: row.id,
             email: row.email,
             displayName: row.display_name,
+            avatarUrl: row.avatar_url,
             createdAt: row.created_at,
             lastLoginAt: row.last_login_at,
           }
@@ -152,16 +157,25 @@ export function createD1AuthStore(db: D1Database): AuthStore {
     async createUser(input) {
       await db
         .prepare(
-          'INSERT INTO users (id, email, display_name, created_at, last_login_at) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO users (id, email, display_name, avatar_url, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?)',
         )
-        .bind(input.id, input.email, input.displayName, input.createdAt, input.createdAt)
+        .bind(
+          input.id,
+          input.email,
+          input.displayName,
+          input.avatarUrl ?? null,
+          input.createdAt,
+          input.createdAt,
+        )
         .run()
     },
 
     async updateUserProfile(userId, input) {
       await db
-        .prepare('UPDATE users SET email = ?, display_name = ?, last_login_at = ? WHERE id = ?')
-        .bind(input.email, input.displayName, input.lastLoginAt, userId)
+        .prepare(
+          'UPDATE users SET email = ?, display_name = ?, avatar_url = ?, last_login_at = ? WHERE id = ?',
+        )
+        .bind(input.email, input.displayName, input.avatarUrl ?? null, input.lastLoginAt, userId)
         .run()
     },
 

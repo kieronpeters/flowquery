@@ -17,6 +17,8 @@ export type GithubProfile = {
   login: string
   email: string
   displayName: string
+  /** GitHub-hosted picture. Allowed by the CSP's img-src, nothing else is. */
+  avatarUrl?: string | null
 }
 
 export class GithubError extends Error {
@@ -120,10 +122,12 @@ export async function completeGithubSignIn(input: {
 }): Promise<GithubProfile> {
   const accessToken = await exchangeCode(input)
 
-  const user = await githubGet<{ id: number; login: string; name: string | null }>(
-    USER_URL,
-    accessToken,
-  )
+  const user = await githubGet<{
+    id: number
+    login: string
+    name: string | null
+    avatar_url?: string
+  }>(USER_URL, accessToken)
   const emails = await githubGet<{ email: string; primary: boolean; verified: boolean }[]>(
     EMAILS_URL,
     accessToken,
@@ -146,5 +150,7 @@ export async function completeGithubSignIn(input: {
     login: user.login,
     email: chosen.email,
     displayName: user.name?.trim() || user.login,
+    avatarUrl:
+      typeof user.avatar_url === 'string' && user.avatar_url !== '' ? user.avatar_url : null,
   }
 }

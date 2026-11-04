@@ -40,6 +40,7 @@ function boardWith(backlog: TaskDto[], review: TaskDto[]): BoardView {
     board: {
       id: 'brd_demo',
       name: 'FlowQuery Development',
+      description: null,
       createdAt: '2026-11-03T00:00:00.000Z',
       updatedAt: '2026-11-03T00:00:00.000Z',
       taskCount: backlog.length + review.length,
@@ -63,6 +64,7 @@ const movedBoard: BoardView = {
   board: {
     id: 'brd_demo',
     name: 'FlowQuery Development',
+    description: null,
     createdAt: '2026-11-03T00:00:00.000Z',
     updatedAt: '2026-11-03T00:00:00.000Z',
     taskCount: 2,
@@ -282,8 +284,8 @@ describe('BoardPage', () => {
 
     await screen.findByText('Card one')
 
-    const backlog = screen.getByRole('button', { name: 'Backlog' })
-    const review = screen.getByRole('button', { name: 'Review' })
+    const backlog = screen.getByRole('button', { name: /^Backlog/ })
+    const review = screen.getByRole('button', { name: /^Review/ })
 
     expect(backlog.getAttribute('aria-pressed')).toBe('true')
     expect(review.getAttribute('aria-pressed')).toBe('false')
@@ -292,6 +294,76 @@ describe('BoardPage', () => {
 
     expect(review.getAttribute('aria-pressed')).toBe('true')
     expect(backlog.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('filters cards by search text', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    await userEvent.type(screen.getByLabelText('Search tasks'), 'two')
+
+    expect(screen.queryByText('Card one')).toBeNull()
+    expect(screen.getByText('Card two')).toBeTruthy()
+  })
+
+  it('focuses the search box when / is pressed', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+    await userEvent.keyboard('/')
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Search tasks'))
+  })
+
+  it('opens a new task when n is pressed', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+    await userEvent.keyboard('n')
+
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+  })
+
+  it('deletes a task with an undo window, and undo really cancels it', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete permanently' }))
+
+    // Gone from the board immediately, but not yet gone from the server.
+    expect(screen.queryByText('Card one')).toBeNull()
+    expect(document.querySelector('.undo-toast')?.textContent).toContain('Deleted')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+    expect(await screen.findByText('Card one')).toBeTruthy()
+    expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+  })
+
+  it('lets the board description be written in place', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add description' }))
+    await userEvent.type(screen.getByLabelText('Board description'), 'Planning board')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'PATCH')).toBe(true)
+    })
+
+    const patch = calls.find((call) => call.method === 'PATCH')!
+    expect(patch.body).toEqual({ description: 'Planning board' })
   })
 
   it('gives the activity box its own surface', async () => {

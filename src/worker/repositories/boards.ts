@@ -13,7 +13,9 @@ import type { BoardRow, ProfileRow, TaskRow } from '../domain/types'
 
 export async function getBoardById(db: D1Database, boardId: string): Promise<BoardRow | null> {
   return await db
-    .prepare('SELECT id, name, created_by, created_at, updated_at, theme FROM boards WHERE id = ?')
+    .prepare(
+      'SELECT id, name, description, created_by, created_at, updated_at, theme FROM boards WHERE id = ?',
+    )
     .bind(boardId)
     .first<BoardRow>()
 }
@@ -37,7 +39,7 @@ export type BoardWithCountRow = BoardRow & { task_count: number }
 export async function listBoardsWithTaskCounts(db: D1Database): Promise<BoardWithCountRow[]> {
   const { results } = await db
     .prepare(
-      `SELECT b.id, b.name, b.created_by, b.created_at, b.updated_at,
+      `SELECT b.id, b.name, b.description, b.created_by, b.created_at, b.updated_at,
               COUNT(t.id) AS task_count
          FROM boards b
          LEFT JOIN tasks t ON t.board_id = b.id
@@ -74,6 +76,18 @@ export async function updateBoardName(
   return (result.meta?.changes ?? 0) > 0
 }
 
+/** Stores the one-line description. Null clears it. */
+export async function updateBoardDescription(
+  db: D1Database,
+  input: { boardId: string; description: string | null; now: number },
+): Promise<boolean> {
+  const result = await db
+    .prepare('UPDATE boards SET description = ?, updated_at = ? WHERE id = ?')
+    .bind(input.description, input.now, input.boardId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
+}
 /** Returns false when the board does not exist. Cascades to tasks, comments, activity and tokens. */
 export async function deleteBoardById(db: D1Database, boardId: string): Promise<boolean> {
   const result = await db.prepare('DELETE FROM boards WHERE id = ?').bind(boardId).run()
@@ -106,4 +120,31 @@ export async function listActiveProfiles(db: D1Database): Promise<ProfileRow[]> 
     .all<ProfileRow>()
 
   return results ?? []
+}
+
+/** One assignable profile, or null. Profiles are global, so no board scope. */
+export async function getProfileById(
+  db: D1Database,
+  profileId: string,
+): Promise<ProfileRow | null> {
+  return await db
+    .prepare(
+      'SELECT id, display_name, role_title, kind, avatar_path, active FROM team_profiles WHERE id = ?',
+    )
+    .bind(profileId)
+    .first<ProfileRow>()
+}
+
+/** Returns false when the profile does not exist, so the route can answer 404. */
+export async function updateProfileAvatar(
+  db: D1Database,
+  profileId: string,
+  avatarPath: string,
+): Promise<boolean> {
+  const result = await db
+    .prepare('UPDATE team_profiles SET avatar_path = ? WHERE id = ?')
+    .bind(avatarPath, profileId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
 }

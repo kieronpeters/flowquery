@@ -79,6 +79,7 @@ async function openFeed() {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  window.localStorage.clear()
 })
 
 describe('ActivityFeed', () => {
@@ -171,6 +172,29 @@ describe('ActivityFeed', () => {
 
     // 12 events is two pages; the second is the last, so Next is disabled.
     expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true)
+  })
+
+  it('marks what is new since the last visit', async () => {
+    // Last visit was between the first and second event.
+    window.localStorage.setItem(
+      'fq:activity:brd_demo',
+      String(Date.parse('2026-11-03T11:59:30.000Z')),
+    )
+
+    mockApi({ total: 3 })
+    renderFeed()
+    await openFeed()
+
+    expect(await screen.findByText('New since your last visit')).toBeTruthy()
+  })
+
+  it('shows no marker on a first visit', async () => {
+    mockApi({ total: 3 })
+    renderFeed()
+    await openFeed()
+
+    await screen.findByText(/Card 0/)
+    expect(screen.queryByText('New since your last visit')).toBeNull()
   })
 
   it('marks each actor as human or agent, not just by name', async () => {

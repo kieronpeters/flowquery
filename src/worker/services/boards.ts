@@ -8,6 +8,7 @@ import {
   getBoardById,
   insertBoard,
   listBoardsWithTaskCounts,
+  updateBoardDescription,
   updateBoardName,
   updateBoardTheme,
 } from '../repositories/boards'
@@ -41,6 +42,7 @@ function toSummary(row: BoardWithCountRow): BoardSummary {
   return {
     id: row.id,
     name: row.name,
+    description: row.description,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
     taskCount: row.task_count,
@@ -69,6 +71,7 @@ export async function createBoard(
   return {
     id: board.id,
     name: board.name,
+    description: null,
     createdAt: new Date(now).toISOString(),
     updatedAt: new Date(now).toISOString(),
     taskCount: 0,
@@ -90,6 +93,41 @@ export async function renameBoard(
   return updated ? { kind: 'ok' } : { kind: 'not_found' }
 }
 
+export const DESCRIPTION_MAX = 500
+
+export type DescriptionResult =
+  { kind: 'ok' } | { kind: 'invalid'; message: string } | { kind: 'not_found' }
+
+/**
+ * Sets the board's one-line description. An empty string clears it, so the
+ * column holds null rather than an empty string that means the same thing.
+ */
+export async function setBoardDescription(
+  db: D1Database,
+  input: { boardId: string; description: unknown; now?: number },
+): Promise<DescriptionResult> {
+  const raw = input.description
+
+  if (raw !== null && raw !== undefined && typeof raw !== 'string') {
+    return { kind: 'invalid', message: 'description must be text.' }
+  }
+
+  const trimmed = typeof raw === 'string' ? raw.trim() : ''
+  if (trimmed.length > DESCRIPTION_MAX) {
+    return {
+      kind: 'invalid',
+      message: `description must be at most ${DESCRIPTION_MAX} characters.`,
+    }
+  }
+
+  const updated = await updateBoardDescription(db, {
+    boardId: input.boardId,
+    description: trimmed === '' ? null : trimmed,
+    now: input.now ?? Date.now(),
+  })
+
+  return updated ? { kind: 'ok' } : { kind: 'not_found' }
+}
 export type DeleteResult =
   | { kind: 'ok'; boardName: string }
   | { kind: 'not_found' }

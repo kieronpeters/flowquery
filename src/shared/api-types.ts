@@ -9,6 +9,8 @@ import type { ColumnKey } from './columns'
 export type BoardSummary = {
   id: string
   name: string
+  /** Optional "what this board is for". Null when nobody has written one. */
+  description: string | null
   createdAt: string
   updatedAt: string
   taskCount: number

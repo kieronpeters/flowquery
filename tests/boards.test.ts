@@ -31,6 +31,7 @@ async function signIn(db: D1Database): Promise<string> {
       login: 'kieron',
       email: 'kieron@example.com',
       displayName: 'Kieron',
+      avatarUrl: null,
     },
     now: Date.now(),
   })
@@ -160,6 +161,47 @@ describe('PATCH /api/v1/boards/:boardId', () => {
       env(db),
     )
     expect(response.status).toBe(404)
+  })
+
+  it('sets a description, and an empty string clears it', async () => {
+    const patch = (body: unknown) =>
+      app.request(
+        '/api/v1/boards/brd_demo',
+        {
+          method: 'PATCH',
+          headers: { cookie, 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        env(db),
+      )
+
+    const read = async () => {
+      const view = await app.request('/api/v1/boards/brd_demo', { headers: { cookie } }, env(db))
+      return (await view.json()) as { board: { description: string | null } }
+    }
+
+    expect((await patch({ description: '  Planning and delivery  ' })).status).toBe(200)
+    expect((await read()).board.description).toBe('Planning and delivery')
+
+    expect((await patch({ description: '' })).status).toBe(200)
+    expect((await read()).board.description).toBeNull()
+  })
+
+  it('rejects a description that is too long or not text', async () => {
+    const patch = (body: unknown) =>
+      app.request(
+        '/api/v1/boards/brd_demo',
+        {
+          method: 'PATCH',
+          headers: { cookie, 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        env(db),
+      )
+
+    expect((await patch({ description: 'x'.repeat(501) })).status).toBe(400)
+    expect((await patch({ description: 42 })).status).toBe(400)
+    expect((await patch({})).status).toBe(400)
   })
 })
 

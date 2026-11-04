@@ -89,11 +89,15 @@ describe('BoardsPage', () => {
     expect(await screen.findByText('FlowQuery Development')).toBeTruthy()
     expect(screen.getByText('Second board')).toBeTruthy()
     expect(screen.getByText(/9 tasks/)).toBeTruthy()
-    expect(screen.getByText(/Signed in as Kieron/)).toBeTruthy()
+    expect(screen.getByText('Every board, newest first.')).toBeTruthy()
   })
 
   it('sends the visitor to sign in when the session has expired', async () => {
-    mockApi((call) => (call.url.endsWith('/auth/me') ? Response.json({}, { status: 401 }) : null))
+    mockApi((call) =>
+      call.url.endsWith('/api/v1/boards') && call.method === 'GET'
+        ? Response.json({}, { status: 401 })
+        : null,
+    )
     renderDashboard()
 
     expect(await screen.findByText('sign in page')).toBeTruthy()

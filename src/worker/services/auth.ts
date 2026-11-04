@@ -62,6 +62,7 @@ export async function completeSignIn(input: {
       id: userId,
       email: profile.email,
       displayName,
+      avatarUrl: profile.avatarUrl,
       createdAt: now,
     })
     await store.createIdentity({
@@ -79,6 +80,7 @@ export async function completeSignIn(input: {
   await store.updateUserProfile(user.id, {
     email: profile.email,
     displayName,
+    avatarUrl: profile.avatarUrl,
     lastLoginAt: now,
   })
 
