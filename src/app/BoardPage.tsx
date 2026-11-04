@@ -24,6 +24,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
+import { AgentAvatar } from './AgentAvatar'
 import { applyMove, locate } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
@@ -56,7 +57,11 @@ function formatDueDate(value: string): string {
   })
 }
 
-function CardBody({ task }: { task: TaskDto }) {
+function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] }) {
+  const assigneeProfile = task.assignee
+    ? profiles.find((profile) => profile.id === task.assignee!.id)
+    : undefined
+
   return (
     <>
       <span className="card-title">{task.title}</span>
@@ -72,14 +77,34 @@ function CardBody({ task }: { task: TaskDto }) {
         <span className={`priority priority-${task.priority}`}>
           {PRIORITY_LABELS[task.priority] ?? task.priority}
         </span>
-        {task.assignee && <span>{task.assignee.displayName}</span>}
+        {task.assignee && (
+          <span className="card-assignee">
+            {assigneeProfile && assigneeProfile.kind !== 'human' && (
+              <AgentAvatar
+                name={assigneeProfile.displayName}
+                avatarPath={assigneeProfile.avatarPath}
+                contractor={assigneeProfile.kind === 'contractor'}
+                size={16}
+              />
+            )}
+            {task.assignee.displayName}
+          </span>
+        )}
         {task.dueDate && <span>Due {formatDueDate(task.dueDate)}</span>}
       </span>
     </>
   )
 }
 
-function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
+function SortableCard({
+  task,
+  profiles,
+  onOpen,
+}: {
+  task: TaskDto
+  profiles: ProfileDto[]
+  onOpen: () => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -91,7 +116,7 @@ function SortableCard({ task, onOpen }: { task: TaskDto; onOpen: () => void }) {
       className={isDragging ? 'card-item dragging' : 'card-item'}
     >
       <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
-        <CardBody task={task} />
+        <CardBody task={task} profiles={profiles} />
       </button>
 
       {/*
@@ -429,6 +454,7 @@ export function BoardPage() {
               key={column.key}
               column={column}
               active={column.key === activeColumn}
+              profiles={profiles}
               background={theme.columns?.[column.key]}
               ticket={theme.tickets}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
@@ -454,7 +480,7 @@ export function BoardPage() {
                     className="card drag-overlay"
                     style={floating ? { background: floating, color: inkFor(floating) } : undefined}
                   >
-                    <CardBody task={activeTask} />
+                    <CardBody task={activeTask} profiles={profiles} />
                   </div>
                 )
               })()
@@ -488,6 +514,7 @@ export function BoardPage() {
 function Column({
   column,
   active,
+  profiles,
   background,
   ticket,
   onOpen,
@@ -495,6 +522,7 @@ function Column({
 }: {
   column: BoardView['columns'][number]
   active?: boolean
+  profiles: ProfileDto[]
   background?: string
   ticket?: string
   onOpen: (taskId: string) => void
@@ -534,7 +562,12 @@ function Column({
         ) : (
           <ul className="card-list">
             {column.tasks.map((task) => (
-              <SortableCard key={task.id} task={task} onOpen={() => onOpen(task.id)} />
+              <SortableCard
+                key={task.id}
+                task={task}
+                profiles={profiles}
+                onOpen={() => onOpen(task.id)}
+              />
             ))}
           </ul>
         )}

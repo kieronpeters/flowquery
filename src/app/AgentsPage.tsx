@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type { ApiError, ProfileDto } from '../shared/api-types'
 import { AVATAR_VARIANTS, avatarPathFor, type AvatarVariant } from '../shared/avatars'
@@ -15,12 +16,19 @@ export function AgentsPage() {
   const [profiles, setProfiles] = useState<ProfileDto[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let cancelled = false
 
     fetch('/api/v1/profiles')
       .then(async (response) => {
+        // Appearance is administration: without a session there is nothing to
+        // administer, so send them to sign in rather than showing an error.
+        if (response.status === 401) {
+          navigate('/login?next=/agents', { replace: true })
+          return
+        }
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const body = (await response.json()) as { profiles?: ProfileDto[] }
         if (!Array.isArray(body.profiles)) throw new Error('Unexpected payload')
@@ -33,7 +41,7 @@ export function AgentsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [navigate])
 
   async function choose(profile: ProfileDto, variant: AvatarVariant) {
     if (busyId) return

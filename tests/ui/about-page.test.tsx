@@ -39,7 +39,8 @@ describe('app shell', () => {
     expect(footer).toBeTruthy()
 
     expect(screen.getByRole('link', { name: 'About' }).getAttribute('href')).toBe('/about')
-    expect(screen.getByRole('link', { name: 'Agent access' }).getAttribute('href')).toBe('/agent')
+    expect(screen.getByRole('link', { name: 'Agents' }).getAttribute('href')).toBe('/agents')
+    expect(screen.getByRole('link', { name: 'Test a token' }).getAttribute('href')).toBe('/agent')
   })
 })
 

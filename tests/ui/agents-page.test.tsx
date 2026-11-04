@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -63,7 +64,11 @@ afterEach(() => {
 describe('AgentsPage', () => {
   it('lists the agents but not the humans', async () => {
     mockApi()
-    render(<AgentsPage />)
+    render(
+      <MemoryRouter>
+        <AgentsPage />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText('Bob')).toBeTruthy()
     expect(screen.getByText('Contractor')).toBeTruthy()
@@ -74,7 +79,11 @@ describe('AgentsPage', () => {
 
   it('saves the chosen colour', async () => {
     const { patches } = mockApi()
-    render(<AgentsPage />)
+    render(
+      <MemoryRouter>
+        <AgentsPage />
+      </MemoryRouter>,
+    )
 
     await screen.findByText('Bob')
     await userEvent.click(screen.getByRole('button', { name: 'teal for Bob' }))
@@ -86,7 +95,11 @@ describe('AgentsPage', () => {
 
   it('marks the current colour as pressed', async () => {
     mockApi()
-    render(<AgentsPage />)
+    render(
+      <MemoryRouter>
+        <AgentsPage />
+      </MemoryRouter>,
+    )
 
     await screen.findByText('Bob')
 

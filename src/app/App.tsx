@@ -40,7 +40,7 @@ export function App() {
         <nav aria-label="Footer">
           <a href="/about">About</a>
           <a href="/agents">Agents</a>
-          <a href="/agent">Agent access</a>
+          <a href="/agent">Test a token</a>
         </nav>
       </footer>
     </div>
