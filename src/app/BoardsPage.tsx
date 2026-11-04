@@ -25,7 +25,6 @@ function today(iso: string): string {
 export function BoardsPage() {
   const navigate = useNavigate()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
-  const [me, setMe] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
   const [newName, setNewName] = useState('')
@@ -43,12 +42,6 @@ export function BoardsPage() {
   const [tokenBoardId, setTokenBoardId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const meResponse = await fetch('/api/v1/auth/me')
-    if (meResponse.status === 401) {
-      navigate('/login?next=/boards', { replace: true })
-      return
-    }
-
     const response = await fetch('/api/v1/boards')
     if (response.status === 401) {
       navigate('/login?next=/boards', { replace: true })
@@ -59,9 +52,7 @@ export function BoardsPage() {
       return
     }
 
-    const meBody = (await meResponse.json()) as { user: { displayName: string } }
     const body = (await response.json()) as { boards: BoardSummary[] }
-    setMe(meBody.user.displayName)
     setState({ kind: 'ready', boards: body.boards })
   }, [navigate])
 
@@ -156,11 +147,6 @@ export function BoardsPage() {
     }
   }
 
-  async function signOut() {
-    await fetch('/api/v1/auth/logout', { method: 'POST' })
-    navigate('/', { replace: true })
-  }
-
   if (state.kind === 'loading') {
     return (
       <main className="page">
@@ -186,11 +172,8 @@ export function BoardsPage() {
       <div className="page-heading">
         <div>
           <h1>Boards</h1>
-          <p className="lede">{me ? `Signed in as ${me}.` : null}</p>
+          <p className="lede">Every board, newest first.</p>
         </div>
-        <button className="button button-quiet inline" type="button" onClick={signOut}>
-          Sign out
-        </button>
       </div>
 
       {notice && (

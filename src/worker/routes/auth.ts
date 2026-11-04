@@ -134,7 +134,12 @@ authRoutes.get('/auth/me', async (c) => {
   }
 
   return c.json({
-    user: { id: user.id, displayName: user.displayName, email: user.email },
+    user: {
+      id: user.id,
+      displayName: user.displayName,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+    },
   })
 })
 

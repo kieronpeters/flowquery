@@ -57,6 +57,7 @@ a {
 .app-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   /* Keep clear of the notch in landscape and the rounded corners. */
   padding: 1rem max(1.5rem, env(safe-area-inset-right)) 1rem max(1.5rem, env(safe-area-inset-left));
@@ -129,6 +130,91 @@ a {
 
 .app-footer nav a:hover {
   color: var(--text);
+}
+
+/* Signed-in profile menu ------------------------------------------------ */
+
+.profile {
+  position: relative;
+}
+
+.profile-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.profile-button:hover,
+.profile-button[aria-expanded='true'] {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: none;
+}
+
+.avatar-fallback {
+  background: var(--accent-soft);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  min-width: 12rem;
+  padding: 0.45rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+}
+
+.profile-menu-name {
+  margin: 0 0 0.35rem;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.45rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-menu-item:hover {
+  background: var(--accent-soft);
 }
 
 /* About page -------------------------------------------------------------- */

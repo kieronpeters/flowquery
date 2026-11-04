@@ -31,6 +31,7 @@ async function signIn(db: D1Database): Promise<string> {
       login: 'kieron',
       email: 'kieron@example.com',
       displayName: 'Kieron',
+      avatarUrl: null,
     },
     now: Date.now(),
   })

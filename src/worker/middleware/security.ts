@@ -18,7 +18,8 @@ export const CSP = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data:",
+  // GitHub's avatar host is the only external origin allowed to load an image.
+  "img-src 'self' data: https://avatars.githubusercontent.com",
   "font-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self'",

@@ -6,6 +6,7 @@ import { BoardPage } from './BoardPage'
 import { BoardsPage } from './BoardsPage'
 import { HomePage } from './HomePage'
 import { LoginPage } from './LoginPage'
+import { ProfileMenu } from './ProfileMenu'
 import { SignupPage } from './SignupPage'
 
 export function App() {
@@ -15,6 +16,7 @@ export function App() {
         <a className="brand" href="/" aria-label="FlowQuery home">
           <img src="/brand/flowquery-wordmark.png" alt="FlowQuery" width={131} height={32} />
         </a>
+        <ProfileMenu />
       </header>
 
       <Routes>

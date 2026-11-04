@@ -40,7 +40,14 @@ export function createMemoryAuthStore(): AuthStore & {
       return users.get(userId) ?? null
     },
     async createUser(input) {
-      users.set(input.id, { ...input, lastLoginAt: input.createdAt })
+      users.set(input.id, {
+        id: input.id,
+        email: input.email,
+        displayName: input.displayName,
+        avatarUrl: input.avatarUrl ?? null,
+        createdAt: input.createdAt,
+        lastLoginAt: input.createdAt,
+      })
     },
     async updateUserProfile(userId, input) {
       const user = users.get(userId)
@@ -49,6 +56,7 @@ export function createMemoryAuthStore(): AuthStore & {
         ...user,
         email: input.email,
         displayName: input.displayName,
+        avatarUrl: input.avatarUrl ?? null,
         lastLoginAt: input.lastLoginAt,
       })
     },
