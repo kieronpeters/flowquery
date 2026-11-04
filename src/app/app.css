@@ -1841,3 +1841,88 @@ select.input {
   gap: 0.5rem;
   margin-left: auto;
 }
+
+/* Profile pictures -------------------------------------------------------- */
+
+/*
+ * An uploaded picture sits in the same circle as a drawn avatar or initials,
+ * so the three sources are interchangeable wherever a person or agent appears.
+ */
+
+.avatar {
+  object-fit: cover;
+}
+
+.profile-menu-error {
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.4rem;
+  background: var(--danger-soft, #3a1020);
+  color: var(--text);
+  font-size: 0.78rem;
+}
+
+/* Agents page: upload and revert, beside the colour swatches. */
+
+.agent-picture-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.agent-picture-actions .button {
+  margin-top: 0;
+}
+
+/* Tokens: an avatar per row, and two actions on the right. */
+
+.token-row-main {
+  flex: 1;
+}
+
+.token-row-actions {
+  display: flex;
+  flex: none;
+  gap: 0.4rem;
+}
+
+.token-row-actions .button {
+  margin-top: 0;
+}
+
+.token-form .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.token-history {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+}
+
+.token-history summary {
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0.25rem 0;
+}
+
+.token-history .token-list {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .token-row {
+    flex-wrap: wrap;
+  }
+
+  .token-row-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .token-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

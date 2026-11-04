@@ -157,7 +157,7 @@ describe('PUT /api/v1/boards/:boardId/theme', () => {
       {
         method: 'POST',
         headers: { cookie, 'content-type': 'application/json' },
-        body: JSON.stringify({ label: 'Bob' }),
+        body: JSON.stringify({ profileId: 'prf_bob' }),
       },
       env(db),
     )

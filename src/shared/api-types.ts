@@ -69,6 +69,8 @@ export type ProfileDto = {
   roleTitle: string
   kind: 'human' | 'ai' | 'contractor'
   avatarPath: string | null
+  /** An uploaded picture, if this profile has one. Versioned, so it can be cached. */
+  avatarUrl: string | null
 }
 
 export type CommentDto = {

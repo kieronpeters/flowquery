@@ -107,4 +107,75 @@ describe('ProfileMenu', () => {
       expect(document.querySelector('.profile')).toBeNull()
     })
   })
+
+  it('offers a picture upload and a way into the agents page', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          user: {
+            displayName: 'Kieron',
+            avatarUrl: null,
+            profileId: 'prf_user_usr_1',
+            hasUploadedImage: false,
+          },
+        }),
+      ),
+    )
+
+    renderMenu()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Kieron/ }))
+
+    expect(screen.getByRole('menuitem', { name: 'Upload a new image' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Manage agents' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeTruthy()
+
+    // Nothing uploaded yet, so there is nothing to remove.
+    expect(screen.queryByRole('menuitem', { name: 'Remove picture' })).toBeNull()
+  })
+
+  it('offers to remove a picture only when one was uploaded', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          user: {
+            displayName: 'Kieron',
+            // A GitHub avatar is not an upload, so it cannot be removed here.
+            avatarUrl: 'https://avatars.githubusercontent.com/u/1',
+            profileId: 'prf_user_usr_1',
+            hasUploadedImage: true,
+          },
+        }),
+      ),
+    )
+
+    renderMenu()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Kieron/ }))
+    expect(screen.getByRole('menuitem', { name: 'Remove picture' })).toBeTruthy()
+  })
+
+  it('shows the uploaded picture instead of the GitHub one', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          user: {
+            displayName: 'Kieron',
+            avatarUrl: '/api/v1/avatars/prf_user_usr_1?v=1700000000000',
+            profileId: 'prf_user_usr_1',
+            hasUploadedImage: true,
+          },
+        }),
+      ),
+    )
+
+    renderMenu()
+
+    await screen.findByRole('button', { name: /Kieron/ })
+    const image = document.querySelector('.avatar') as HTMLImageElement
+    expect(image.getAttribute('src')).toContain('/api/v1/avatars/prf_user_usr_1')
+  })
 })

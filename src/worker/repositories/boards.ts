@@ -135,6 +135,32 @@ export async function getProfileById(
     .first<ProfileRow>()
 }
 
+/**
+ * The human profile belonging to a signed-in user.
+ *
+ * `ensureHumanProfile` normally creates `prf_user_<userId>`, but a person whose
+ * profile was created before their first sign-in (Abdul, for instance) keeps
+ * that earlier row instead. Matching on either keeps both cases working.
+ */
+export async function findHumanProfileId(
+  db: D1Database,
+  input: { userId: string; displayName: string },
+): Promise<string | null> {
+  const row = await db
+    .prepare(
+      `SELECT id
+         FROM team_profiles
+        WHERE kind = 'human'
+          AND (id = ? OR display_name = ?)
+        ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END
+        LIMIT 1`,
+    )
+    .bind(`prf_user_${input.userId}`, input.displayName, `prf_user_${input.userId}`)
+    .first<{ id: string }>()
+
+  return row?.id ?? null
+}
+
 /** Returns false when the profile does not exist, so the route can answer 404. */
 export async function updateProfileAvatar(
   db: D1Database,
