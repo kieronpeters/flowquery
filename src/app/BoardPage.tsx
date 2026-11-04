@@ -25,7 +25,7 @@ import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../sh
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
 import { AgentAvatar } from './AgentAvatar'
-import { applyMove, locate } from './board-state'
+import { applyMove, locate, withoutTask } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
 import { cardBackground, inkFor } from './theme'
@@ -198,6 +198,14 @@ export function BoardPage() {
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
   const [priority, setPriority] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement | null>(null)
+
+  // Deletion waits a few seconds so it can be taken back. Nothing is sent to
+  // the server until the window closes, so an undo is a no-op, not a restore.
+  const [pendingDelete, setPendingDelete] = useState<{
+    taskId: string
+    title: string
+    timer: ReturnType<typeof setTimeout>
+  } | null>(null)
 
   const sensors = useSensors(
     // Mouse: a few pixels of movement starts the drag, as before.
@@ -482,6 +490,45 @@ export function BoardPage() {
     setPriority(null)
   }
 
+  /** Removes the card at once, then deletes it for real when the window closes. */
+  function requestDelete(taskId: string, title: string) {
+    setDrawer(null)
+    setState((current) =>
+      current.kind === 'ok' ? { kind: 'ok', view: withoutTask(current.view, taskId) } : current,
+    )
+
+    const timer = setTimeout(() => void commitDelete(taskId), 8000)
+    setPendingDelete({ taskId, title, timer })
+  }
+
+  async function commitDelete(taskId: string) {
+    setPendingDelete(null)
+
+    try {
+      await fetch(`/api/v1/boards/${boardId}/tasks/${encodeURIComponent(taskId)}`, {
+        method: 'DELETE',
+      })
+    } finally {
+      await load({ silent: true })
+    }
+  }
+
+  function undoDelete() {
+    if (!pendingDelete) return
+
+    clearTimeout(pendingDelete.timer)
+    setPendingDelete(null)
+    // The server still has the task; reloading is how it comes back.
+    void load({ silent: true })
+  }
+
+  const editingTaskId = drawer?.kind === 'edit' ? drawer.taskId : null
+
+  function taskTitle(taskId: string): string {
+    const task = columns.flatMap((column) => column.tasks).find((item) => item.id === taskId)
+    return task?.title ?? 'task'
+  }
+
   const pageStyle = theme.background
     ? ({
         background: theme.background,
@@ -586,6 +633,15 @@ export function BoardPage() {
         </p>
       )}
 
+      {pendingDelete && (
+        <div className="undo-toast" role="status">
+          <span>Deleted “{pendingDelete.title}”</span>
+          <button className="button button-quiet inline" type="button" onClick={undoDelete}>
+            Undo
+          </button>
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -668,6 +724,9 @@ export function BoardPage() {
           onChanged={() => load({ silent: true })}
           onMoveRelative={(direction) =>
             drawer.kind === 'edit' ? moveRelative(drawer.taskId, direction) : Promise.resolve(null)
+          }
+          onRequestDelete={
+            editingTaskId ? () => requestDelete(editingTaskId, taskTitle(editingTaskId)) : undefined
           }
         />
       )}

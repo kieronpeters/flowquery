@@ -69,3 +69,28 @@ export function locate(
   }
   return null
 }
+
+/**
+ * The board without one task, positions renumbered.
+ *
+ * Used for the optimistic half of undoable deletion: the card disappears at
+ * once, and if the reader changes their mind the board is reloaded from the
+ * server rather than reconstructed by hand.
+ */
+export function withoutTask(view: BoardView, taskId: string): BoardView {
+  const columns = view.columns.map((column) => {
+    const tasks = column.tasks
+      .filter((task) => task.id !== taskId)
+      .map((task, index) => ({ ...task, position: index }))
+
+    return { ...column, tasks, taskCount: tasks.length }
+  })
+
+  const removed = view.columns.some((column) => column.tasks.some((task) => task.id === taskId))
+
+  return {
+    ...view,
+    board: { ...view.board, taskCount: Math.max(0, view.board.taskCount - (removed ? 1 : 0)) },
+    columns,
+  }
+}

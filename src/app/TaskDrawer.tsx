@@ -58,8 +58,13 @@ export function TaskDrawer(props: {
   onClose: () => void
   onChanged: () => Promise<void> | void
   onMoveRelative?: (direction: MoveDirection) => Promise<string | null>
+  /**
+   * When provided, deletion is handed to the caller instead of being sent here.
+   * The board uses it to hold the request for a few seconds so it can be undone.
+   */
+  onRequestDelete?: () => void
 }) {
-  const { boardId, mode, profiles, onClose, onChanged, onMoveRelative } = props
+  const { boardId, mode, profiles, onClose, onChanged, onMoveRelative, onRequestDelete } = props
 
   const [form, setForm] = useState<Form>(
     mode.kind === 'create' ? { ...EMPTY, status: mode.status } : EMPTY,
@@ -500,7 +505,7 @@ export function TaskDrawer(props: {
                       <button
                         className="button button-danger"
                         type="button"
-                        onClick={() => void remove()}
+                        onClick={() => (onRequestDelete ? onRequestDelete() : void remove())}
                         disabled={busy}
                       >
                         Delete permanently

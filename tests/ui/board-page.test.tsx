@@ -326,6 +326,26 @@ describe('BoardPage', () => {
     expect(await screen.findByRole('dialog')).toBeTruthy()
   })
 
+  it('deletes a task with an undo window, and undo really cancels it', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete permanently' }))
+
+    // Gone from the board immediately, but not yet gone from the server.
+    expect(screen.queryByText('Card one')).toBeNull()
+    expect(document.querySelector('.undo-toast')?.textContent).toContain('Deleted')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+    expect(await screen.findByText('Card one')).toBeTruthy()
+    expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+  })
+
   it('gives the activity box its own surface', async () => {
     mockApi({ theme: { activity: '#141a2e' } })
     renderBoard()

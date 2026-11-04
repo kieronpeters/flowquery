@@ -332,6 +332,24 @@ a {
   color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
 }
 
+.undo-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  background: var(--surface-raised);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.85rem;
+}
+
+.undo-toast .button {
+  margin-top: 0;
+}
+
 /* Board tools: search and filters ---------------------------------------- */
 
 .board-tools {
