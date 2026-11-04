@@ -304,6 +304,70 @@ a {
   cursor: not-allowed;
 }
 
+/* Screen-reader-only text for controls that are visually obvious. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.activity-new {
+  margin: 0.2rem 0;
+  padding: 0.35rem 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.activity[data-custom='true'] .activity-new {
+  border-color: color-mix(in srgb, var(--activity-fg) 18%, transparent);
+  color: color-mix(in srgb, var(--activity-fg) 65%, transparent);
+}
+
+/* Board tools: search and filters ---------------------------------------- */
+
+.board-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.board-search {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.board-filter .input {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+}
+
+.board-tools-note {
+  flex-basis: 100%;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.overdue-count {
+  color: #ff9aa2;
+  font-weight: 600;
+}
+
+.card-due.overdue {
+  color: #ff9aa2;
+  font-weight: 600;
+}
+
 /* About page -------------------------------------------------------------- */
 
 .about section {

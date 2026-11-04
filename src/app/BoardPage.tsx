@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
@@ -38,6 +38,8 @@ type LoadState =
 
 type DrawerState = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string } | null
 
+const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const
+
 const PRIORITY_LABELS: Record<string, string> = {
   none: 'None',
   low: 'Low',
@@ -55,6 +57,37 @@ function formatDueDate(value: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   })
+}
+
+/** Today in the reader's timezone, as YYYY-MM-DD, to compare against dueDate. */
+export function todayIso(now: Date = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+/**
+ * Overdue means the date has passed and the work is not finished. Comparing
+ * date strings is safe here: dueDate is YYYY-MM-DD and so is todayIso, and
+ * using the local date avoids a task turning red at the wrong midnight.
+ */
+export function isOverdue(task: TaskDto, today: string = todayIso()): boolean {
+  if (!task.dueDate || task.status === 'done') return false
+  return task.dueDate < today
+}
+
+type BoardFilters = {
+  query: string
+  assigneeId: string | null
+  priority: string | null
+}
+
+export function matchesFilters(task: TaskDto, filters: BoardFilters): boolean {
+  const query = filters.query.trim().toLowerCase()
+  if (query && !task.title.toLowerCase().includes(query)) return false
+  if (filters.assigneeId && task.assignee?.id !== filters.assigneeId) return false
+  if (filters.priority && task.priority !== filters.priority) return false
+  return true
 }
 
 function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] }) {
@@ -90,7 +123,11 @@ function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] })
             {task.assignee.displayName}
           </span>
         )}
-        {task.dueDate && <span>Due {formatDueDate(task.dueDate)}</span>}
+        {task.dueDate && (
+          <span className={isOverdue(task) ? 'card-due overdue' : 'card-due'}>
+            Due {formatDueDate(task.dueDate)}
+          </span>
+        )}
       </span>
     </>
   )
@@ -99,14 +136,17 @@ function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] })
 function SortableCard({
   task,
   profiles,
+  draggable = true,
   onOpen,
 }: {
   task: TaskDto
   profiles: ProfileDto[]
+  draggable?: boolean
   onOpen: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
+    disabled: !draggable,
   })
 
   return (
@@ -153,6 +193,11 @@ export function BoardPage() {
   const [activeColumn, setActiveColumn] = useState<ColumnKey>('backlog')
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
+
+  const [query, setQuery] = useState('')
+  const [assigneeId, setAssigneeId] = useState<string | null>(null)
+  const [priority, setPriority] = useState<string | null>(null)
+  const searchRef = useRef<HTMLInputElement | null>(null)
 
   const sensors = useSensors(
     // Mouse: a few pixels of movement starts the drag, as before.
@@ -348,6 +393,36 @@ export function BoardPage() {
     [performMove, state],
   )
 
+  // Shortcuts that work anywhere on the board, but never while typing.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+
+      const target = event.target as HTMLElement | null
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      if (typing) return
+
+      if (event.key === '/') {
+        event.preventDefault()
+        searchRef.current?.focus()
+        return
+      }
+
+      if (event.key === 'n' && !drawer) {
+        event.preventDefault()
+        setDrawer({ kind: 'create', status: activeColumn })
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeColumn, drawer])
+
   if (state.kind === 'loading') {
     return (
       <main className="page">
@@ -382,6 +457,31 @@ export function BoardPage() {
 
   const { board, columns, theme } = state.view
 
+  const filters = { query, assigneeId, priority }
+  const filtering = query.trim() !== '' || assigneeId !== null || priority !== null
+  const today = todayIso()
+  const allTasks = columns.flatMap((column) => column.tasks)
+  const overdueCount = allTasks.filter((task) => isOverdue(task, today)).length
+
+  // Only people who actually hold work on this board are worth offering.
+  const assignees = [
+    ...new Map(
+      allTasks
+        .filter((task) => task.assignee !== null)
+        .map((task) => [task.assignee!.id, task.assignee!] as const),
+    ).values(),
+  ]
+
+  function visibleTasks(tasks: TaskDto[]): TaskDto[] {
+    return filtering ? tasks.filter((task) => matchesFilters(task, filters)) : tasks
+  }
+
+  function clearFilters() {
+    setQuery('')
+    setAssigneeId(null)
+    setPriority(null)
+  }
+
   const pageStyle = theme.background
     ? ({
         background: theme.background,
@@ -402,6 +502,12 @@ export function BoardPage() {
           <p className="lede">
             {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag to reorder, or open
             a card to edit it
+            {overdueCount > 0 && (
+              <>
+                {' · '}
+                <span className="overdue-count">{overdueCount} overdue</span>
+              </>
+            )}
           </p>
         </div>
         <button
@@ -412,6 +518,62 @@ export function BoardPage() {
         >
           Colours
         </button>
+      </div>
+
+      <div className="board-tools">
+        <input
+          ref={searchRef}
+          className="input board-search"
+          type="search"
+          value={query}
+          placeholder="Search tasks…  /"
+          aria-label="Search tasks"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+
+        <label className="board-filter">
+          <span className="visually-hidden">Assignee</span>
+          <select
+            className="input"
+            value={assigneeId ?? ''}
+            onChange={(event) => setAssigneeId(event.target.value || null)}
+          >
+            <option value="">Anyone</option>
+            {assignees.map((assignee) => (
+              <option key={assignee.id} value={assignee.id}>
+                {assignee.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="board-filter">
+          <span className="visually-hidden">Priority</span>
+          <select
+            className="input"
+            value={priority ?? ''}
+            onChange={(event) => setPriority(event.target.value || null)}
+          >
+            <option value="">Any priority</option>
+            {PRIORITIES.map((value) => (
+              <option key={value} value={value}>
+                {PRIORITY_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {filtering && (
+          <button className="button button-quiet inline" type="button" onClick={clearFilters}>
+            Clear
+          </button>
+        )}
+
+        {filtering && (
+          <span className="board-tools-note">
+            Dragging is off while filtered, so hidden cards cannot be reordered by accident.
+          </span>
+        )}
       </div>
 
       {showTheme && (
@@ -457,6 +619,8 @@ export function BoardPage() {
               profiles={profiles}
               background={theme.columns?.[column.key]}
               ticket={theme.tickets}
+              tasks={visibleTasks(column.tasks)}
+              filtering={filtering}
               onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
               onAdd={() => setDrawer({ kind: 'create', status: column.key })}
             />
@@ -517,6 +681,8 @@ function Column({
   profiles,
   background,
   ticket,
+  tasks,
+  filtering,
   onOpen,
   onAdd,
 }: {
@@ -525,6 +691,8 @@ function Column({
   profiles: ProfileDto[]
   background?: string
   ticket?: string
+  tasks: TaskDto[]
+  filtering: boolean
   onOpen: (taskId: string) => void
   onAdd: () => void
 }) {
@@ -550,22 +718,20 @@ function Column({
     >
       <header className="column-header">
         <h2 id={`column-${column.key}`}>{column.name}</h2>
-        <span className="count">{column.taskCount}</span>
+        <span className="count">{filtering ? tasks.length : column.taskCount}</span>
       </header>
 
-      <SortableContext
-        items={column.tasks.map((task) => task.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        {column.tasks.length === 0 ? (
-          <p className="empty">Drop a task here</p>
+      <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+        {tasks.length === 0 ? (
+          <p className="empty">{filtering ? 'No matching tasks' : 'Drop a task here'}</p>
         ) : (
           <ul className="card-list">
-            {column.tasks.map((task) => (
+            {tasks.map((task) => (
               <SortableCard
                 key={task.id}
                 task={task}
                 profiles={profiles}
+                draggable={!filtering}
                 onOpen={() => onOpen(task.id)}
               />
             ))}

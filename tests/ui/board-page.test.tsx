@@ -294,6 +294,38 @@ describe('BoardPage', () => {
     expect(backlog.getAttribute('aria-pressed')).toBe('false')
   })
 
+  it('filters cards by search text', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    await userEvent.type(screen.getByLabelText('Search tasks'), 'two')
+
+    expect(screen.queryByText('Card one')).toBeNull()
+    expect(screen.getByText('Card two')).toBeTruthy()
+  })
+
+  it('focuses the search box when / is pressed', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+    await userEvent.keyboard('/')
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Search tasks'))
+  })
+
+  it('opens a new task when n is pressed', async () => {
+    mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+    await userEvent.keyboard('n')
+
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+  })
+
   it('gives the activity box its own surface', async () => {
     mockApi({ theme: { activity: '#141a2e' } })
     renderBoard()

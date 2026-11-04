@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 
 import type {
   ActivityActorDto,
@@ -106,6 +106,18 @@ export function ActivityFeed({
 }) {
   const [open, setOpen] = useState(false)
 
+  // Captured once per visit: everything after this is "new since you last
+  // looked". Kept in localStorage because it is per person and per device —
+  // Abdul's last visit is not yours.
+  const [lastSeen] = useState(() => {
+    try {
+      const stored = Number(window.localStorage.getItem(`fq:activity:${boardId}`))
+      return Number.isFinite(stored) ? stored : 0
+    } catch {
+      return 0
+    }
+  })
+
   const [pages, setPages] = useState<ActivityDto[][]>([])
   const [cursors, setCursors] = useState<(number | null)[]>([])
   const [page, setPage] = useState(1)
@@ -151,6 +163,14 @@ export function ActivityFeed({
   useEffect(() => {
     // Nothing is fetched until the accordion is opened.
     if (!open) return
+
+    // Opening the feed counts as looking: the marker will not appear again
+    // until something newer arrives.
+    try {
+      window.localStorage.setItem(`fq:activity:${boardId}`, String(Date.now()))
+    } catch {
+      // Private mode or a full quota. The marker simply will not persist.
+    }
 
     let cancelled = false
     setLoading(true)
@@ -226,6 +246,13 @@ export function ActivityFeed({
   const events = pages[page - 1] ?? []
   const lastPage = Math.max(1, pages.length)
   const hasMore = cursors.length > 0 && cursors[cursors.length - 1] !== null
+
+  // Where the "new" run ends on the first page. -1 means everything shown is
+  // new, and 0 means nothing is — neither needs a divider.
+  const firstOldIndex =
+    page === 1 && lastSeen > 0
+      ? events.findIndex((event) => Date.parse(event.createdAt) <= lastSeen)
+      : -1
 
   return (
     <section
@@ -318,30 +345,35 @@ export function ActivityFeed({
           ) : (
             <>
               <ol className="activity-list">
-                {events.map((event) => (
-                  <li key={event.id} className="activity-item">
-                    {event.actorType === 'agent' && (
-                      <AgentAvatar
-                        name={event.actorName}
-                        avatarPath={
-                          profiles.find((profile) => profile.displayName === event.actorName)
-                            ?.avatarPath
-                        }
-                        contractor={
-                          profiles.find((profile) => profile.displayName === event.actorName)
-                            ?.kind === 'contractor'
-                        }
-                        size={18}
-                      />
+                {events.map((event, index) => (
+                  <Fragment key={event.id}>
+                    {index === firstOldIndex && firstOldIndex > 0 && (
+                      <li className="activity-new">New since your last visit</li>
                     )}
-                    <span className="activity-who">
-                      {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
-                    </span>{' '}
-                    <span className="activity-what">{describe(event, profiles)}</span>{' '}
-                    <time className="activity-when" dateTime={event.createdAt}>
-                      {when(event.createdAt)}
-                    </time>
-                  </li>
+                    <li className="activity-item">
+                      {event.actorType === 'agent' && (
+                        <AgentAvatar
+                          name={event.actorName}
+                          avatarPath={
+                            profiles.find((profile) => profile.displayName === event.actorName)
+                              ?.avatarPath
+                          }
+                          contractor={
+                            profiles.find((profile) => profile.displayName === event.actorName)
+                              ?.kind === 'contractor'
+                          }
+                          size={18}
+                        />
+                      )}
+                      <span className="activity-who">
+                        {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
+                      </span>{' '}
+                      <span className="activity-what">{describe(event, profiles)}</span>{' '}
+                      <time className="activity-when" dateTime={event.createdAt}>
+                        {when(event.createdAt)}
+                      </time>
+                    </li>
+                  </Fragment>
                 ))}
               </ol>
 
