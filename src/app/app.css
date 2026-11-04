@@ -342,6 +342,18 @@ a {
     flex-basis: auto;
   }
 
+  /* The board list puts the title on its own line and the actions below it,
+     rather than squeezing the name against three buttons. */
+  .board-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0.6rem;
+  }
+
+  .board-row-actions {
+    flex-wrap: wrap;
+  }
+
   /* 44px is the smallest comfortable touch target. */
   .button,
   .add-task {
