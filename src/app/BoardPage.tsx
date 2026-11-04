@@ -416,6 +416,9 @@ export function BoardPage() {
               onClick={() => setActiveColumn(column.key)}
             >
               {column.name}
+              <span className="count" aria-hidden="true">
+                {column.taskCount}
+              </span>
             </button>
           ))}
         </div>

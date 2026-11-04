@@ -282,8 +282,8 @@ describe('BoardPage', () => {
 
     await screen.findByText('Card one')
 
-    const backlog = screen.getByRole('button', { name: 'Backlog' })
-    const review = screen.getByRole('button', { name: 'Review' })
+    const backlog = screen.getByRole('button', { name: /^Backlog/ })
+    const review = screen.getByRole('button', { name: /^Review/ })
 
     expect(backlog.getAttribute('aria-pressed')).toBe('true')
     expect(review.getAttribute('aria-pressed')).toBe('false')
