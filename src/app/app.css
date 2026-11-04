@@ -56,12 +56,14 @@ a {
 
 .app-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
   /* Keep clear of the notch in landscape and the rounded corners. */
   padding: 1rem max(1.5rem, env(safe-area-inset-right)) 1rem max(1.5rem, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
-  background: rgba(11, 16, 32, 0.85);
+  /* Matched to the wordmark's own background (#02092f) so the image has no
+     visible plate around it. */
+  background: rgba(2, 9, 47, 0.92);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -69,10 +71,80 @@ a {
 }
 
 .brand {
-  font-weight: 650;
-  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   color: var(--text);
+}
+
+/* The wordmark already carries the name, so the image is the label. */
+.brand img {
+  display: block;
+  height: 2rem;
+  width: auto;
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 3rem;
+  padding: 1.25rem max(1.5rem, env(safe-area-inset-right))
+    calc(1.5rem + env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+  border-top: 1px solid var(--border);
+  /* Same navy as the header and the wordmark, so the footer image blends too. */
+  background: #02092f;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer-brand:hover {
+  opacity: 0.85;
+}
+
+.footer-brand img {
+  display: block;
+  height: 1.25rem;
+  width: auto;
+}
+
+.app-footer nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.app-footer nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.app-footer nav a:hover {
+  color: var(--text);
+}
+
+/* About page -------------------------------------------------------------- */
+
+.about section {
+  margin-top: 1.75rem;
+}
+
+.about h2 {
+  margin-bottom: 0.4rem;
+}
+
+.about p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
 }
 
 .page {
