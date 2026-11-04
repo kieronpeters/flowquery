@@ -14,6 +14,7 @@ import {
   setBoardTheme,
   validateBoardName,
   renameBoard,
+  setBoardDescription,
 } from '../services/boards'
 import { loadBoardView } from '../services/board-view'
 
@@ -90,19 +91,34 @@ boardRoutes.patch('/:boardId', async (c) => {
   const body = await readJson(c)
   if (!body) return validationError(c, 'Expected a JSON object body.')
 
-  const name = validateBoardName(body.name)
-  if (!name.ok) return validationError(c, name.message, 'name')
+  const boardId = c.req.param('boardId')
+  const wantsName = body.name !== undefined
+  const wantsDescription = body.description !== undefined
 
-  const result = await renameBoard(c.env.DB, {
-    boardId: c.req.param('boardId'),
-    name: name.value,
-  })
-
-  if (result.kind === 'not_found') {
-    return c.json({ error: { code: 'NOT_FOUND', message: 'Board not found.' } }, 404)
+  if (!wantsName && !wantsDescription) {
+    return validationError(c, 'Provide a name or a description.')
   }
 
-  return c.json({ board: { id: c.req.param('boardId'), name: name.value } })
+  if (wantsName) {
+    const name = validateBoardName(body.name)
+    if (!name.ok) return validationError(c, name.message, 'name')
+
+    const result = await renameBoard(c.env.DB, { boardId, name: name.value })
+    if (result.kind === 'not_found') {
+      return c.json({ error: { code: 'NOT_FOUND', message: 'Board not found.' } }, 404)
+    }
+  }
+
+  if (wantsDescription) {
+    const result = await setBoardDescription(c.env.DB, { boardId, description: body.description })
+
+    if (result.kind === 'not_found') {
+      return c.json({ error: { code: 'NOT_FOUND', message: 'Board not found.' } }, 404)
+    }
+    if (result.kind === 'invalid') return validationError(c, result.message, 'description')
+  }
+
+  return c.json({ ok: true })
 })
 
 /**

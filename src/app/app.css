@@ -386,6 +386,47 @@ a {
   font-weight: 600;
 }
 
+/* Board description ------------------------------------------------------- */
+
+.board-description {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 46rem;
+}
+
+.board-row .board-description {
+  display: block;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.board-description-empty {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.board-description-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.6rem;
+  max-width: 46rem;
+}
+
+.board-description-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.board-description-actions .button {
+  margin-top: 0;
+}
+
 /* About page -------------------------------------------------------------- */
 
 .about section {

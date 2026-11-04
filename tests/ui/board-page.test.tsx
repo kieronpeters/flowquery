@@ -40,6 +40,7 @@ function boardWith(backlog: TaskDto[], review: TaskDto[]): BoardView {
     board: {
       id: 'brd_demo',
       name: 'FlowQuery Development',
+      description: null,
       createdAt: '2026-11-03T00:00:00.000Z',
       updatedAt: '2026-11-03T00:00:00.000Z',
       taskCount: backlog.length + review.length,
@@ -63,6 +64,7 @@ const movedBoard: BoardView = {
   board: {
     id: 'brd_demo',
     name: 'FlowQuery Development',
+    description: null,
     createdAt: '2026-11-03T00:00:00.000Z',
     updatedAt: '2026-11-03T00:00:00.000Z',
     taskCount: 2,
@@ -344,6 +346,24 @@ describe('BoardPage', () => {
 
     expect(await screen.findByText('Card one')).toBeTruthy()
     expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+  })
+
+  it('lets the board description be written in place', async () => {
+    const { calls } = mockApi()
+    renderBoard()
+
+    await screen.findByText('Card one')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add description' }))
+    await userEvent.type(screen.getByLabelText('Board description'), 'Planning board')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'PATCH')).toBe(true)
+    })
+
+    const patch = calls.find((call) => call.method === 'PATCH')!
+    expect(patch.body).toEqual({ description: 'Planning board' })
   })
 
   it('gives the activity box its own surface', async () => {

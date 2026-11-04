@@ -238,6 +238,9 @@ export function BoardsPage() {
                     <Link className="board-link" to={`/boards/${board.id}`}>
                       {board.name}
                     </Link>
+                    {board.description && (
+                      <span className="board-description">{board.description}</span>
+                    )}
                     <span className="board-meta">
                       {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · created{' '}
                       {today(board.createdAt)}

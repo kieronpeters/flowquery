@@ -199,6 +199,10 @@ export function BoardPage() {
   const [priority, setPriority] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement | null>(null)
 
+  // The board's one-line description, edited in place under the title.
+  const [editingDescription, setEditingDescription] = useState(false)
+  const [descriptionDraft, setDescriptionDraft] = useState('')
+
   // Deletion waits a few seconds so it can be taken back. Nothing is sent to
   // the server until the window closes, so an undo is a no-op, not a restore.
   const [pendingDelete, setPendingDelete] = useState<{
@@ -524,6 +528,25 @@ export function BoardPage() {
 
   const editingTaskId = drawer?.kind === 'edit' ? drawer.taskId : null
 
+  async function saveDescription() {
+    if (!boardId) return
+
+    const response = await fetch(`/api/v1/boards/${boardId}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ description: descriptionDraft }),
+    })
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as ApiError | null
+      setNotice(body?.error.message ?? 'Could not save the description.')
+      return
+    }
+
+    setEditingDescription(false)
+    await load({ silent: true })
+  }
+
   function taskTitle(taskId: string): string {
     const task = columns.flatMap((column) => column.tasks).find((item) => item.id === taskId)
     return task?.title ?? 'task'
@@ -546,6 +569,53 @@ export function BoardPage() {
       <div className="page-heading">
         <div>
           <h1>{board.name}</h1>
+
+          {editingDescription ? (
+            <div className="board-description-form">
+              <textarea
+                className="input textarea"
+                rows={2}
+                maxLength={500}
+                value={descriptionDraft}
+                aria-label="Board description"
+                placeholder="What is this board for?"
+                onChange={(event) => setDescriptionDraft(event.target.value)}
+              />
+              <div className="board-description-actions">
+                <button
+                  className="button button-primary"
+                  type="button"
+                  onClick={() => void saveDescription()}
+                >
+                  Save
+                </button>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={() => setEditingDescription(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="board-description">
+              {board.description ?? (
+                <span className="board-description-empty">No description yet</span>
+              )}
+              <button
+                className="button button-quiet inline"
+                type="button"
+                onClick={() => {
+                  setDescriptionDraft(board.description ?? '')
+                  setEditingDescription(true)
+                }}
+              >
+                {board.description ? 'Edit' : 'Add description'}
+              </button>
+            </p>
+          )}
+
           <p className="lede">
             {board.taskCount} {board.taskCount === 1 ? 'task' : 'tasks'} · drag to reorder, or open
             a card to edit it

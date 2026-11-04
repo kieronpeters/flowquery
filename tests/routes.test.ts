@@ -71,6 +71,7 @@ const now = 1793664000000
 const board: BoardRow = {
   id: 'brd_test',
   name: 'Test Board',
+  description: null,
   created_by: 'usr_test',
   created_at: now,
   updated_at: now,

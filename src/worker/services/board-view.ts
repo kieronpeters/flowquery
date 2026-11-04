@@ -74,6 +74,7 @@ export function assembleBoardView(
     board: {
       id: board.id,
       name: board.name,
+      description: board.description,
       createdAt: toIso(board.created_at),
       updatedAt: toIso(board.updated_at),
       taskCount: tasks.length,

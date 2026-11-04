@@ -6,6 +6,7 @@ import { assembleBoardView, DESCRIPTION_PREVIEW_LENGTH } from '../src/worker/ser
 const board: BoardRow = {
   id: 'brd_test',
   name: 'Test Board',
+  description: null,
   created_by: 'usr_test',
   created_at: 1793664000000,
   updated_at: 1793664000000,

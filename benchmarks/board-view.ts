@@ -19,6 +19,7 @@ import { toTaskDto } from '../src/worker/services/task-dto'
 const board: BoardRow = {
   id: 'brd_bench',
   name: 'Benchmark Board',
+  description: null,
   created_by: 'usr_bench',
   created_at: 1793664000000,
   updated_at: 1793664000000,
