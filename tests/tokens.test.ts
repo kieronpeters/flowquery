@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { parseAllowlist } from '../src/worker/auth/allowlist'
 import { app } from '../src/worker/app'
+import { sha256Hex } from '../src/worker/lib/ids'
 import { createD1AuthStore } from '../src/worker/repositories/auth-store'
 import { completeSignIn } from '../src/worker/services/auth'
-import { sha256Hex } from '../src/worker/lib/ids'
 import { createSqliteD1 } from './helpers/sqlite-d1'
 
 /** Agent token management (AGT-001…005). */
@@ -46,22 +46,29 @@ function call(method: string, path: string, body?: unknown) {
   )
 }
 
-type Created = { token: string; record: { id: string; label: string; tokenPrefix: string } }
+type Created = {
+  token: string
+  record: { id: string; profileId: string | null; label: string; tokenPrefix: string }
+}
 
-async function createToken(label = 'Bob — main'): Promise<Created> {
-  const response = await call('POST', '/api/v1/boards/brd_demo/tokens', { label })
+/** Issues a token for the seeded Bob profile. */
+async function createToken(profileId = 'prf_bob'): Promise<Created> {
+  const response = await call('POST', '/api/v1/boards/brd_demo/tokens', { profileId })
   expect(response.status).toBe(201)
   return (await response.json()) as Created
 }
 
+function agentCall(token: string, path: string) {
+  return app.request(path, { headers: { authorization: `Bearer ${token}` } }, env(db))
+}
+
 describe('POST /api/v1/boards/:boardId/tokens', () => {
   it('returns the plaintext once and stores only a hash', async () => {
-    const created = await createToken('Bob — main')
+    const created = await createToken()
 
     expect(created.token).toMatch(/^fq_[0-9A-HJKMNP-TV-Z]+$/)
     expect(created.token.length).toBeGreaterThan(30)
     expect(created.record.tokenPrefix).toBe(created.token.slice(0, 8))
-    expect(created.record.label).toBe('Bob — main')
 
     const { results } = await db
       .prepare('SELECT token_hash, token_prefix FROM agent_tokens WHERE id = ?')
@@ -72,6 +79,19 @@ describe('POST /api/v1/boards/:boardId/tokens', () => {
     expect(stored?.token_hash).toBe(await sha256Hex(created.token))
     expect(stored?.token_hash).not.toBe(created.token)
     expect(stored?.token_prefix).not.toBe(created.token)
+  })
+
+  it('takes the label from the agent, not from the request', async () => {
+    // A caller that tries to name the token something else is ignored: the
+    // label is what activity attribution matches on, so it is not negotiable.
+    const response = await call('POST', '/api/v1/boards/brd_demo/tokens', {
+      profileId: 'prf_bob',
+      label: 'something else entirely',
+    })
+
+    const body = (await response.json()) as Created
+    expect(body.record.label).toBe('Bob')
+    expect(body.record.profileId).toBe('prf_bob')
   })
 
   it('never returns the plaintext again on list', async () => {
@@ -87,30 +107,65 @@ describe('POST /api/v1/boards/:boardId/tokens', () => {
     const serialised = JSON.stringify(body)
     expect(serialised).not.toContain(created.token)
     expect(body.tokens[0]).toMatchObject({
-      label: 'Bob — main',
+      profileId: 'prf_bob',
+      label: 'Bob',
       tokenPrefix: created.token.slice(0, 8),
       revokedAt: null,
     })
   })
 
-  it('allows several tokens on one board', async () => {
-    await createToken('Bob — main')
-    await createToken('Bob — backlog cleanup')
+  it('allows one token per agent, and refuses a second', async () => {
+    await createToken()
+
+    const again = await call('POST', '/api/v1/boards/brd_demo/tokens', { profileId: 'prf_bob' })
+    expect(again.status).toBe(409)
+
+    const body = (await again.json()) as { error: { message: string } }
+    expect(body.error.message).toContain('Bob')
+  })
+
+  it('lets a different agent hold its own token on the same board', async () => {
+    await createToken('prf_bob')
+    await createToken('prf_alex')
 
     const response = await call('GET', '/api/v1/boards/brd_demo/tokens')
     const body = (await response.json()) as { tokens: { label: string }[] }
-    expect(body.tokens.map((token) => token.label)).toEqual(['Bob — backlog cleanup', 'Bob — main'])
+    expect(body.tokens.map((token) => token.label).sort()).toEqual(['Alex', 'Bob'])
   })
 
-  it('rejects an empty or oversized label', async () => {
-    for (const label of ['', '   ', 'x'.repeat(81), 42]) {
-      const response = await call('POST', '/api/v1/boards/brd_demo/tokens', { label })
+  it('lets the same agent hold one token on each board', async () => {
+    await createToken('prf_bob')
+
+    const other = await call('POST', '/api/v1/boards', { name: 'Other board' })
+    const otherBoard = (await other.json()) as { board: { id: string } }
+
+    const response = await call('POST', `/api/v1/boards/${otherBoard.board.id}/tokens`, {
+      profileId: 'prf_bob',
+    })
+    expect(response.status).toBe(201)
+  })
+
+  it('refuses a human profile', async () => {
+    const response = await call('POST', '/api/v1/boards/brd_demo/tokens', {
+      profileId: 'prf_abdul',
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('rejects a missing or unknown agent', async () => {
+    for (const body of [{}, { profileId: '' }, { profileId: 42 }]) {
+      const response = await call('POST', '/api/v1/boards/brd_demo/tokens', body)
       expect(response.status).toBe(400)
     }
+
+    const missing = await call('POST', '/api/v1/boards/brd_demo/tokens', { profileId: 'prf_nope' })
+    expect(missing.status).toBe(404)
   })
 
   it('returns 404 for an unknown board', async () => {
-    const response = await call('POST', '/api/v1/boards/brd_missing/tokens', { label: 'x' })
+    const response = await call('POST', '/api/v1/boards/brd_missing/tokens', {
+      profileId: 'prf_bob',
+    })
     expect(response.status).toBe(404)
   })
 
@@ -120,7 +175,7 @@ describe('POST /api/v1/boards/:boardId/tokens', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ label: 'x' }),
+        body: JSON.stringify({ profileId: 'prf_bob' }),
       },
       env(db),
     )
@@ -128,26 +183,72 @@ describe('POST /api/v1/boards/:boardId/tokens', () => {
   })
 })
 
+describe('POST /api/v1/boards/:boardId/tokens/:tokenId/rotate', () => {
+  it('replaces the token, and the old one stops working immediately', async () => {
+    const created = await createToken()
+
+    expect((await agentCall(created.token, '/api/v1/agent/board')).status).toBe(200)
+
+    const response = await call(
+      'POST',
+      `/api/v1/boards/brd_demo/tokens/${created.record.id}/rotate`,
+    )
+    expect(response.status).toBe(201)
+
+    const rotated = (await response.json()) as Created
+    expect(rotated.token).not.toBe(created.token)
+    expect(rotated.record.label).toBe('Bob')
+
+    // The whole point of rotating: the old value is dead, the new one works.
+    expect((await agentCall(created.token, '/api/v1/agent/board')).status).toBe(401)
+    expect((await agentCall(rotated.token, '/api/v1/agent/board')).status).toBe(200)
+  })
+
+  it('leaves exactly one live token, keeping the old row for the record', async () => {
+    const created = await createToken()
+    await call('POST', `/api/v1/boards/brd_demo/tokens/${created.record.id}/rotate`)
+
+    const response = await call('GET', '/api/v1/boards/brd_demo/tokens')
+    const body = (await response.json()) as { tokens: { revokedAt: string | null }[] }
+
+    expect(body.tokens).toHaveLength(2)
+    expect(body.tokens.filter((token) => token.revokedAt === null)).toHaveLength(1)
+  })
+
+  it('does not allow a second rotation of an already revoked token', async () => {
+    const created = await createToken()
+    await call('POST', `/api/v1/boards/brd_demo/tokens/${created.record.id}/rotate`)
+
+    const again = await call('POST', `/api/v1/boards/brd_demo/tokens/${created.record.id}/rotate`)
+    expect(again.status).toBe(404)
+  })
+
+  it('returns 404 for an unknown token, and cannot cross boards', async () => {
+    const missing = await call('POST', '/api/v1/boards/brd_demo/tokens/tok_missing/rotate')
+    expect(missing.status).toBe(404)
+
+    const created = await createToken()
+    const other = await call('POST', '/api/v1/boards', { name: 'Other board' })
+    const otherBoard = (await other.json()) as { board: { id: string } }
+
+    const crossed = await call(
+      'POST',
+      `/api/v1/boards/${otherBoard.board.id}/tokens/${created.record.id}/rotate`,
+    )
+    expect(crossed.status).toBe(404)
+  })
+})
+
 describe('DELETE /api/v1/boards/:boardId/tokens/:tokenId', () => {
   it('revokes a token, which then stops working immediately', async () => {
     const created = await createToken()
 
-    const before = await app.request(
-      '/api/v1/agent/board',
-      { headers: { authorization: `Bearer ${created.token}` } },
-      env(db),
-    )
-    expect(before.status).toBe(200)
+    expect((await agentCall(created.token, '/api/v1/agent/board')).status).toBe(200)
 
     const revoke = await call('DELETE', `/api/v1/boards/brd_demo/tokens/${created.record.id}`)
     expect(revoke.status).toBe(204)
 
-    const after = await app.request(
-      '/api/v1/agent/board',
-      { headers: { authorization: `Bearer ${created.token}` } },
-      env(db),
-    )
-    expect(after.status).toBe(401)
+    expect((await agentCall(created.token, '/api/v1/agent/board')).status).toBe(401)
   })
 
   it('keeps the revoked row for the record', async () => {
@@ -157,6 +258,14 @@ describe('DELETE /api/v1/boards/:boardId/tokens/:tokenId', () => {
     const response = await call('GET', '/api/v1/boards/brd_demo/tokens')
     const body = (await response.json()) as { tokens: { revokedAt: string | null }[] }
     expect(body.tokens[0]?.revokedAt).toBeTruthy()
+  })
+
+  it('frees the agent to be issued a fresh token afterwards', async () => {
+    const created = await createToken()
+    await call('DELETE', `/api/v1/boards/brd_demo/tokens/${created.record.id}`)
+
+    const again = await call('POST', '/api/v1/boards/brd_demo/tokens', { profileId: 'prf_bob' })
+    expect(again.status).toBe(201)
   })
 
   it('returns 404 for an unknown token', async () => {

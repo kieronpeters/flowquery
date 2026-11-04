@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import type { ApiError } from '../shared/api-types'
+import type { ApiError, ProfileDto } from '../shared/api-types'
+import { ProfileAvatar } from './ProfileAvatar'
 
 type TokenRow = {
   id: string
+  profileId: string | null
   label: string
   tokenPrefix: string
   createdAt: string
@@ -26,27 +28,44 @@ function when(iso: string | null): string {
 /**
  * Agent credential management for one board.
  *
+ * One agent holds one token per board, so the form is a choice of agent rather
+ * than a free-text label: the label is the agent's name, and it is what the
+ * activity feed matches on. Typing it by hand was the one way to get it wrong.
+ *
+ * Rotating replaces the token in a single step. Revoking and creating separately
+ * left a window where the agent had nothing, and a person who forgot the second
+ * half.
+ *
  * The plaintext appears once, in a panel the user must dismiss. There is no
  * "show again": the server only ever stored a hash.
  */
 export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () => void }) {
   const [tokens, setTokens] = useState<TokenRow[]>([])
+  const [profiles, setProfiles] = useState<ProfileDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [label, setLabel] = useState('')
+  const [selected, setSelected] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [createdToken, setCreatedToken] = useState<string | null>(null)
+  const [revealed, setRevealed] = useState<{ token: string; label: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
-    const response = await fetch(`/api/v1/boards/${boardId}/tokens`)
-    if (!response.ok) {
+    const [tokenResponse, profileResponse] = await Promise.all([
+      fetch(`/api/v1/boards/${boardId}/tokens`),
+      fetch('/api/v1/profiles'),
+    ])
+
+    if (!tokenResponse.ok || !profileResponse.ok) {
       setError('Tokens could not be loaded.')
       setLoading(false)
       return
     }
-    const body = (await response.json()) as { tokens: TokenRow[] }
-    setTokens(body.tokens)
+
+    const tokenBody = (await tokenResponse.json()) as { tokens: TokenRow[] }
+    const profileBody = (await profileResponse.json()) as { profiles: ProfileDto[] }
+
+    setTokens(tokenBody.tokens)
+    setProfiles(profileBody.profiles.filter((profile) => profile.kind !== 'human'))
     setLoading(false)
   }, [boardId])
 
@@ -54,9 +73,17 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
     void load()
   }, [load])
 
-  async function create(event: React.FormEvent) {
-    event.preventDefault()
-    if (busy || !label.trim()) return
+  const live = tokens.filter((token) => token.revokedAt === null)
+  const liveProfileIds = new Set(live.map((token) => token.profileId))
+  const available = profiles.filter((profile) => !liveProfileIds.has(profile.id))
+  const chosen = available.find((profile) => profile.id === selected) ?? available[0] ?? null
+
+  function profileFor(token: TokenRow): ProfileDto | null {
+    return profiles.find((profile) => profile.id === token.profileId) ?? null
+  }
+
+  async function create() {
+    if (busy || !chosen) return
 
     setBusy(true)
     setError(null)
@@ -65,7 +92,7 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
       const response = await fetch(`/api/v1/boards/${boardId}/tokens`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ label }),
+        body: JSON.stringify({ profileId: chosen.id }),
       })
 
       if (!response.ok) {
@@ -74,9 +101,35 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
         return
       }
 
-      const body = (await response.json()) as { token: string }
-      setCreatedToken(body.token)
-      setLabel('')
+      const body = (await response.json()) as { token: string; record: TokenRow }
+      setRevealed({ token: body.token, label: body.record.label })
+      setSelected('')
+      setCopied(false)
+      await load()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function rotate(token: TokenRow) {
+    if (busy) return
+
+    setBusy(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}/tokens/${token.id}/rotate`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as ApiError | null
+        setError(body?.error.message ?? 'That token could not be rotated.')
+        return
+      }
+
+      const body = (await response.json()) as { token: string; record: TokenRow }
+      setRevealed({ token: body.token, label: body.record.label })
       setCopied(false)
       await load()
     } finally {
@@ -104,9 +157,9 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
   }
 
   async function copy() {
-    if (!createdToken) return
+    if (!revealed) return
     try {
-      await navigator.clipboard.writeText(createdToken)
+      await navigator.clipboard.writeText(revealed.token)
       setCopied(true)
     } catch {
       setCopied(false)
@@ -129,55 +182,98 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
 
       <p className="token-note">
         A token lets one agent reach this board and nothing else. It cannot create, rename or delete
-        boards, and it cannot see any other board.
+        boards, and it cannot see any other board. Each agent holds one token per board.
       </p>
 
-      {createdToken && (
+      {revealed && (
         <div className="token-reveal" role="status">
-          <p className="token-reveal-title">Copy this now — it will not be shown again.</p>
-          <code className="token-value">{createdToken}</code>
+          <p className="token-reveal-title">
+            New token for {revealed.label} — copy it now, it will not be shown again.
+          </p>
+          <code className="token-value">{revealed.token}</code>
           <div className="token-reveal-actions">
             <button className="button button-primary" type="button" onClick={() => void copy()}>
               {copied ? 'Copied' : 'Copy token'}
             </button>
-            <button className="button" type="button" onClick={() => setCreatedToken(null)}>
+            <button className="button" type="button" onClick={() => setRevealed(null)}>
               Done
             </button>
           </div>
           <p className="token-note">
-            FlowQuery stores only a hash. If you lose it, revoke it and create another.
+            FlowQuery stores only a hash. If you lose it, rotate the token for that agent.
           </p>
         </div>
       )}
 
       {loading ? (
         <p role="status">Loading tokens…</p>
-      ) : tokens.length === 0 ? (
+      ) : live.length === 0 ? (
         <p className="empty">No tokens yet.</p>
       ) : (
         <ul className="token-list">
-          {tokens.map((token) => (
-            <li key={token.id} className={token.revokedAt ? 'token-row revoked' : 'token-row'}>
-              <div className="token-row-main">
-                <span className="token-label">{token.label}</span>
-                <span className="token-meta">
-                  {token.tokenPrefix}… · used {when(token.lastUsedAt)}
-                  {token.revokedAt && ' · revoked'}
-                </span>
-              </div>
-              {!token.revokedAt && (
-                <button
-                  className="button button-danger"
-                  type="button"
-                  onClick={() => void revoke(token.id)}
-                  disabled={busy}
-                >
-                  Revoke
-                </button>
-              )}
-            </li>
-          ))}
+          {live.map((token) => {
+            const profile = profileFor(token)
+
+            return (
+              <li key={token.id} className="token-row">
+                <ProfileAvatar
+                  name={token.label}
+                  avatarPath={profile?.avatarPath ?? null}
+                  avatarUrl={profile?.avatarUrl ?? null}
+                  kind={profile?.kind ?? 'ai'}
+                  size={28}
+                />
+
+                <div className="token-row-main">
+                  <span className="token-label">{token.label}</span>
+                  <span className="token-meta">
+                    {token.tokenPrefix}… · used {when(token.lastUsedAt)}
+                  </span>
+                </div>
+
+                <div className="token-row-actions">
+                  <button
+                    className="button button-quiet inline"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void rotate(token)}
+                    title="Replace this token with a new one; the old one stops working"
+                  >
+                    Rotate
+                  </button>
+                  <button
+                    className="button button-danger inline"
+                    type="button"
+                    onClick={() => void revoke(token.id)}
+                    disabled={busy}
+                  >
+                    Revoke
+                  </button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
+      )}
+
+      {tokens.some((token) => token.revokedAt !== null) && (
+        <details className="token-history">
+          <summary>Revoked tokens</summary>
+          <ul className="token-list">
+            {tokens
+              .filter((token) => token.revokedAt !== null)
+              .map((token) => (
+                <li key={token.id} className="token-row revoked">
+                  <div className="token-row-main">
+                    <span className="token-label">{token.label}</span>
+                    <span className="token-meta">
+                      {token.tokenPrefix}… · revoked {when(token.revokedAt)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </details>
       )}
 
       {error && (
@@ -186,21 +282,35 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
         </p>
       )}
 
-      <form className="token-form" onSubmit={create}>
-        <label className="field">
-          <span className="field-label">New token label</span>
-          <input
-            className="input"
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-            placeholder="e.g. Bob — main development"
-            maxLength={80}
-          />
-        </label>
-        <button className="button button-primary" type="submit" disabled={busy || !label.trim()}>
-          Create token
-        </button>
-      </form>
+      {available.length === 0 ? (
+        <p className="token-note">Every agent already has a token on this board.</p>
+      ) : (
+        <form
+          className="token-form"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void create()
+          }}
+        >
+          <label className="field">
+            <span className="field-label">Agent</span>
+            <select
+              className="input"
+              value={chosen?.id ?? ''}
+              onChange={(event) => setSelected(event.target.value)}
+            >
+              {available.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.displayName} — {profile.roleTitle}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button button-primary" type="submit" disabled={busy || !chosen}>
+            Create token
+          </button>
+        </form>
+      )}
     </div>
   )
 }

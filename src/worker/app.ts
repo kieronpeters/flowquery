@@ -6,6 +6,7 @@ import { securityHeaders } from './middleware/security'
 import { openApiDocument } from './openapi'
 import { agentRoutes } from './routes/agent'
 import { authRoutes } from './routes/auth'
+import { avatarRoutes } from './routes/avatars'
 import { boardRoutes } from './routes/boards'
 import { profileRoutes } from './routes/profiles'
 
@@ -76,6 +77,9 @@ app.route('/api/v1/boards', boardRoutes)
 
 /** Assignable profiles — session required. */
 app.route('/api/v1/profiles', profileRoutes)
+
+/** Uploaded profile pictures — session required, served same-origin. */
+app.route('/api/v1/avatars', avatarRoutes)
 
 /** The agent door. Board scope comes from the token, never from the request. */
 app.route('/api/v1/agent', agentRoutes)

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 
+import { avatarUrlFor } from '../../shared/avatars'
 import { parseAllowlist } from '../auth/allowlist'
 import {
   clearOAuthCookie,
@@ -14,6 +15,8 @@ import { buildAuthorizeUrl, completeGithubSignIn, createPkce, GithubError } from
 import type { Bindings } from '../env'
 import { randomToken } from '../lib/ids'
 import { createD1AuthStore } from '../repositories/auth-store'
+import { findHumanProfileId } from '../repositories/boards'
+import { getAvatarVersion } from '../repositories/profile-avatars'
 import { completeSignIn, NotAllowedError, resolveSession, signOut } from '../services/auth'
 
 const RATE_LIMIT = 10
@@ -133,12 +136,27 @@ authRoutes.get('/auth/me', async (c) => {
     return c.json({ error: { code: 'UNAUTHENTICATED', message: 'Sign in required.' } }, 401)
   }
 
+  // The profile is what carries an uploaded picture; `users.avatar_url` only
+  // ever holds the GitHub one. An upload therefore wins, and GitHub is the
+  // fallback rather than the other way round.
+  const profileId = await findHumanProfileId(c.env.DB, {
+    userId: user.id,
+    displayName: user.displayName,
+  })
+  const uploaded = profileId
+    ? avatarUrlFor(profileId, await getAvatarVersion(c.env.DB, profileId))
+    : null
+
   return c.json({
     user: {
       id: user.id,
       displayName: user.displayName,
       email: user.email,
-      avatarUrl: user.avatarUrl,
+      profileId,
+      avatarUrl: uploaded ?? user.avatarUrl,
+      // So the menu can offer "Remove picture" only when there is an uploaded
+      // one to remove, rather than for the GitHub avatar it cannot touch.
+      hasUploadedImage: uploaded !== null,
     },
   })
 })

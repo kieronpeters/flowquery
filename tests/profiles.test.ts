@@ -95,7 +95,7 @@ describe('PATCH /api/v1/profiles/:profileId', () => {
       {
         method: 'POST',
         headers: { cookie, 'content-type': 'application/json' },
-        body: JSON.stringify({ label: 'Bob' }),
+        body: JSON.stringify({ profileId: 'prf_bob' }),
       },
       env(db),
     )

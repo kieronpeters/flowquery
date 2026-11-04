@@ -2,6 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 
 import { AVATAR_PREFIX, isAvatarVariant } from '../../shared/avatars'
 import { getProfileById, updateProfileAvatar } from '../repositories/boards'
+import { deleteProfileAvatar } from '../repositories/profile-avatars'
 
 export type AvatarResult =
   { kind: 'ok' } | { kind: 'invalid'; message: string } | { kind: 'not_found' }
@@ -40,5 +41,13 @@ export async function setProfileAvatar(
   }
 
   const updated = await updateProfileAvatar(db, input.profileId, raw)
-  return updated ? { kind: 'ok' } : { kind: 'not_found' }
+
+  if (!updated) return { kind: 'not_found' }
+
+  // Choosing a drawn avatar is a decision about how this agent looks, so it
+  // also clears an uploaded picture. Otherwise the upload would keep winning
+  // and the click would appear to do nothing.
+  await deleteProfileAvatar(db, input.profileId)
+
+  return { kind: 'ok' }
 }

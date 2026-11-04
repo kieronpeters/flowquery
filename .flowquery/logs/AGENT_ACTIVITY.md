@@ -4,6 +4,26 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-04 — Improvements v3: profile pictures, and tokens chosen by agent
+
+**Requested by the owner:** a picture upload in the profile menu, per-agent pictures on the agents page (a drawn default or a custom upload), and token creation simplified to choosing an agent from a list with one token each, rotatable in one press.
+
+**Decided with the owner:** pictures stored in D1 rather than R2 (DEC-036); the token dropdown covers the 16 non-human profiles, including the contractor (DEC-037).
+
+**Schema — migration `0009_profile_images.sql`:** a `profile_avatars` table (one row per profile, base64 plus MIME, capped); `agent_tokens.profile_id` added and backfilled by matching the old free-text label to a profile name; a partial unique index allowing one live token per agent per board. Applied locally: 5 commands, no errors. **Not applied to production.**
+
+**Fixed a real defect on the way:** agent activity is attributed by matching `actor_name` against `team_profiles.display_name`, so a hand-typed token label could silently detach an agent's actions from its name and avatar. The label is now copied from the profile.
+
+**Security:** SVG uploads refused (a document that can carry script, served from our own origin); magic bytes checked against the declared MIME type, so a mislabelled file is rejected rather than trusted; size checked on decoded bytes; a human may change their own picture and any agent's, but not another human's (403); the image endpoint is session-gated, so an agent token cannot read one.
+
+**Verified:** `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` — all pass, **332 tests** (29 files). In a browser against the dev server: upload resized 400×300 to 256×256 and stored it; the picture appeared on `/agents` and in the header; Remove picture fell back to initials; the dropdown listed 16 agents and omitted the one holding a token; rotating showed a new plaintext and moved the old row into "Revoked tokens"; the rotated token returned `200` from `/api/v1/agent/board` and `/api/v1/agent/tasks`, and the database held exactly one live row for that agent.
+
+**Not verified:** the OS file-picker dialog (suppressed so the app's own code could run), and the flows on a phone.
+
+**Mistake worth recording:** mounting the avatar router at `/api/v1` made its session middleware apply to every API route, so agent tokens started returning `401`. Found by the test suite; fixed by mounting it at `/api/v1/avatars`.
+
+---
+
 ## 2026-11-04 — Improvements v2 merged and deployed
 
 **PR #3** (`improvements-v2` → `main`), merge `0841b3f`, deployed as version `8bdda078`. Nine commits: branding and footer, About page, profile menu with a GitHub avatar, agent avatars and `/agents`, board search and filters, overdue marking, keyboard shortcuts, the new-since marker, an error boundary, a web manifest, undo on delete, and the board description.

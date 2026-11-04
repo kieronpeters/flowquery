@@ -68,10 +68,10 @@ beforeEach(async () => {
   const created = await human('POST', '/api/v1/boards', { name: 'Second board' })
   boardB = ((await created.json()) as { board: { id: string } }).board.id
 
-  const a = await human('POST', '/api/v1/boards/brd_demo/tokens', { label: 'Bob — main' })
+  const a = await human('POST', '/api/v1/boards/brd_demo/tokens', { profileId: 'prf_bob' })
   tokenA = ((await a.json()) as { token: string }).token
 
-  const b = await human('POST', `/api/v1/boards/${boardB}/tokens`, { label: 'Bob — other' })
+  const b = await human('POST', `/api/v1/boards/${boardB}/tokens`, { profileId: 'prf_bob' })
   tokenB = ((await b.json()) as { token: string }).token
 })
 
@@ -157,7 +157,7 @@ describe('each token sees exactly one board', () => {
 })
 
 describe('bob can do the job', () => {
-  it('creates a task on its board and attributes it to the token label', async () => {
+  it('creates a task on its board and attributes it to the agent behind the token', async () => {
     const response = await agent(tokenA, 'POST', '/tasks', {
       title: 'Refine the backlog',
       priority: 'high',
@@ -179,7 +179,7 @@ describe('bob can do the job', () => {
     }
     const created = activity.events.find((event) => event.eventType === 'task.created')
 
-    expect(created).toMatchObject({ actorType: 'agent', actorName: 'Bob — main' })
+    expect(created).toMatchObject({ actorType: 'agent', actorName: 'Bob' })
   })
 
   it('edits, moves and deletes its own tasks', async () => {

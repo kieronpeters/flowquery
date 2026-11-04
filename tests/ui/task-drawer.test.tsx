@@ -93,6 +93,7 @@ function renderDrawer(overrides: Partial<Parameters<typeof TaskDrawer>[0]> = {})
           roleTitle: 'Engineer',
           kind: 'ai',
           avatarPath: null,
+          avatarUrl: null,
         },
         {
           id: 'prf_user_usr_1',
@@ -100,6 +101,7 @@ function renderDrawer(overrides: Partial<Parameters<typeof TaskDrawer>[0]> = {})
           roleTitle: 'Administrator',
           kind: 'human',
           avatarPath: null,
+          avatarUrl: null,
         },
         {
           id: 'prf_contractor',
@@ -107,6 +109,7 @@ function renderDrawer(overrides: Partial<Parameters<typeof TaskDrawer>[0]> = {})
           roleTitle: 'External Specialist',
           kind: 'contractor',
           avatarPath: null,
+          avatarUrl: null,
         },
       ]}
       onClose={onClose}
