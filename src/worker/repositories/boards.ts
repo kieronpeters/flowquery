@@ -107,3 +107,30 @@ export async function listActiveProfiles(db: D1Database): Promise<ProfileRow[]> 
 
   return results ?? []
 }
+
+/** One assignable profile, or null. Profiles are global, so no board scope. */
+export async function getProfileById(
+  db: D1Database,
+  profileId: string,
+): Promise<ProfileRow | null> {
+  return await db
+    .prepare(
+      'SELECT id, display_name, role_title, kind, avatar_path, active FROM team_profiles WHERE id = ?',
+    )
+    .bind(profileId)
+    .first<ProfileRow>()
+}
+
+/** Returns false when the profile does not exist, so the route can answer 404. */
+export async function updateProfileAvatar(
+  db: D1Database,
+  profileId: string,
+  avatarPath: string,
+): Promise<boolean> {
+  const result = await db
+    .prepare('UPDATE team_profiles SET avatar_path = ? WHERE id = ?')
+    .bind(avatarPath, profileId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
+}

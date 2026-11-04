@@ -217,6 +217,73 @@ a {
   background: var(--accent-soft);
 }
 
+/* Agent appearance page --------------------------------------------------- */
+
+.agent-list {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.agent-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.agent-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.agent-name {
+  font-weight: 550;
+}
+
+.agent-role {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.agent-swatches {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.agent-swatch {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+
+.agent-swatch:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.agent-swatch[aria-pressed='true'] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.agent-swatch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* About page -------------------------------------------------------------- */
 
 .about section {
@@ -1324,8 +1391,17 @@ a {
 }
 
 .activity-item {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 0.35rem;
   font-size: 0.85rem;
   color: var(--text);
+}
+
+.activity-item .agent-avatar {
+  align-self: center;
+  flex: none;
 }
 
 .activity[data-custom='true'] .activity-item {

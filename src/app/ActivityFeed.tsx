@@ -8,6 +8,7 @@ import type {
   ProfileDto,
 } from '../shared/api-types'
 import { COLUMNS } from '../shared/columns'
+import { AgentAvatar } from './AgentAvatar'
 import {
   ACTIVITY_PAGE_SIZE,
   ACTIVITY_PERIODS,
@@ -319,6 +320,20 @@ export function ActivityFeed({
               <ol className="activity-list">
                 {events.map((event) => (
                   <li key={event.id} className="activity-item">
+                    {event.actorType === 'agent' && (
+                      <AgentAvatar
+                        name={event.actorName}
+                        avatarPath={
+                          profiles.find((profile) => profile.displayName === event.actorName)
+                            ?.avatarPath
+                        }
+                        contractor={
+                          profiles.find((profile) => profile.displayName === event.actorName)
+                            ?.kind === 'contractor'
+                        }
+                        size={18}
+                      />
+                    )}
                     <span className="activity-who">
                       {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
                     </span>{' '}
