@@ -267,6 +267,7 @@ a {
 
 .agent-name {
   font-weight: 550;
+  text-decoration: none;
 }
 
 .agent-role {
@@ -1924,5 +1925,282 @@ select.input {
   .token-form {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* Brand marks on the public pages ----------------------------------------- */
+
+/*
+ * The header and footer already carry the wordmark; these are the larger
+ * standalone uses on the landing and sign-in pages. One dimension is fixed and
+ * the other is auto so the supplied artwork is never stretched.
+ */
+.page-logo {
+  display: block;
+  height: 4rem;
+  width: auto;
+  margin-bottom: 1.25rem;
+}
+
+/* People directory --------------------------------------------------------- */
+
+.people-group + .people-group {
+  margin-top: 2.5rem;
+}
+
+.people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  text-decoration: none;
+}
+
+.person-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.person-identity {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.person-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 550;
+}
+
+.person-you {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.person-role {
+  font-size: 0.78rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.person-kind {
+  flex: none;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+/* One profile page --------------------------------------------------------- */
+
+.profile-page {
+  max-width: 52rem;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+/*
+ * The picture is a button, not decoration: at 240px it is already useful, and
+ * the preview behind it is what makes a face actually recognisable. Reset the
+ * native button chrome so it still reads as the avatar.
+ */
+.profile-picture-button {
+  flex: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: zoom-in;
+  border-radius: 0.75rem;
+}
+
+.profile-picture-hint {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.profile-hero .avatar {
+  flex: none;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* The full-size look at the picture, over a dimmed page. */
+.picture-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(2, 9, 47, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+.picture-preview-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 100%;
+}
+
+.picture-preview .avatar {
+  border-radius: 50%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.picture-preview-caption {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.picture-preview-caption .button {
+  margin-top: 0;
+}
+
+.profile-hero-text {
+  min-width: 0;
+}
+
+.profile-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.profile-role {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.profile-hero-text .button {
+  margin-top: 1rem;
+}
+
+.profile-readonly {
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.profile-picture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.profile-picture-actions .button {
+  margin-top: 0;
+}
+
+.profile-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2.25rem;
+}
+
+.profile-section {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.profile-section .section-heading {
+  margin-bottom: 0.5rem;
+}
+
+.profile-text {
+  margin: 0;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.profile-empty {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.profile-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 2.25rem;
+}
+
+.profile-edit .field {
+  flex: none;
+}
+
+.profile-edit .field-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.profile-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.profile-edit-actions .button {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .page-logo {
+    height: 3rem;
+  }
+
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .person-kind {
+    display: none;
   }
 }

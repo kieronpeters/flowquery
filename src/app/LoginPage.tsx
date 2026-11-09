@@ -9,6 +9,13 @@ export function LoginPage() {
 
   return (
     <main className="page page-narrow">
+      <img
+        className="page-logo"
+        src="/brand/logos/flowquery-logo-dark.png"
+        alt=""
+        width={196}
+        height={48}
+      />
       <h1>Sign in</h1>
       <p className="lede">
         FlowQuery is private. Sign in with the GitHub account that has been added to the allowlist.

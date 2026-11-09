@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import type { ApiError, ProfileDto } from '../shared/api-types'
 import { AVATAR_VARIANTS, avatarPathFor, type AvatarVariant } from '../shared/avatars'
@@ -173,7 +173,9 @@ export function AgentsPage() {
                 />
 
                 <div className="agent-identity">
-                  <span className="agent-name">{profile.displayName}</span>
+                  <Link className="agent-name" to={`/profiles/${encodeURIComponent(profile.id)}`}>
+                    {profile.displayName}
+                  </Link>
                   <span className="agent-role">{profile.roleTitle}</span>
                 </div>
 
