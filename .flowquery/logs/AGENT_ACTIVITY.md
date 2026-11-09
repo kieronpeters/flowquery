@@ -4,6 +4,20 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Agent profiles: appearance moves to the profile, and every agent gets a purpose
+
+**Requested by the owner:** make the agents obvious — pressing a name opens the profile; remove the picture/colour buttons from `/agents` and put them on the profile picture; the row action becomes “View profile”; fill in each agent’s details and purpose from the defined roles.
+
+**Shipped on branch `agent-profiles`:** `/agents` is a list of links with no appearance controls. Upload, remove and the eight colour swatches now sit under the picture on `/profiles/:id`, shown only when `canEdit` (your own human profile or any agent). The server rules did not change: humans still cannot set a drawn avatar, and only your own profile or an agent’s can be edited.
+
+**Migration `0011_agent_profile_text.sql`:** writes About, Skills and Development for all 16 non-human profiles using `COALESCE`, so text already written by a person is never overwritten. Verified against a fresh SQLite database built from every migration plus the seed: 16 profiles, all three fields populated.
+
+**Verified:** typecheck, lint, tests (**358**, 31 files), build all pass. Tests cover the directory links, the absence of appearance controls on `/agents`, choosing a colour from the profile, no colour on a human profile, and the seeded agent text.
+
+**Not done:** migration not applied to production, nothing committed, deployed or pushed. The wording of the agent descriptions is a first draft for the owner to review.
+
+---
+
 ## 2026-11-09 — Profile pages v2: a full-size picture preview
 
 **Requested by the owner:** the profile picture could not be seen large anywhere; make it viewable at a decent size, keep the list of everyone, and keep other humans view-only.

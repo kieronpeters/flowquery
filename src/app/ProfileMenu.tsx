@@ -197,7 +197,7 @@ export function ProfileMenu() {
             to="/agents"
             onClick={() => setOpen(false)}
           >
-            Manage agents
+            Agents
           </Link>
 
           <button className="profile-menu-item" type="button" role="menuitem" onClick={signOut}>

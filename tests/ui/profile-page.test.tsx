@@ -41,6 +41,20 @@ const SELF: ProfileDetailDto = {
   canEdit: true,
 }
 
+const BOB: ProfileDetailDto = {
+  id: 'prf_bob',
+  displayName: 'Bob',
+  roleTitle: 'Engineering Manager',
+  kind: 'ai',
+  avatarPath: 'svg:cyan',
+  avatarUrl: null,
+  about: 'Coordinates the specialist agents.',
+  skills: 'Planning, delegation, code review.',
+  development: 'Turn owner goals into small, reviewable work.',
+  hasUploadedImage: false,
+  canEdit: true,
+}
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -160,6 +174,46 @@ describe('ProfilePage', () => {
     await screen.findByRole('heading', { level: 1, name: 'Kieron' })
     expect(screen.getByRole('button', { name: 'Upload a new picture' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Remove picture' })).toBeNull()
+  })
+
+  it('lets you choose an agent colour beside the picture', async () => {
+    const { calls } = renderProfile(BOB)
+
+    await screen.findByRole('heading', { level: 1, name: 'Bob' })
+
+    // The stored variant is pressed, and no upload is set.
+    expect(screen.getByRole('button', { name: 'cyan for Bob' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'teal for Bob' }))
+
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0]!.url).toBe('/api/v1/profiles/prf_bob')
+    expect(calls[0]!.method).toBe('PATCH')
+    expect(calls[0]!.body).toEqual({ avatarPath: 'svg:teal' })
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'teal for Bob' }).getAttribute('aria-pressed'),
+      ).toBe('true'),
+    )
+  })
+
+  it('does not offer a colour on a human profile', async () => {
+    renderProfile(SELF)
+
+    await screen.findByRole('heading', { level: 1, name: 'Kieron' })
+    expect(screen.queryByRole('group', { name: /Colour for Kieron/ })).toBeNull()
+  })
+
+  it('shows an agent’s purpose under the picture', async () => {
+    renderProfile(BOB)
+
+    await screen.findByRole('heading', { level: 1, name: 'Bob' })
+    expect(screen.getByText('Coordinates the specialist agents.')).toBeTruthy()
+    expect(screen.getByText('Planning, delegation, code review.')).toBeTruthy()
+    expect(screen.getByText('Turn owner goals into small, reviewable work.')).toBeTruthy()
   })
 })
 

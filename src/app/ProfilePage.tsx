@@ -2,7 +2,9 @@ import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { ApiError, ProfileDetailDto } from '../shared/api-types'
+import { AVATAR_VARIANTS, avatarPathFor, type AvatarVariant } from '../shared/avatars'
 import { ABOUT_MAX, DEVELOPMENT_MAX, ROLE_TITLE_MAX, SKILLS_MAX } from '../shared/profile-limits'
+import { AVATAR_PALETTE, variantFromPath } from './AgentAvatar'
 import { prepareAvatarFile } from './image-resize'
 import { ProfileAvatar } from './ProfileAvatar'
 
@@ -213,6 +215,46 @@ export function ProfilePage() {
     }
   }
 
+  /**
+   * A drawn avatar, for agents and the contractor.
+   *
+   * Choosing a colour is the same decision as uploading a picture: the server
+   * clears the upload in the same step, so the colour is what will be shown.
+   * The local state follows immediately rather than re-reading, because the
+   * only fields that change are the two the server just decided.
+   */
+  async function chooseColour(variant: AvatarVariant) {
+    if (!profile || pictureBusy) return
+
+    setPictureBusy(true)
+    setPictureError(null)
+
+    try {
+      const response = await fetch(`/api/v1/profiles/${encodeURIComponent(profile.id)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ avatarPath: avatarPathFor(variant) }),
+      })
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as ApiError | null
+        setPictureError(body?.error.message ?? 'That colour could not be saved.')
+        return
+      }
+
+      setProfile({
+        ...profile,
+        avatarPath: avatarPathFor(variant),
+        avatarUrl: null,
+        hasUploadedImage: false,
+      })
+    } catch {
+      setPictureError('The request failed. Check the connection and try again.')
+    } finally {
+      setPictureBusy(false)
+    }
+  }
+
   if (error) {
     return (
       <main className="page page-narrow">
@@ -240,11 +282,15 @@ export function ProfilePage() {
       ? 'What I want to develop using agents'
       : 'What this agent should help develop'
 
+  const aboutLabel = profile.kind === 'human' ? 'About me' : 'About'
+
   const sections = [
-    { key: 'about', label: 'About me', value: profile.about },
+    { key: 'about', label: aboutLabel, value: profile.about },
     { key: 'skills', label: 'Skills', value: profile.skills },
     { key: 'development', label: developmentLabel, value: profile.development },
   ] as const
+
+  const currentVariant = variantFromPath(profile.avatarPath, profile.displayName)
 
   // Big enough to recognise a face, small enough to leave the page behind it
   // visible. Recomputed on each render; the preview is opened rarely enough
@@ -331,6 +377,27 @@ export function ProfilePage() {
                   Remove picture
                 </button>
               )}
+            </div>
+          )}
+
+          {profile.canEdit && profile.kind !== 'human' && (
+            <div
+              className="agent-swatches profile-swatches"
+              role="group"
+              aria-label={`Colour for ${profile.displayName}`}
+            >
+              {AVATAR_VARIANTS.map((variant) => (
+                <button
+                  key={variant}
+                  type="button"
+                  className="agent-swatch"
+                  style={{ background: AVATAR_PALETTE[variant].accent }}
+                  aria-label={`${variant} for ${profile.displayName}`}
+                  aria-pressed={variant === currentVariant && !profile.avatarUrl}
+                  disabled={pictureBusy}
+                  onClick={() => void chooseColour(variant)}
+                />
+              ))}
             </div>
           )}
 

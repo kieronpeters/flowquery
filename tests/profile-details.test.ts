@@ -103,6 +103,13 @@ describe('GET /api/v1/profiles/:profileId', () => {
     expect(profile.canEdit).toBe(true)
   })
 
+  it('ships each agent with a purpose already written', async () => {
+    const { profile } = (await (await get('prf_bob')).json()) as Detail
+    expect(profile.about).toContain('Coordinates the specialist agents')
+    expect(profile.skills).toBeTruthy()
+    expect(profile.development).toBeTruthy()
+  })
+
   it('returns 404 for an unknown id', async () => {
     expect((await get('prf_missing')).status).toBe(404)
   })
