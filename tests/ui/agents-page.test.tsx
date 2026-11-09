@@ -19,7 +19,7 @@ const PROFILES: ProfileDto[] = [
     displayName: 'Bob',
     roleTitle: 'Engineering Manager',
     kind: 'ai',
-    avatarPath: 'svg:cyan',
+    avatarPath: 'team/portraits/bob.png',
     avatarUrl: null,
   },
   {
@@ -61,6 +61,21 @@ afterEach(() => {
 })
 
 describe('AgentsPage', () => {
+  it('shows the full team overview artwork above the directory', async () => {
+    mockApi()
+    renderPage()
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'FlowQuery AI Development Team' }),
+    ).toBeTruthy()
+
+    const art = document.querySelector('.agents-hero-art') as HTMLImageElement
+    expect(art.getAttribute('src')).toBe('/brand/flowquery-ai-development-team-overview.png')
+    expect(art.getAttribute('width')).toBe('1536')
+    expect(art.getAttribute('height')).toBe('1024')
+    expect(screen.getByText(/Illustrative team artwork/)).toBeTruthy()
+  })
+
   it('lists the agents but not the humans', async () => {
     mockApi()
     renderPage()
@@ -68,6 +83,15 @@ describe('AgentsPage', () => {
     expect(await screen.findByText('Bob')).toBeTruthy()
     expect(screen.getByText('Contractor')).toBeTruthy()
     expect(screen.queryByText('Abdul')).toBeNull()
+  })
+
+  it('shows each agent’s default portrait', async () => {
+    mockApi()
+    renderPage()
+
+    await screen.findByText('Bob')
+    const picture = document.querySelector('.agent-card img') as HTMLImageElement
+    expect(picture.getAttribute('src')).toBe('/brand/agents/defaults/prf_bob.png')
   })
 
   it('opens each agent profile from the row', async () => {

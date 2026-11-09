@@ -25,6 +25,7 @@ function PersonRow({ profile }: { profile: ProfileListItemDto }) {
       <Link className="person-row" to={`/profiles/${encodeURIComponent(profile.id)}`}>
         <ProfileAvatar
           name={profile.displayName}
+          profileId={profile.id}
           avatarPath={profile.avatarPath}
           avatarUrl={profile.avatarUrl}
           kind={profile.kind}

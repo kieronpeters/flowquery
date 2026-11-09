@@ -8,7 +8,7 @@ import type {
   ProfileDto,
 } from '../shared/api-types'
 import { COLUMNS } from '../shared/columns'
-import { AgentAvatar } from './AgentAvatar'
+import { ProfileAvatar } from './ProfileAvatar'
 import {
   ACTIVITY_PAGE_SIZE,
   ACTIVITY_PERIODS,
@@ -345,36 +345,38 @@ export function ActivityFeed({
           ) : (
             <>
               <ol className="activity-list">
-                {events.map((event, index) => (
-                  <Fragment key={event.id}>
-                    {index === firstOldIndex && firstOldIndex > 0 && (
-                      <li className="activity-new">New since your last visit</li>
-                    )}
-                    <li className="activity-item">
-                      {event.actorType === 'agent' && (
-                        <AgentAvatar
-                          name={event.actorName}
-                          avatarPath={
-                            profiles.find((profile) => profile.displayName === event.actorName)
-                              ?.avatarPath
-                          }
-                          contractor={
-                            profiles.find((profile) => profile.displayName === event.actorName)
-                              ?.kind === 'contractor'
-                          }
-                          size={18}
-                        />
+                {events.map((event, index) => {
+                  const actorProfile = profiles.find(
+                    (profile) => profile.displayName === event.actorName,
+                  )
+
+                  return (
+                    <Fragment key={event.id}>
+                      {index === firstOldIndex && firstOldIndex > 0 && (
+                        <li className="activity-new">New since your last visit</li>
                       )}
-                      <span className="activity-who">
-                        {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
-                      </span>{' '}
-                      <span className="activity-what">{describe(event, profiles)}</span>{' '}
-                      <time className="activity-when" dateTime={event.createdAt}>
-                        {when(event.createdAt)}
-                      </time>
-                    </li>
-                  </Fragment>
-                ))}
+                      <li className="activity-item">
+                        {event.actorType === 'agent' && (
+                          <ProfileAvatar
+                            name={event.actorName}
+                            profileId={actorProfile?.id ?? null}
+                            avatarPath={actorProfile?.avatarPath ?? null}
+                            avatarUrl={actorProfile?.avatarUrl ?? null}
+                            kind={actorProfile?.kind ?? 'ai'}
+                            size={18}
+                          />
+                        )}
+                        <span className="activity-who">
+                          {event.actorName} ({ACTOR_KIND[event.actorType] ?? event.actorType})
+                        </span>{' '}
+                        <span className="activity-what">{describe(event, profiles)}</span>{' '}
+                        <time className="activity-when" dateTime={event.createdAt}>
+                          {when(event.createdAt)}
+                        </time>
+                      </li>
+                    </Fragment>
+                  )
+                })}
               </ol>
 
               <nav className="activity-pages" aria-label="Activity pages">

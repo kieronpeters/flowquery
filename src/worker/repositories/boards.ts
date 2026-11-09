@@ -213,43 +213,49 @@ export async function updateProfileDetails(
 }
 
 /**
- * The GitHub picture for one human profile, if that account is known.
+ * The GitHub identity and picture for one human profile, if that account is
+ * known.
  *
- * A human's face comes from GitHub until they upload one (DEC-036). The link
- * is the reverse of `findHumanProfileId`: either the account owns
- * `prf_user_<id>`, or it adopted a profile created before its first sign-in by
- * matching display name. Without this the directory would show initials for a
- * person whose GitHub picture the app already holds.
+ * The immutable subject is returned as well as the picture: the supplied
+ * default avatars are keyed by GitHub id, so the caller needs the identity even
+ * when the account has no GitHub picture. The link is the reverse of
+ * `findHumanProfileId`: either the account owns `prf_user_<id>`, or it adopted a
+ * profile created before its first sign-in by matching display name.
  */
-export async function getHumanGithubAvatar(
+export async function getHumanAccount(
   db: D1Database,
   input: { profileId: string; displayName: string },
-): Promise<string | null> {
+): Promise<{ subject: string | null; avatarUrl: string | null } | null> {
   const row = await db
     .prepare(
-      `SELECT avatar_url
-         FROM users
-        WHERE ('prf_user_' || id = ? OR display_name = ?)
-          AND avatar_url IS NOT NULL
-        ORDER BY CASE WHEN 'prf_user_' || id = ? THEN 0 ELSE 1 END
+      `SELECT u.avatar_url, i.subject
+         FROM users u
+         LEFT JOIN auth_identities i
+           ON i.user_id = u.id AND i.provider = 'github'
+        WHERE ('prf_user_' || u.id = ? OR u.display_name = ?)
+        ORDER BY CASE WHEN 'prf_user_' || u.id = ? THEN 0 ELSE 1 END
         LIMIT 1`,
     )
     .bind(input.profileId, input.displayName, input.profileId)
-    .first<{ avatar_url: string }>()
+    .first<{ avatar_url: string | null; subject: string | null }>()
 
-  return row?.avatar_url ?? null
+  return row ? { subject: row.subject, avatarUrl: row.avatar_url } : null
 }
 
 /**
- * Every human profile whose GitHub picture is known, keyed by profile id.
+ * Every human profile whose account is known, keyed by profile id.
  *
  * One query rather than one per person: the directory lists everyone, and a
  * loop of lookups would turn a single page load into a burst of statements.
+ * Accounts with no GitHub picture are included, because their supplied default
+ * portrait is chosen by subject.
  */
-export async function listHumanGithubAvatars(db: D1Database): Promise<Map<string, string>> {
+export async function listHumanAccounts(
+  db: D1Database,
+): Promise<Map<string, { subject: string | null; avatarUrl: string | null }>> {
   const { results } = await db
     .prepare(
-      `SELECT p.id AS profile_id, u.avatar_url
+      `SELECT p.id AS profile_id, u.avatar_url, i.subject
          FROM team_profiles p
          JOIN users u
            ON u.id = (
@@ -259,22 +265,25 @@ export async function listHumanGithubAvatars(db: D1Database): Promise<Map<string
                  ORDER BY CASE WHEN 'prf_user_' || u2.id = p.id THEN 0 ELSE 1 END
                  LIMIT 1
               )
+         LEFT JOIN auth_identities i
+           ON i.user_id = u.id AND i.provider = 'github'
         WHERE p.kind = 'human'
-          AND p.active = 1
-          AND u.avatar_url IS NOT NULL`,
+          AND p.active = 1`,
     )
-    .all<{ profile_id: string; avatar_url: string }>()
+    .all<{ profile_id: string; avatar_url: string | null; subject: string | null }>()
 
-  const avatars = new Map<string, string>()
-  for (const row of results ?? []) avatars.set(row.profile_id, row.avatar_url)
-  return avatars
+  const accounts = new Map<string, { subject: string | null; avatarUrl: string | null }>()
+  for (const row of results ?? []) {
+    accounts.set(row.profile_id, { subject: row.subject, avatarUrl: row.avatar_url })
+  }
+  return accounts
 }
 
 /** Returns false when the profile does not exist, so the route can answer 404. */
 export async function updateProfileAvatar(
   db: D1Database,
   profileId: string,
-  avatarPath: string,
+  avatarPath: string | null,
 ): Promise<boolean> {
   const result = await db
     .prepare('UPDATE team_profiles SET avatar_path = ? WHERE id = ?')

@@ -315,3 +315,27 @@ export function createD1AuthStore(db: D1Database): AuthStore {
     },
   }
 }
+
+/**
+ * The GitHub numeric id behind a user, if one is linked.
+ *
+ * The profile default avatars are keyed by this immutable subject, so `/auth/me`
+ * needs it without loading a whole identity record. A user with no GitHub link
+ * (there is none in this product, but the schema allows it) returns null.
+ */
+export async function getGithubSubjectForUser(
+  db: D1Database,
+  userId: string,
+): Promise<string | null> {
+  const row = await db
+    .prepare(
+      `SELECT subject
+         FROM auth_identities
+        WHERE user_id = ? AND provider = 'github'
+        LIMIT 1`,
+    )
+    .bind(userId)
+    .first<{ subject: string }>()
+
+  return row?.subject ?? null
+}

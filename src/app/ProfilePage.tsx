@@ -182,7 +182,12 @@ export function ProfilePage() {
       }
 
       const body = (await response.json()) as { avatarUrl: string | null }
-      setProfile({ ...profile, avatarUrl: body.avatarUrl, hasUploadedImage: true })
+      setProfile({
+        ...profile,
+        avatarUrl: body.avatarUrl,
+        hasUploadedImage: true,
+        hasCustomAvatar: true,
+      })
     } catch {
       setPictureError('The upload failed. Check the connection and try again.')
     } finally {
@@ -247,6 +252,7 @@ export function ProfilePage() {
         avatarPath: avatarPathFor(variant),
         avatarUrl: null,
         hasUploadedImage: false,
+        hasCustomAvatar: true,
       })
     } catch {
       setPictureError('The request failed. Check the connection and try again.')
@@ -318,6 +324,7 @@ export function ProfilePage() {
           >
             <ProfileAvatar
               name={profile.displayName}
+              profileId={profile.id}
               avatarPath={profile.avatarPath}
               avatarUrl={profile.avatarUrl}
               kind={profile.kind}
@@ -328,6 +335,7 @@ export function ProfilePage() {
         ) : (
           <ProfileAvatar
             name={profile.displayName}
+            profileId={profile.id}
             avatarPath={profile.avatarPath}
             avatarUrl={profile.avatarUrl}
             kind={profile.kind}
@@ -343,6 +351,12 @@ export function ProfilePage() {
 
           <h1>{profile.displayName}</h1>
           <p className="profile-role">{profile.roleTitle}</p>
+
+          {(profile.kind !== 'human' || profile.hasDefaultAvatar || profile.hasUploadedImage) && (
+            <p className="profile-avatar-source">
+              {profile.hasCustomAvatar ? 'Custom avatar' : 'Default portrait'}
+            </p>
+          )}
 
           {profile.canEdit ? (
             !editing && (
@@ -367,16 +381,27 @@ export function ProfilePage() {
                 {pictureBusy ? 'Working…' : 'Upload a new picture'}
               </button>
 
-              {profile.hasUploadedImage && (
-                <button
-                  className="button button-quiet inline"
-                  type="button"
-                  disabled={pictureBusy}
-                  onClick={() => void removePicture()}
-                >
-                  Remove picture
-                </button>
-              )}
+              {profile.kind !== 'human'
+                ? profile.hasCustomAvatar && (
+                    <button
+                      className="button button-quiet inline"
+                      type="button"
+                      disabled={pictureBusy}
+                      onClick={() => void removePicture()}
+                    >
+                      Restore default
+                    </button>
+                  )
+                : profile.hasUploadedImage && (
+                    <button
+                      className="button button-quiet inline"
+                      type="button"
+                      disabled={pictureBusy}
+                      onClick={() => void removePicture()}
+                    >
+                      {profile.hasDefaultAvatar ? 'Restore default' : 'Remove picture'}
+                    </button>
+                  )}
             </div>
           )}
 
@@ -434,6 +459,7 @@ export function ProfilePage() {
           <div className="picture-preview-panel">
             <ProfileAvatar
               name={profile.displayName}
+              profileId={profile.id}
               avatarPath={profile.avatarPath}
               avatarUrl={profile.avatarUrl}
               kind={profile.kind}

@@ -19,12 +19,22 @@ const ABDUL: ProfileDetailDto = {
   roleTitle: 'Administrator',
   kind: 'human',
   avatarPath: null,
-  avatarUrl: 'https://avatars.githubusercontent.com/u/37402145?v=4',
+  avatarUrl: '/brand/humans/abdul-default.png',
   about: 'Runs the boards.',
   skills: 'SQL, TypeScript',
   development: null,
   hasUploadedImage: false,
+  hasDefaultAvatar: true,
+  hasCustomAvatar: false,
   canEdit: false,
+}
+
+const ABDUL_UPLOAD: ProfileDetailDto = {
+  ...ABDUL,
+  canEdit: true,
+  avatarUrl: '/api/v1/avatars/prf_abdul?v=1',
+  hasUploadedImage: true,
+  hasCustomAvatar: true,
 }
 
 const SELF: ProfileDetailDto = {
@@ -38,6 +48,8 @@ const SELF: ProfileDetailDto = {
   skills: null,
   development: null,
   hasUploadedImage: false,
+  hasDefaultAvatar: false,
+  hasCustomAvatar: false,
   canEdit: true,
 }
 
@@ -52,6 +64,24 @@ const BOB: ProfileDetailDto = {
   skills: 'Planning, delegation, code review.',
   development: 'Turn owner goals into small, reviewable work.',
   hasUploadedImage: false,
+  hasDefaultAvatar: false,
+  hasCustomAvatar: true,
+  canEdit: true,
+}
+
+const ALEX: ProfileDetailDto = {
+  id: 'prf_alex',
+  displayName: 'Alex',
+  roleTitle: 'Senior Software Engineer',
+  kind: 'ai',
+  avatarPath: 'team/portraits/alex.png',
+  avatarUrl: null,
+  about: 'Leads implementation on the application code.',
+  skills: 'TypeScript, React.',
+  development: 'Keep the architecture small.',
+  hasUploadedImage: false,
+  hasDefaultAvatar: false,
+  hasCustomAvatar: false,
   canEdit: true,
 }
 
@@ -214,6 +244,46 @@ describe('ProfilePage', () => {
     expect(screen.getByText('Coordinates the specialist agents.')).toBeTruthy()
     expect(screen.getByText('Planning, delegation, code review.')).toBeTruthy()
     expect(screen.getByText('Turn owner goals into small, reviewable work.')).toBeTruthy()
+  })
+
+  it('shows the default portrait when the avatar has not been customised', async () => {
+    renderProfile(ALEX)
+
+    await screen.findByRole('heading', { level: 1, name: 'Alex' })
+
+    const picture = document.querySelector('.profile-hero img') as HTMLImageElement
+    expect(picture.getAttribute('src')).toBe('/brand/agents/defaults/prf_alex.png')
+    expect(screen.getByText('Default portrait')).toBeTruthy()
+  })
+
+  it('shows a human administrator default portrait and labels it', async () => {
+    renderProfile(ABDUL)
+
+    await screen.findByRole('heading', { level: 1, name: 'Abdul' })
+
+    const picture = document.querySelector('.profile-hero img') as HTMLImageElement
+    expect(picture.getAttribute('src')).toBe('/brand/humans/abdul-default.png')
+    expect(screen.getByText('Default portrait')).toBeTruthy()
+  })
+
+  it('offers Restore default on a human who uploaded a picture', async () => {
+    const { calls } = renderProfile(ABDUL_UPLOAD)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore default' }))
+
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0]!.method).toBe('DELETE')
+    expect(calls[0]!.url).toBe('/api/v1/profiles/prf_abdul/image')
+  })
+
+  it('offers Restore default on a customised agent and calls DELETE', async () => {
+    const { calls } = renderProfile(BOB)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore default' }))
+
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0]!.method).toBe('DELETE')
+    expect(calls[0]!.url).toBe('/api/v1/profiles/prf_bob/image')
   })
 })
 

@@ -43,51 +43,78 @@ export function AgentsPage() {
   }, [navigate])
 
   return (
-    <main className="page page-narrow">
-      <h1>Agents</h1>
-      <p className="lede">
-        The AI specialists you can assign work to. Open a profile to see the picture, what they do
-        and what they are for. Pictures and colours are changed on the profile itself.
-      </p>
+    <main className="page agents-page">
+      <section className="agents-hero">
+        <div className="agents-hero-copy">
+          <p className="profile-eyebrow">AI Development Task Force</p>
+          <h1>FlowQuery AI Development Team</h1>
+          <p className="lede">
+            The AI specialists supporting FlowQuery across design, engineering, architecture,
+            testing, security, delivery and operations. Each one is an assignable profile; open a
+            profile to see the picture, what they do and what they are for.
+          </p>
+        </div>
 
-      {error && (
-        <p className="alert" role="alert">
-          {error}
-        </p>
-      )}
+        <figure className="agents-hero-figure">
+          <img
+            className="agents-hero-art"
+            src="/brand/flowquery-ai-development-team-overview.png"
+            alt="FlowQuery AI Development Task Force overview poster: the FlowQuery logo, Bob as coordinator, and an illustrated grid of agents."
+            width={1536}
+            height={1024}
+          />
+          <figcaption className="agents-hero-caption">
+            Illustrative team artwork. The directory below lists the actual FlowQuery agents and
+            roles.
+          </figcaption>
+        </figure>
+      </section>
 
-      {profiles === null ? (
-        <p role="status">Loading agents…</p>
-      ) : (
-        <ul className="agent-list">
-          {profiles.map((profile) => (
-            <li key={profile.id}>
-              <Link
-                className="agent-card"
-                to={`/profiles/${encodeURIComponent(profile.id)}`}
-                aria-label={`Open ${profile.displayName}'s profile`}
-              >
-                <ProfileAvatar
-                  name={profile.displayName}
-                  avatarPath={profile.avatarPath}
-                  avatarUrl={profile.avatarUrl}
-                  kind={profile.kind}
-                  size={48}
-                />
+      <section aria-labelledby="agents-directory">
+        <h2 className="section-heading" id="agents-directory">
+          The team
+        </h2>
 
-                <span className="agent-card-text">
-                  <span className="agent-name">{profile.displayName}</span>
-                  <span className="agent-role">{profile.roleTitle}</span>
-                </span>
+        {error && (
+          <p className="alert" role="alert">
+            {error}
+          </p>
+        )}
 
-                <span className="agent-card-action" aria-hidden="true">
-                  View profile
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+        {profiles === null ? (
+          <p role="status">Loading agents…</p>
+        ) : (
+          <ul className="agent-list">
+            {profiles.map((profile) => (
+              <li key={profile.id}>
+                <Link
+                  className="agent-card"
+                  to={`/profiles/${encodeURIComponent(profile.id)}`}
+                  aria-label={`Open ${profile.displayName}'s profile`}
+                >
+                  <ProfileAvatar
+                    name={profile.displayName}
+                    profileId={profile.id}
+                    avatarPath={profile.avatarPath}
+                    avatarUrl={profile.avatarUrl}
+                    kind={profile.kind}
+                    size={48}
+                  />
+
+                  <span className="agent-card-text">
+                    <span className="agent-name">{profile.displayName}</span>
+                    <span className="agent-role">{profile.roleTitle}</span>
+                  </span>
+
+                  <span className="agent-card-action" aria-hidden="true">
+                    View profile
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <p className="note">
         <Link to="/people">See everyone</Link>

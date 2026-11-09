@@ -1,14 +1,15 @@
 import { Hono } from 'hono'
 
 import { avatarUrlFor } from '../../shared/avatars'
+import { humanDefaultAvatarFor } from '../../shared/human-default-avatars'
 import type { AppEnv } from '../env'
 import { requireSession } from '../middleware/session'
 import {
   findHumanProfileId,
-  getHumanGithubAvatar,
+  getHumanAccount,
   getProfileDetailById,
   listActiveProfiles,
-  listHumanGithubAvatars,
+  listHumanAccounts,
 } from '../repositories/boards'
 import { getAvatarVersion, listAvatarVersions } from '../repositories/profile-avatars'
 import { setProfileAvatar, updateProfileDetails } from '../services/profiles'
@@ -21,27 +22,36 @@ profileRoutes.use('*', requireSession)
 /** Assignable profiles. They are global, not board-scoped: no fake tenancy. */
 profileRoutes.get('/', async (c) => {
   const actor = c.get('user')
-  const [rows, versions, ownProfileId, githubAvatars] = await Promise.all([
+  const [rows, versions, ownProfileId, humanAccounts] = await Promise.all([
     listActiveProfiles(c.env.DB),
     // Versions only — never the image bytes. A board load must not grow just
     // because somebody uploaded a picture.
     listAvatarVersions(c.env.DB),
     findHumanProfileId(c.env.DB, { userId: actor.id, displayName: actor.displayName }),
-    listHumanGithubAvatars(c.env.DB),
+    listHumanAccounts(c.env.DB),
   ])
 
   return c.json({
     profiles: rows.map((profile) => {
       const uploaded = avatarUrlFor(profile.id, versions.get(profile.id) ?? null)
+      const account = humanAccounts.get(profile.id)
+      const defaultAvatar =
+        profile.kind === 'human'
+          ? humanDefaultAvatarFor({ githubId: account?.subject, profileId: profile.id })
+          : null
+
       return {
         id: profile.id,
         displayName: profile.display_name,
         roleTitle: profile.role_title,
         kind: profile.kind,
         avatarPath: profile.avatar_path,
-        // An upload wins; GitHub is the fallback for a human who has none.
+        // An upload wins; the supplied human default comes next; GitHub is the
+        // fallback for a human with neither.
         avatarUrl:
-          uploaded ?? (profile.kind === 'human' ? (githubAvatars.get(profile.id) ?? null) : null),
+          uploaded ??
+          defaultAvatar ??
+          (profile.kind === 'human' ? (account?.avatarUrl ?? null) : null),
         isSelf: profile.id === ownProfileId,
       }
     }),
@@ -66,11 +76,11 @@ profileRoutes.get('/:profileId', async (c) => {
   }
 
   const actor = c.get('user')
-  const [version, ownProfileId, githubAvatar] = await Promise.all([
+  const [version, ownProfileId, account] = await Promise.all([
     getAvatarVersion(c.env.DB, profileId),
     findHumanProfileId(c.env.DB, { userId: actor.id, displayName: actor.displayName }),
     profile.kind === 'human'
-      ? getHumanGithubAvatar(c.env.DB, {
+      ? getHumanAccount(c.env.DB, {
           profileId: profile.id,
           displayName: profile.display_name,
         })
@@ -78,7 +88,19 @@ profileRoutes.get('/:profileId', async (c) => {
   ])
 
   const uploaded = avatarUrlFor(profile.id, version)
+  const defaultAvatar =
+    profile.kind === 'human'
+      ? humanDefaultAvatarFor({ githubId: account?.subject, profileId: profile.id })
+      : null
   const canEdit = profile.kind !== 'human' || ownProfileId === profile.id
+  const hasUploadedImage = uploaded !== null
+  // Independent of the upload: the page needs to know that removing a custom
+  // picture will reveal a supplied default, not GitHub or initials.
+  const hasDefaultAvatar = defaultAvatar !== null
+  // A drawn colour is a customisation too, so the page can offer "Restore
+  // default" rather than pretending the avatar is still the shipped one.
+  const hasCustomAvatar =
+    hasUploadedImage || (profile.kind !== 'human' && (profile.avatar_path ?? '').startsWith('svg:'))
 
   return c.json({
     profile: {
@@ -87,11 +109,13 @@ profileRoutes.get('/:profileId', async (c) => {
       roleTitle: profile.role_title,
       kind: profile.kind,
       avatarPath: profile.avatar_path,
-      avatarUrl: uploaded ?? githubAvatar,
+      avatarUrl: uploaded ?? defaultAvatar ?? account?.avatarUrl ?? null,
       about: profile.about,
       skills: profile.skills,
       development: profile.development,
-      hasUploadedImage: uploaded !== null,
+      hasUploadedImage,
+      hasDefaultAvatar,
+      hasCustomAvatar,
       canEdit,
     },
   })

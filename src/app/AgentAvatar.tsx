@@ -8,13 +8,13 @@ import {
 /**
  * Agent avatars, drawn rather than photographed.
  *
- * Sixteen generated portraits were the original plan; the image service had no
- * funds, so these are SVG instead: a robot head with a per-agent accent colour,
- * and a suit-and-shades variant for the external contractor. They scale, weigh
- * nothing, need no CSP exception and cannot 404.
+ * These are the fallback, not the default. Each agent normally shows its
+ * portrait from `public/brand/agents/defaults/`, and a human may upload a
+ * picture. A drawn avatar appears only when someone deliberately chooses a
+ * colour, or when the portrait is missing and the image fails to load.
  *
- * The chosen variant is stored on the profile as `svg:<name>`, so a human can
- * change it without touching the database by hand.
+ * The chosen variant is stored on the profile as `svg:<name>`, so the choice is
+ * explicit and can be cleared by Restore default.
  */
 
 /** Tile background and glyph colour for each variant. */

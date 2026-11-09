@@ -218,6 +218,7 @@ export function TokenPanel({ boardId, onClose }: { boardId: string; onClose: () 
               <li key={token.id} className="token-row">
                 <ProfileAvatar
                   name={token.label}
+                  profileId={profile?.id ?? null}
                   avatarPath={profile?.avatarPath ?? null}
                   avatarUrl={profile?.avatarUrl ?? null}
                   kind={profile?.kind ?? 'ai'}

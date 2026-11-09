@@ -33,6 +33,7 @@ All names and faces are fictional AI-generated identities. They are not represen
 - Portraits are visual assets only; they imply no real-world identity.
 - The contractor is one reusable anonymous profile (`team/portraits/contractor.png`), not a pool of numbered contractors.
 - Bob is the only member who is also the orchestrator. Bob is the running session; the others are sub-agents Bob may launch.
+- The application serves copies from `public/brand/agents/defaults/`, keyed by `team_profiles.id` and mapped in `src/shared/agent-portraits.ts`. The files here are the originals and are never modified by the app.
 
 ## Application identity: settled
 

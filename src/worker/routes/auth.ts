@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 
 import { avatarUrlFor } from '../../shared/avatars'
+import { humanDefaultAvatarFor } from '../../shared/human-default-avatars'
 import { parseAllowlist } from '../auth/allowlist'
 import {
   clearOAuthCookie,
@@ -14,7 +15,7 @@ import {
 import { buildAuthorizeUrl, completeGithubSignIn, createPkce, GithubError } from '../auth/github'
 import type { Bindings } from '../env'
 import { randomToken } from '../lib/ids'
-import { createD1AuthStore } from '../repositories/auth-store'
+import { createD1AuthStore, getGithubSubjectForUser } from '../repositories/auth-store'
 import { findHumanProfileId } from '../repositories/boards'
 import { getAvatarVersion } from '../repositories/profile-avatars'
 import { completeSignIn, NotAllowedError, resolveSession, signOut } from '../services/auth'
@@ -147,15 +148,20 @@ authRoutes.get('/auth/me', async (c) => {
     ? avatarUrlFor(profileId, await getAvatarVersion(c.env.DB, profileId))
     : null
 
+  // The supplied human defaults are keyed by the immutable GitHub id. This is
+  // what the header shows for Kieron and Abdul until they upload a picture.
+  const githubId = await getGithubSubjectForUser(c.env.DB, user.id)
+  const defaultAvatar = humanDefaultAvatarFor({ githubId, profileId })
+
   return c.json({
     user: {
       id: user.id,
       displayName: user.displayName,
       email: user.email,
       profileId,
-      avatarUrl: uploaded ?? user.avatarUrl,
+      avatarUrl: uploaded ?? defaultAvatar ?? user.avatarUrl,
       // So the menu can offer "Remove picture" only when there is an uploaded
-      // one to remove, rather than for the GitHub avatar it cannot touch.
+      // one to remove, rather than for the default or GitHub avatar it cannot touch.
       hasUploadedImage: uploaded !== null,
     },
   })

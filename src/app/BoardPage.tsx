@@ -24,7 +24,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
-import { AgentAvatar } from './AgentAvatar'
+import { ProfileAvatar } from './ProfileAvatar'
 import { applyMove, locate, withoutTask } from './board-state'
 import { TaskDrawer, type MoveDirection } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
@@ -113,10 +113,12 @@ function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] })
         {task.assignee && (
           <span className="card-assignee">
             {assigneeProfile && assigneeProfile.kind !== 'human' && (
-              <AgentAvatar
+              <ProfileAvatar
                 name={assigneeProfile.displayName}
+                profileId={assigneeProfile.id}
                 avatarPath={assigneeProfile.avatarPath}
-                contractor={assigneeProfile.kind === 'contractor'}
+                avatarUrl={assigneeProfile.avatarUrl}
+                kind={assigneeProfile.kind}
                 size={16}
               />
             )}
