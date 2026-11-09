@@ -30,7 +30,7 @@ There are three kinds of identity. They are deliberately different, and the diff
 | Identity | Authenticates with | Access | Notes |
 |---|---|---|---|
 | **Human administrator** | Human account (see §9) | Every board, full control | Exactly two initially: the owner and their friend. Equivalent rights. |
-| **Bob** | Board-scoped agent token | Exactly one board, task-level operations only | Bob **is** the current OpenCode session. Not a separate agent, not a human account. |
+| **Bob** | Board-scoped agent token | Exactly one board, task-level operations only | Bob **is** the running AI Engineering Manager, whatever environment runs it. Not a separate agent, not a human account. |
 | **Assignee profile** | Nothing — never authenticates | None | Labels for assignment: team members, AI specialists, contractor. Not accounts. |
 
 ### 3.1 Human administrators
@@ -42,7 +42,7 @@ There are three kinds of identity. They are deliberately different, and the diff
 
 ### 3.2 Bob
 
-- Bob is the **current OpenCode session** — the engineering manager reading this repository. Bob is not spawned as a sub-agent and has no FlowQuery human account.
+- Bob is the **running AI agent and Engineering Manager** - the manager reading this repository. Bob may run in OpenCode, Cursor, Cline, GitHub Copilot, Codex, ChatGPT, Claude, Gemini, DeepSeek or another environment; the tool is not the identity. Bob is not spawned as a sub-agent and has no FlowQuery human account.
 - Bob authenticates to FlowQuery with a **board-scoped token** and interacts through the versioned REST API, never through browser automation.
 - Bob's authority is limited to tasks, comments and activity **within the token's board**. Bob cannot create, rename or delete boards, reach the human dashboard, or read any other board.
 
@@ -229,7 +229,7 @@ These appeared in earlier drafts of this repository and are now **wrong**. If a 
 | Archive instead of delete | Permanent delete with confirmation |
 | Board slugs as route identifiers | Stable, unguessable board IDs |
 | Organisation ownership, memberships, roles | Two equal human administrators |
-| Bob as a separate service account with an inbox | Bob is the current OpenCode session |
+| Bob as a separate service account with an inbox | Bob is the running AI manager, not an account |
 | Specialist agents as future FlowQuery accounts | Profiles only, never accounts |
 | In-app notification centre with on/off control | Excluded pending SCOPE-01 |
 | Workers Paid as an acceptable option | Workers Free only |

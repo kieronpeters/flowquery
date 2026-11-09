@@ -11,7 +11,9 @@ The Boards screen lists every board, newest first.
   board removes its tasks, comments, activity and any agent tokens. There is no
   archive or undo.
 - **Tokens** — opens the board's agent-token panel. Tokens are created for one
-  agent profile and scoped to that board only.
+  agent profile and scoped to that board only. The recommended setup is one
+  token for Bob; specialists are delegated work through Bob and do not need
+  tokens.
 
 ## The five columns
 
@@ -26,6 +28,18 @@ Every board has the same columns, in the same order:
 They cannot be renamed, reordered or added to. A task moves within its column or
 to another column; positions stay contiguous.
 
+### How the columns are used
+
+- **Backlog** — identified work, not yet prioritised.
+- **To Do** — approved and prioritised, ready to start.
+- **In Progress** — actively being worked by the assignee.
+- **Review** — finished by the assignee and awaiting review or verification.
+- **Done** — accepted as complete.
+
+Bob grooms the Backlog, moves approved work into To Do, and checks specialist
+workload before assigning. The default is one active task per specialist; this
+is an operating guideline, not an application restriction.
+
 ## Tasks
 
 A task carries:
@@ -38,18 +52,24 @@ A task carries:
 
 ### Creating and editing
 
-Use the new-task control in a column, or open an existing card. The task drawer
-holds the editable fields. Save applies the changes; Cancel discards them.
+Use the new-task control in a column, or open an existing card. The card title is
+a real link to the ticket URL, so it can be opened in a new tab or copied like
+any other link. The task drawer holds the editable fields. Its header shows
+**Task › ticket title**, with the title linked to the ticket URL. Saving an
+existing ticket keeps the drawer open and updates that title; creating a new
+task closes it. Save applies the changes; Cancel discards them.
 
 ### Moving
 
-Drag a card, use the move buttons in the drawer, or use the keyboard shortcut on
-a focused card. On a narrow screen the board becomes column tabs; the move
-buttons still work.
+Drag a card, or use the **Status** selector in the drawer to move it between
+columns. On a narrow screen the board becomes column tabs; dragging still works
+within and between columns.
 
 ### Comments and activity
 
-Comments are attributed to the signed-in human. Activity records task creation,
+Comments are attributed to the signed-in human. When Bob records a specialist's
+report, the actor is Bob; the comment can say that Alex completed the work, but
+the history must not pretend Alex authenticated. Activity records task creation,
 field changes, moves and comments. Agent activity is attributed to the agent
 profile, with `(agent)` beside the name.
 
@@ -57,6 +77,24 @@ profile, with `(agent)` beside the name.
 
 Deleting a task is permanent. It removes its comments and activity. The board
 itself is not affected.
+
+### Direct ticket links
+
+Every ticket has a stable URL:
+
+```text
+/boards/{boardId}/tickets/{ticketId}
+```
+
+Opening a card puts that URL in the address bar, so you can copy it into a
+comment or another ticket. The ticket sidebar also has a **Copy ticket link**
+button; if the browser blocks the clipboard, the URL appears in a read-only
+field for manual copying. Refresh and browser back/forward keep the same
+ticket. A ticket id that is not on the board shows a not-found message on the
+board; the URL is never authentication, so the board still requires your
+session.
+
+Board ids (`brd_…`) and ticket ids (`tsk_…`) are opaque and non-sequential.
 
 ## Search and filters
 

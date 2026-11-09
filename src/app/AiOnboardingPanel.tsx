@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { AI_ONBOARDING_PROMPT } from '../shared/ai-onboarding'
+import { copyText } from './clipboard'
 
 /**
  * The universal AI onboarding panel on the Boards landing page.
@@ -25,34 +26,12 @@ const TOOLS = [
 
 type CopyState = 'idle' | 'copied' | 'error'
 
-async function writeClipboard(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
-    return
-  }
-
-  // Older or restricted browsers: a temporary textarea is the fallback. The
-  // prompt is not a secret, so selecting it is safe.
-  const element = document.createElement('textarea')
-  element.value = text
-  element.setAttribute('readonly', '')
-  element.style.position = 'fixed'
-  element.style.opacity = '0'
-  document.body.appendChild(element)
-  element.select()
-
-  const copied = document.execCommand('copy')
-  document.body.removeChild(element)
-
-  if (!copied) throw new Error('Copy failed')
-}
-
 export function AiOnboardingPanel() {
   const [state, setState] = useState<CopyState>('idle')
 
   async function copyPrompt() {
     try {
-      await writeClipboard(AI_ONBOARDING_PROMPT)
+      await copyText(AI_ONBOARDING_PROMPT)
       setState('copied')
     } catch {
       setState('error')

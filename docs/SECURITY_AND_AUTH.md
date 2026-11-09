@@ -178,8 +178,10 @@ Adding a third person later is a variable update and a redeploy — deliberately
 | Identified in UI | `token_prefix` (first 8 characters) + label + `created_at` + `last_used_at` |
 | Scope | Exactly one board. Enforced by deriving `board_id` from the token row, never from the request |
 | Revocation | `revoked_at` set; rejected on the next request. No cached session to expire |
-| Multiple per board | Yes, each labelled — e.g. "Bob — Main Development", "Bob — backlog cleanup" |
+| Multiple per board | Yes, each labelled. One token for Bob is the recommended default; extra tokens are optional custom setups |
 | Transport | `Authorization: Bearer <token>` only. Never a query parameter, never a URL, never a cookie |
+
+**Recommended setup.** Use one board-scoped token for Bob, the single AI Engineering Manager. Bob delegates specialist work through his environment; specialists hold no FlowQuery credentials and need no tokens. Multiple tokens and configurable permissions remain supported when there is a genuine reason. A token label is descriptive only, never proof of identity.
 
 **Why not a JWT.** A signed token cannot be revoked without a denylist, and a denylist is a database lookup — the same cost as checking the token row directly. Opaque tokens are simpler and revocable by construction.
 

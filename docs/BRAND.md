@@ -42,7 +42,7 @@ there are no loose icon files in `public/` any more.
 ## Where the mark appears
 
 - **Header** — wordmark on the left, at 2rem tall, linking home; primary tabs follow it.
-- **Footer** — wordmark at 1.25rem tall with the private-instance note.
+- **Footer** — wordmark at 1.25rem tall, with no additional text.
 - **Landing and sign-in** — a larger standalone mark above the copy.
 - **Browser and home screen** — favicons and the web manifest.
 

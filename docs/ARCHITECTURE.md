@@ -10,7 +10,7 @@
 One Worker, one database, one build. No second service.
 
 ```text
-   Human browser                    Bob (OpenCode, owner's PC)
+   Human browser                    Bob (AI manager, any environment)
         │                                    │
         │ HTTPS + session cookie             │ HTTPS + Bearer <board token>
         ▼                                    ▼

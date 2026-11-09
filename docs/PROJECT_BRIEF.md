@@ -8,7 +8,7 @@ A small, private Kanban application for managing development work done by the ow
 
 ## The one-sentence shape
 
-Two humans share a dashboard of boards; each board is five fixed columns of tasks; Bob — the OpenCode session — reaches exactly one board through a scoped API token.
+Two humans share a dashboard of boards; each board is five fixed columns of tasks; Bob — the running AI Engineering Manager — reaches exactly one board through a scoped API token.
 
 ## Structure
 
@@ -17,7 +17,7 @@ Boards only. No organisations, projects, workspaces or folders. Every human admi
 ## People and agents
 
 - **Owner and friend** — two human administrators with identical, full access. Register and sign in, manage boards, manage all tasks.
-- **Bob** — the current OpenCode session. Not a separate account, not a sub-agent. Reaches one board via a board-scoped bearer token, manages tasks and comments only, and can never create, rename or delete boards.
+- **Bob** — the running AI agent and Engineering Manager, whatever environment runs it. Not a separate account, not a sub-agent. Reaches one board via a board-scoped bearer token, manages tasks and comments only, and can never create, rename or delete boards. Specialists report through Bob and hold no credentials.
 - **Assignee profiles** — the specialist roster (Alex, Sarah, Olivia, Daniel, Marcus, James, Victoria, Chris, Emma, Liam, Priya, Ethan, Rebecca, Noah, plus one contractor) and the humans. They are labels for assignment. They never authenticate and hold no credentials.
 
 ## Task content
