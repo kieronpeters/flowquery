@@ -38,7 +38,7 @@ folder; the supplied originals are never overwritten.
 ## Banner
 
 `public/brand/flowquery-ai-development-team-overview.png` is the corrected
-1536 x 655 overview banner, shown whole at the top of `/agents` with
+1536 x 655 overview banner, shown whole at the top of `/people` with
 `object-fit: contain` and its natural aspect ratio. Its names and roles match
 this table.
 

@@ -317,6 +317,16 @@ function renderPeople(profiles: ProfileListItemDto[] = DIRECTORY) {
 }
 
 describe('PeoplePage', () => {
+  it('shows the team overview banner above the directory', async () => {
+    renderPeople()
+
+    await screen.findByRole('heading', { level: 1, name: 'People' })
+
+    const art = document.querySelector('.people-hero-art') as HTMLImageElement
+    expect(art.getAttribute('src')).toBe('/brand/flowquery-ai-development-team-overview.png')
+    expect(art.getAttribute('height')).toBe('655')
+  })
+
   it('lists people and agents, marking the signed-in human', async () => {
     renderPeople()
 

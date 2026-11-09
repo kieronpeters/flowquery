@@ -41,8 +41,8 @@ there are no loose icon files in `public/` any more.
 
 ## Where the mark appears
 
-- **Header** — wordmark on the left, at 2rem tall, linking home.
-- **Footer** — wordmark at 1.25rem tall beside About / People / Agents / Test a token.
+- **Header** — wordmark on the left, at 2rem tall, linking home; primary tabs follow it.
+- **Footer** — wordmark at 1.25rem tall with the private-instance note.
 - **Landing and sign-in** — a larger standalone mark above the copy.
 - **Browser and home screen** — favicons and the web manifest.
 
@@ -50,7 +50,7 @@ there are no loose icon files in `public/` any more.
 
 | File | Size | Use |
 |---|---|---|
-| `public/brand/flowquery-ai-development-team-overview.png` | 1536 × 655 | Corrected team overview banner at the top of `/agents`, above the directory. Displayed whole, with `object-fit: contain` and the natural aspect ratio preserved. |
+| `public/brand/flowquery-ai-development-team-overview.png` | 1536 × 655 | Corrected team overview banner at the top of `/people`, above the directory. Displayed whole, with `object-fit: contain` and the natural aspect ratio preserved. |
 | `public/brand/agents/defaults/prf_*.png` | 512 × 512 | One approved default portrait per non-human profile, keyed by profile id. |
 
 The banner lists the real 16-agent roster and its roles. It is the corrected
