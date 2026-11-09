@@ -4,7 +4,7 @@
 
 The cleanup removed obsolete and duplicated material, moved the engineering documents into `docs/internal/`, moved the team roster and operating model into `docs/agents/`, and consolidated development instructions into root `AGENTS.md`.
 
-**Board auto-refresh is merged and prepared, but deliberately not deployed.** PR #12 merged as `5fe208e`. The open board polls every five seconds while the tab is visible, pauses while hidden or while editing, and shows a Live / Updated indicator. Deployment is deferred because someone is working on a production board; deploy when the owner approves.
+**Board auto-refresh is live.** PR #12 merged as `5fe208e`; deployed from `main` as version `bfff39d4`. The open board polls every five seconds while the tab is visible, pauses while hidden or while editing, and shows a Live / Updated indicator.
 
 ---
 

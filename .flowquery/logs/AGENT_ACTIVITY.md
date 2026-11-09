@@ -12,7 +12,7 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Verification:** typecheck, lint, format:check, **405 tests**, build. Browser: a remote create appeared in 3.5 s, an update in 4 s and a delete in 5 s, with no reload (a window marker survived), scroll preserved, an unsaved drawer draft preserved across two intervals, and a hidden tab paused then caught up on return.
 
-**Release:** PR #12 merged as `5fe208e`; branch deleted locally and remotely. **Not deployed** — deployment was deliberately deferred because someone is working on a production board.
+**Release:** PR #12 merged as `5fe208e`; branch deleted locally and remotely. Deployed from `main` as version `bfff39d4`. Post-deploy: health `200`, `/boards`, `/people`, `/docs`, `/docs/internal/architecture` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries `board-live-status` and the offline label.
 
 ---
 

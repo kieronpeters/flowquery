@@ -4,9 +4,8 @@
 
 - Branch: `feature/board-auto-refresh` (deleted after merge)
 - Base: `main` at `cdef1e4`
-- Released: PR #12 merged as `5fe208e`
+- Released: PR #12 merged as `5fe208e`; deployed from `main` as version `bfff39d4`
 - `main` and `origin/main` match
-- **Not deployed**
 
 ## Completed
 
@@ -36,10 +35,10 @@
 
 ## Outstanding
 
-- **Deployment is deliberately deferred.** Someone is working on a production board; deploy only when the owner approves and the board is free.
-- No migrations are required for this feature.
+- Deployed as version `bfff39d4`. Post-deploy: health `200`, `/boards`, `/people`, `/docs`, `/docs/internal/architecture` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries `board-live-status` and the offline label.
+- No migrations were required for this feature.
 - The browser check used a local session and the local D1 test board; the test ticket was deleted afterwards.
 
 ## Next action
 
-Owner approval to deploy when the production board is free. Run `npm run deploy` from `main`; no migration step is needed.
+None. The release is complete.
