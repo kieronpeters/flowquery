@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M9 complete and deployed. Current work: repository simplification on branch `refactor/repository-simplification`, awaiting owner review.
-**Next gate:** owner review of the cleanup branch; merging and deploying require explicit approval.
+**Current phase:** M9 complete and deployed. The repository simplification is released and deployed.
+**Next gate:** none; the next change requires its own owner approval.
 **Last updated:** 2026-11-09.
 
 ## Phase history
@@ -20,7 +20,7 @@
 | **M8 Hardening** | **Complete 2026-11-03** | Headers, request ids, restore drill, perf pass, review, runbook |
 | M9 Deployment | **Complete 2026-11-03** | Worker and D1 live at `flowquery.workstack.workers.dev`; sign-in verified end to end |
 | Post-M9 releases | Complete | Onboarding and docs, People directory, Bob operating model, direct ticket links |
-| Repository simplification | In review | Branch `refactor/repository-simplification`; not pushed, merged or deployed |
+| Repository simplification | **Complete 2026-11-09** | PR #11 merged as `4bddf82`; deployed as version `7677ce03`; migrations `0012` and `0013` applied |
 
 ## M8 completion evidence
 

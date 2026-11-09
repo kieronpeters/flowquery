@@ -1,10 +1,8 @@
 # Next Action
 
-**Repository simplification is on branch `refactor/repository-simplification`, awaiting owner review.** It is not pushed, merged or deployed.
+**The repository simplification is live.** PR #11 merged as `4bddf82`; deployed from `main` as version `7677ce03`. Migrations `0012` and `0013` were applied to production first. Production: <https://flowquery.workstack.workers.dev>. Free plans, $0 recurring.
 
-The live release is the Bob operating model and direct ticket links: PR #10 merged as `10aa71a`, deployed from `main` as version `d3d09443`. Production: <https://flowquery.workstack.workers.dev>. Free plans, $0 recurring.
-
-The cleanup branch removes obsolete and duplicated material, moves the engineering documents into `docs/internal/`, moves the team roster and operating model into `docs/agents/`, and consolidates development instructions into root `AGENTS.md`. It adds migrations `0012` (clear legacy avatar paths) and `0013` (correct Bob's profile text); neither has been applied to production.
+The cleanup removed obsolete and duplicated material, moved the engineering documents into `docs/internal/`, moved the team roster and operating model into `docs/agents/`, and consolidated development instructions into root `AGENTS.md`.
 
 ---
 
@@ -26,11 +24,10 @@ The cleanup branch removes obsolete and duplicated material, moves the engineeri
 
 ## Worth doing next, none urgent
 
-1. **Review the cleanup branch** and decide whether to merge and deploy it.
-2. **Apply migrations `0012` and `0013`** to production before or with the next deploy.
-3. **Sign in as Abdul** to confirm the allowlist entry works end to end.
-4. **A real backup.** `docs/internal/RUNBOOK.md` has the export procedure; production has no backup beyond Cloudflare's Time Travel window.
-5. **The product name.** "FlowQuery" is still a working title, and it is in the URL.
+1. **Sign in as Abdul** to confirm the allowlist entry works end to end.
+2. **A real backup.** `docs/internal/RUNBOOK.md` has the export procedure; production has no backup beyond Cloudflare's Time Travel window.
+3. **The product name.** "FlowQuery" is still a working title, and it is in the URL.
+4. **Owner review of the personal email** in `docs/internal/TECHNICAL_RESEARCH.md`; it is already public in history.
 
 ## Rules that have not changed
 

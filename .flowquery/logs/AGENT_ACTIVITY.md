@@ -4,6 +4,12 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Repository simplification released
+
+**Release:** PR #11 (`refactor/repository-simplification` → `main`), merge `4bddf82`; branch deleted locally and remotely. `main` and `origin/main` match. Migrations `0012_clear_legacy_avatar_paths.sql` and `0013_bob_profile_text.sql` applied to production first; the remote database reports 0 legacy `team/portraits/` paths and Bob's corrected About text. Deployed from `main` as version `7677ce03`. Post-deploy: health `200`, `/boards`, `/people`, `/docs`, `/docs/internal/architecture`, `/docs/agents/team-directory` and a direct ticket route `200`, anonymous docs API `401`. 394 tests pass.
+
+---
+
 ## 2026-11-09 — Repository simplification (local)
 
 **Requested by the owner:** simplify the repository, remove obsolete and duplicated material, consolidate documentation and AI instructions, and point everything at the public repository.

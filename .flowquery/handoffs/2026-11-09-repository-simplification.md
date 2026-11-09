@@ -2,10 +2,10 @@
 
 ## Repository
 
-- Branch: `refactor/repository-simplification`
+- Branch: `refactor/repository-simplification` (deleted after merge)
 - Base: `main` at `844b43a`
-- Working tree: changes for this phase, uncommitted at the time of writing
-- Nothing pushed, merged or deployed
+- Released: PR #11 merged as `4bddf82`; deployed from `main` as version `7677ce03`
+- `main` and `origin/main` match
 
 ## Completed
 
@@ -29,10 +29,10 @@
 
 ## Outstanding
 
-- The two new migrations have **not** been applied to production.
+- Migrations `0012` and `0013` are applied to production; the remote database reports 0 legacy avatar paths.
 - The repository is already public. `docs/internal/TECHNICAL_RESEARCH.md` records the owner's real email address as the local Git identity. It is already in Git history and on `main`; it was left for owner review rather than silently rewritten.
-- No browser check of the `/docs` page was run in this session; discovery and rendering are covered by the API and DocsPage tests.
+- No browser check of the `/docs` page was run in this session; discovery and rendering are covered by the API and DocsPage tests. Post-deploy, `/docs`, `/docs/internal/architecture` and `/docs/agents/team-directory` returned `200`.
 
 ## Next action
 
-Owner review of the branch. Merging, pushing and deploying require explicit approval.
+None. The release is complete.
