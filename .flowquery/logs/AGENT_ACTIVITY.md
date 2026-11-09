@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-10 — Board auto-refresh merged (not deployed)
+
+**Requested by the owner:** make board changes appear automatically without a browser refresh.
+
+**Implementation:** new `useBoardPolling` hook and `BoardLiveStatus` indicator. The board still uses its existing `/api/v1/boards/:id` fetch; the hook decides when to call it. Polls every 5 seconds while visible, pauses while hidden, dragging, during the undoable-delete window, while a write is in flight, and while the ticket drawer is open. One request at a time; aborts in-flight requests on pause or unmount; keeps the last good board on error and retries. Identical views are ignored, so scroll and interaction state are preserved. The transport is a `refresh(signal)` callback, so SSE can replace polling later.
+
+**Verification:** typecheck, lint, format:check, **405 tests**, build. Browser: a remote create appeared in 3.5 s, an update in 4 s and a delete in 5 s, with no reload (a window marker survived), scroll preserved, an unsaved drawer draft preserved across two intervals, and a hidden tab paused then caught up on return.
+
+**Release:** PR #12 merged as `5fe208e`; branch deleted locally and remotely. **Not deployed** — deployment was deliberately deferred because someone is working on a production board.
+
+---
+
 ## 2026-11-09 — Repository simplification released
 
 **Release:** PR #11 (`refactor/repository-simplification` → `main`), merge `4bddf82`; branch deleted locally and remotely. `main` and `origin/main` match. Migrations `0012_clear_legacy_avatar_paths.sql` and `0013_bob_profile_text.sql` applied to production first; the remote database reports 0 legacy `team/portraits/` paths and Bob's corrected About text. Deployed from `main` as version `7677ce03`. Post-deploy: health `200`, `/boards`, `/people`, `/docs`, `/docs/internal/architecture`, `/docs/agents/team-directory` and a direct ticket route `200`, anonymous docs API `401`. 394 tests pass.

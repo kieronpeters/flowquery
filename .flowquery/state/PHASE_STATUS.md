@@ -1,7 +1,7 @@
 # Phase Status
 
-**Current phase:** M9 complete and deployed. The repository simplification is released and deployed.
-**Next gate:** none; the next change requires its own owner approval.
+**Current phase:** M9 complete and deployed. Repository simplification released. Board auto-refresh merged and prepared, not deployed.
+**Next gate:** owner approval to deploy the board auto-refresh when no one is working on a production board.
 **Last updated:** 2026-11-09.
 
 ## Phase history
@@ -21,6 +21,7 @@
 | M9 Deployment | **Complete 2026-11-03** | Worker and D1 live at `flowquery.workstack.workers.dev`; sign-in verified end to end |
 | Post-M9 releases | Complete | Onboarding and docs, People directory, Bob operating model, direct ticket links |
 | Repository simplification | **Complete 2026-11-09** | PR #11 merged as `4bddf82`; deployed as version `7677ce03`; migrations `0012` and `0013` applied |
+| Board auto-refresh | **Complete 2026-11-10, not deployed** | PR #12 merged as `5fe208e`; deploy deliberately deferred while a production board is in use |
 
 ## M8 completion evidence
 
