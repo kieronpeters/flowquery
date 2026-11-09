@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Header tabs and one People directory released
+
+**Release:** PR #9 (`people-nav` → `main`), merge `97d44ff`; branch deleted locally and remotely. `main` and `origin/main` match.
+
+**Deployed:** version `4dfb09c7`; no migration. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and `/agents` `200`, anonymous docs API `401`, and the tab, footer and banner markers present.
+
+**Contents:** primary tabs in the header (Boards, People, Docs, About, Test a token), a minimal footer, the Agents page consolidated into People, the team banner on People, `/agents` redirecting to `/people`, and the duplicate profile-menu link removed. Docs updated to match.
+
+**Verified:** typecheck, lint, format check, **377 tests**, build; local DOM confirmed tab order and active states, the banner, the redirect, and People staying active on profile pages.
+
+---
+
 ## 2026-11-09 — Universal AI onboarding and docs released
 
 **Release:** PR #8 (`ai-onboarding-docs` → `main`), merge `d0512aa`; release branch deleted locally and remotely. `main` and `origin/main` match. Local dev servers stopped.

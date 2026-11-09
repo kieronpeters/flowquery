@@ -1,10 +1,10 @@
 # Next Action
 
-**Universal AI onboarding and the documentation browser are live.** PR #8 merged as `d0512aa`; production deployed as version `64e2433e`. The corrected AI team artwork from PR #7 is included in that deploy. Free plans, $0 recurring.
+**Header tabs and the single People directory are live.** PR #9 merged as `97d44ff`; production deployed as version `4dfb09c7`. The onboarding panel, docs browser and corrected AI team artwork are included. Free plans, $0 recurring.
 
 Production: https://flowquery.workstack.workers.dev. No migration was required for this release.
 
-The Boards page has the onboarding panel and copy button; `/docs` renders repository Markdown through a session-gated API; the master entry point is `docs/agents/AI_AGENT_ENTRYPOINT.md`. The repository cleanup from the previous release is retained and `*.zip` is ignored.
+The header tabs are Boards, People, Docs, About and Test a token; the account menu stays on the right. `/people` is the only directory and carries the team banner; `/agents` redirects there. The footer is the brand plus a private-instance note. The docs browser and master entry point are unchanged.
 
 ---
 
