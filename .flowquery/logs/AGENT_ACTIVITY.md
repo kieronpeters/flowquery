@@ -18,6 +18,8 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Git:** committed locally on `profile-pages-v2`. **Not merged and not pushed.**
 
+**Follow-up (same day):** the owner then asked to push, open a PR, merge and deploy from `main`. PR #5 merged as `40adffd`; `main` and `origin/main` are the same commit and every local and remote branch has 0 commits outside `main`. Redeployed from `main` as version `e696b299` — no assets changed, confirming the tree matches the tested build — and the post-deploy checks passed again.
+
 ---
 
 ## 2026-11-09 — Profile pages, the people directory and the new brand pack

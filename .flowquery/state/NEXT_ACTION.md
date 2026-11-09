@@ -1,6 +1,6 @@
 # Next Action
 
-**Profile pages v2 are live on `profile-pages-v2`.** https://flowquery.workstack.workers.dev — version `1ae37931`. Branch **not merged and not pushed**. Free plans, $0 recurring.
+**Profile pages v2 are live on `main`.** https://flowquery.workstack.workers.dev — version `e696b299`, deployed from the merge commit `40adffd`. PR #5 merged; every branch is fully contained in `main`. Free plans, $0 recurring.
 
 ---
 
