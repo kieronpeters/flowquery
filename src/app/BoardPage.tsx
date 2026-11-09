@@ -24,8 +24,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
 import type { ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
+import { BoardLiveStatus } from './BoardLiveStatus'
 import { ProfileAvatar } from './ProfileAvatar'
-import { applyMove, withoutTask } from './board-state'
+import { applyMove, boardSignature, withoutTask } from './board-state'
 import { TaskDrawer } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
 import { cardBackground, inkFor } from './theme'
@@ -220,6 +221,9 @@ export function BoardPage() {
   const [activeColumn, setActiveColumn] = useState<ColumnKey>('backlog')
   // Bumped whenever board data changes, so the feed refetches.
   const [activityKey, setActivityKey] = useState(0)
+  // True while a write is in flight; background polling pauses so a refresh
+  // cannot land on top of an optimistic move or a save.
+  const [mutating, setMutating] = useState(false)
 
   const [query, setQuery] = useState('')
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
@@ -249,11 +253,21 @@ export function BoardPage() {
   )
 
   const load = useCallback(
-    async (options: { silent?: boolean } = {}) => {
+    async (options: { silent?: boolean; background?: boolean; signal?: AbortSignal } = {}) => {
       if (!boardId) return
       if (!options.silent) setState({ kind: 'loading' })
 
-      const response = await fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`)
+      let response: Response
+      try {
+        response = await fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`, {
+          signal: options.signal,
+        })
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        if (options.background) throw error
+        setState({ kind: 'error', message: 'The board could not be reached.' })
+        return
+      }
 
       if (response.status === 401) {
         const currentTicket = ticketIdRef.current
@@ -268,12 +282,31 @@ export function BoardPage() {
         return
       }
       if (!response.ok) {
+        if (options.background) throw new Error(`HTTP ${response.status}`)
         setState({ kind: 'error', message: `HTTP ${response.status}` })
         return
       }
 
-      setState({ kind: 'ok', view: (await response.json()) as BoardView })
-      setActivityKey((key) => key + 1)
+      let view: BoardView
+      try {
+        view = (await response.json()) as BoardView
+      } catch (error) {
+        if (options.background) throw error
+        setState({ kind: 'error', message: 'The board response was not valid.' })
+        return
+      }
+
+      // Do not replace an identical view: that would re-render the board and
+      // could disturb a scroll for no reason.
+      setState((current) =>
+        current.kind === 'ok' && boardSignature(current.view) === boardSignature(view)
+          ? current
+          : { kind: 'ok', view },
+      )
+
+      // A background poll must not reset the activity feed's pagination; a
+      // local change (save, move, delete) should refresh it.
+      if (!options.background) setActivityKey((key) => key + 1)
     },
     [boardId, navigate],
   )
@@ -353,6 +386,7 @@ export function BoardPage() {
           : current,
       )
 
+      setMutating(true)
       try {
         const response = await fetch(
           `/api/v1/boards/${boardId}/tasks/${encodeURIComponent(taskId)}/move`,
@@ -382,6 +416,8 @@ export function BoardPage() {
       } catch {
         setNotice('The board could not be reached. Refresh to resync.')
         await load({ silent: true })
+      } finally {
+        setMutating(false)
       }
     },
     [boardId, load],
@@ -389,24 +425,29 @@ export function BoardPage() {
 
   /** Saves the appearance document and applies it without a full refetch. */
   async function saveTheme(theme: BoardTheme): Promise<string | null> {
-    const response = await fetch(`/api/v1/boards/${boardId}/theme`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(theme),
-    })
+    setMutating(true)
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}/theme`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(theme),
+      })
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as ApiError | null
-      return body?.error.message ?? 'Could not save colours.'
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as ApiError | null
+        return body?.error.message ?? 'Could not save colours.'
+      }
+
+      const body = (await response.json()) as { theme: BoardTheme }
+      setState((current) =>
+        current.kind === 'ok'
+          ? { kind: 'ok', view: { ...current.view, theme: body.theme } }
+          : current,
+      )
+      return null
+    } finally {
+      setMutating(false)
     }
-
-    const body = (await response.json()) as { theme: BoardTheme }
-    setState((current) =>
-      current.kind === 'ok'
-        ? { kind: 'ok', view: { ...current.view, theme: body.theme } }
-        : current,
-    )
-    return null
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -508,6 +549,11 @@ export function BoardPage() {
 
   const { board, columns, theme } = state.view
 
+  // Polling stops while the reader is doing something that a refresh could
+  // disturb: dragging a card, waiting out an undoable delete, saving, or using
+  // the ticket drawer (which holds unsaved edits of its own).
+  const pollingPaused = drawer !== null || activeTask !== null || pendingDelete !== null || mutating
+
   const filters = { query, assigneeId, priority }
   const filtering = query.trim() !== '' || assigneeId !== null || priority !== null
   const today = todayIso()
@@ -568,6 +614,7 @@ export function BoardPage() {
 
   async function commitDelete(taskId: string) {
     setPendingDelete(null)
+    setMutating(true)
 
     try {
       await fetch(`/api/v1/boards/${boardId}/tasks/${encodeURIComponent(taskId)}`, {
@@ -578,6 +625,7 @@ export function BoardPage() {
         navigate(`/boards/${encodeURIComponent(boardId)}`, { replace: true })
       }
       await load({ silent: true })
+      setMutating(false)
     }
   }
 
@@ -595,20 +643,25 @@ export function BoardPage() {
   async function saveDescription() {
     if (!boardId) return
 
-    const response = await fetch(`/api/v1/boards/${boardId}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ description: descriptionDraft }),
-    })
+    setMutating(true)
+    try {
+      const response = await fetch(`/api/v1/boards/${boardId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ description: descriptionDraft }),
+      })
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as ApiError | null
-      setNotice(body?.error.message ?? 'Could not save the description.')
-      return
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as ApiError | null
+        setNotice(body?.error.message ?? 'Could not save the description.')
+        return
+      }
+
+      setEditingDescription(false)
+      await load({ silent: true })
+    } finally {
+      setMutating(false)
     }
-
-    setEditingDescription(false)
-    await load({ silent: true })
   }
 
   function taskTitle(taskId: string): string {
@@ -691,14 +744,21 @@ export function BoardPage() {
             )}
           </p>
         </div>
-        <button
-          className="button button-quiet inline"
-          type="button"
-          onClick={() => setShowTheme((open) => !open)}
-          aria-expanded={showTheme}
-        >
-          Colours
-        </button>
+        <div className="page-heading-actions">
+          <BoardLiveStatus
+            enabled
+            paused={pollingPaused}
+            refresh={(signal) => load({ silent: true, background: true, signal })}
+          />
+          <button
+            className="button button-quiet inline"
+            type="button"
+            onClick={() => setShowTheme((open) => !open)}
+            aria-expanded={showTheme}
+          >
+            Colours
+          </button>
+        </div>
       </div>
 
       {ticketMissing && (

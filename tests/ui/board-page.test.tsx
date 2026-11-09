@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -98,7 +98,7 @@ function mockApi(
   } = {},
 ) {
   const calls: Call[] = []
-  const initial = { ...boardWith([cardOne], [cardTwo]), theme: overrides.theme ?? {} }
+  let currentBoard: BoardView = { ...boardWith([cardOne], [cardTwo]), theme: overrides.theme ?? {} }
 
   vi.stubGlobal(
     'fetch',
@@ -154,11 +154,16 @@ function mockApi(
       }
 
       // The board view, and any refetch of it.
-      return Response.json(initial)
+      return Response.json(currentBoard)
     }),
   )
 
-  return { calls }
+  return {
+    calls,
+    setBoard: (next: BoardView) => {
+      currentBoard = next
+    },
+  }
 }
 
 function LocationProbe() {
@@ -192,6 +197,7 @@ function renderTicket(ticketId: string) {
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
@@ -206,6 +212,27 @@ describe('BoardPage', () => {
     for (const name of ['Backlog', 'To Do', 'In Progress', 'Review', 'Done']) {
       expect(screen.getByRole('heading', { name })).toBeTruthy()
     }
+  })
+
+  it('refreshes the board in the background and shows the update time', async () => {
+    vi.useFakeTimers()
+    const { setBoard } = mockApi()
+    renderBoard()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(screen.getByText('Card one')).toBeTruthy()
+    expect(screen.getByText('Live')).toBeTruthy()
+
+    setBoard(boardWith([cardOne, makeTask({ id: 'tsk_3', title: 'Card three' })], [cardTwo]))
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000)
+    })
+
+    expect(screen.getByText('Card three')).toBeTruthy()
+    expect(screen.getByText(/Updated/)).toBeTruthy()
   })
 
   it('opens a task when its card is clicked', async () => {

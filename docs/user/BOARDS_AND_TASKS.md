@@ -96,6 +96,20 @@ session.
 
 Board ids (`brd_…`) and ticket ids (`tsk_…`) are opaque and non-sequential.
 
+## Live updates
+
+While a board is open, FlowQuery refreshes it in the background every five
+seconds. Cards created, edited, moved or deleted by Bob or another administrator
+appear without a browser refresh. The **Live** / **Updated** line next to the
+**Colours** button shows the last successful refresh.
+
+- Polling pauses while the tab is in the background, while you are dragging a
+  card, during an undoable delete, and while the ticket sidebar is open, so a
+  refresh cannot overwrite unsaved edits.
+- If a refresh fails, the board stays as it was, the line changes to
+  **Offline — retrying**, and the next cycle tries again.
+- Scroll position and filters are kept across a refresh.
+
 ## Search and filters
 
 The board search matches task titles and descriptions. The assignee and priority

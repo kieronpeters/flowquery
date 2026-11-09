@@ -3,6 +3,18 @@ import type { ColumnKey } from '../shared/columns'
 import { moveWithin } from '../shared/ordering'
 
 /**
+ * A stable fingerprint of everything the board renders.
+ *
+ * Background refresh uses it to avoid replacing state with an identical view,
+ * which would re-render the board and could disturb a scroll or drag for no
+ * reason. The server's field order is stable for a given shape, and a false
+ * positive only costs one re-render.
+ */
+export function boardSignature(view: BoardView): string {
+  return JSON.stringify(view)
+}
+
+/**
  * Optimistic board update for a move.
  *
  * This deliberately mirrors the server's rule — remove, insert at index,
