@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Agent profiles and visual pack released
+
+**Release:** PR #6 (`agent-profiles` → `main`), merge `bf13f63`. Branch deleted locally and on the remote; every branch is contained in `main`. Local dev servers stopped.
+
+**Production:** migration `0011` applied before the deploy; all 16 non-human profiles now have About, Skills and Development. Deployed from `main` as version `08fffc21`.
+
+**Verified after deploy:** health `200`; CSP present; `/agents` `200`; the full overview poster, agent defaults and human defaults all `200`; anonymous `/api/v1/profiles` `401`; `/auth/start` `302`; the deployed poster SHA-256 matches the source; the worker bundle contains both human default paths; the client bundle references the full poster and the agent default map, and not the retired banner.
+
+**Known gaps:** the agent portraits are the repository's existing 512×512 canonical set, not a new cinematic set (the image service had insufficient funds); the contractor is a silhouette; phone layout is not visually verified.
+
+---
+
 ## 2026-11-09 — Full team overview poster replaces the banner hero
 
 **Requested by the owner:** use the complete `flowquery-ai-development-team-overview.png` as the `/agents` hero, not the cropped banner. The full image must be visible, uncropped, with the whole agent grid.

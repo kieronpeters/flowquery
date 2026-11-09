@@ -1,8 +1,8 @@
 # Next Action
 
-**Profile pages v2 are live on `main`.** https://flowquery.workstack.workers.dev — version `e696b299`, deployed from the merge commit `40adffd`. PR #5 merged; every branch is fully contained in `main`. Free plans, $0 recurring.
+**Agent profiles and the visual pack are live on `main`.** https://flowquery.workstack.workers.dev — PR #6 merged as `bf13f63`; branch `agent-profiles` deleted locally and on the remote. Free plans, $0 recurring.
 
-**Next change, on branch `agent-profiles`:** `/agents` becomes a read-only directory whose rows open `/profiles/:id`; picture upload, remove and colour choice move to the agent's profile page, beside the picture. Migration `0011` fills About, Skills and Development for all 16 non-human profiles. **Also uncommitted on this branch:** the full team overview poster (not the banner crop) as the `/agents` hero at the owner's request, default portraits for all 16 agents (existing canonical set, interim), Restore default, and the two supplied human administrator default avatars (Kieron/Abdul) keyed by GitHub id. Not yet applied to production, committed or deployed.
+**Deployed from `main` as version `08fffc21`.** Migration `0011` applied to production before the deploy; all 16 non-human profiles now carry About, Skills and Development. The `/agents` hero is the full team overview poster, and the agent and human default avatars are live.
 
 ---
 
