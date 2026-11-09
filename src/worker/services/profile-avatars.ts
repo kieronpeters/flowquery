@@ -2,13 +2,13 @@ import type { D1Database } from '@cloudflare/workers-types'
 
 import { decodeAvatarImage } from '../lib/image'
 import type { UserRecord } from '../repositories/auth-store'
-import { findHumanProfileId, getProfileById } from '../repositories/boards'
 import {
   deleteProfileAvatar,
   getProfileAvatar,
   type ProfileAvatarRecord,
   upsertProfileAvatar,
 } from '../repositories/profile-avatars'
+import { canEditProfile } from './profile-access'
 
 export type ImageChangeResult =
   | { kind: 'ok' }
@@ -16,37 +16,11 @@ export type ImageChangeResult =
   | { kind: 'not_found' }
   | { kind: 'forbidden' }
 
-/**
- * Who may change whose picture.
- *
- * A human may change their own, and any non-human profile's — the agents are
- * theirs to dress. They may not change another human's: two administrators
- * share the boards, not each other's identity.
- */
-async function authorise(
-  db: D1Database,
-  input: { profileId: string; actor: UserRecord },
-): Promise<ImageChangeResult | { kind: 'allowed' }> {
-  const target = await getProfileById(db, input.profileId)
-  if (!target) return { kind: 'not_found' }
-
-  if (target.kind === 'human') {
-    const ownProfileId = await findHumanProfileId(db, {
-      userId: input.actor.id,
-      displayName: input.actor.displayName,
-    })
-
-    if (ownProfileId !== target.id) return { kind: 'forbidden' }
-  }
-
-  return { kind: 'allowed' }
-}
-
 export async function setProfileImage(
   db: D1Database,
   input: { profileId: string; actor: UserRecord; payload: unknown; now?: number },
 ): Promise<ImageChangeResult> {
-  const permission = await authorise(db, input)
+  const permission = await canEditProfile(db, input)
   if (permission.kind !== 'allowed') return permission
 
   const payload = (input.payload ?? {}) as { mime?: unknown; data?: unknown }
@@ -68,7 +42,7 @@ export async function clearProfileImage(
   db: D1Database,
   input: { profileId: string; actor: UserRecord },
 ): Promise<ImageChangeResult> {
-  const permission = await authorise(db, input)
+  const permission = await canEditProfile(db, input)
   if (permission.kind !== 'allowed') return permission
 
   await deleteProfileAvatar(db, input.profileId)

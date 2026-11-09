@@ -73,6 +73,30 @@ export type ProfileDto = {
   avatarUrl: string | null
 }
 
+/**
+ * One entry in the people directory.
+ *
+ * `isSelf` is computed by the server rather than guessed in the browser: the
+ * link between a signed-in account and its profile is the server's to decide.
+ */
+export type ProfileListItemDto = ProfileDto & {
+  isSelf: boolean
+}
+
+/** A profile page: the picture and the optional prose. */
+export type ProfileDetailDto = ProfileDto & {
+  about: string | null
+  skills: string | null
+  development: string | null
+  /**
+   * True when the picture shown is an uploaded one, rather than a GitHub
+   * avatar. Only an upload can be removed from here.
+   */
+  hasUploadedImage: boolean
+  /** True when the signed-in human may edit this profile. */
+  canEdit: boolean
+}
+
 export type CommentDto = {
   id: string
   taskId: string

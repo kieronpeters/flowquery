@@ -149,6 +149,17 @@ export function ProfileMenu() {
         <div className="profile-menu" role="menu" aria-label="Account">
           <p className="profile-menu-name">{me.displayName}</p>
 
+          {me.profileId && (
+            <Link
+              className="profile-menu-item"
+              role="menuitem"
+              to={`/profiles/${encodeURIComponent(me.profileId)}`}
+              onClick={() => setOpen(false)}
+            >
+              View my profile
+            </Link>
+          )}
+
           <button
             className="profile-menu-item"
             type="button"

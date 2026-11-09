@@ -29,7 +29,7 @@ describe('app shell', () => {
     const header = screen.getByRole('banner')
     const logo = within(header).getByAltText('FlowQuery') as HTMLImageElement
 
-    expect(logo.getAttribute('src')).toBe('/brand/flowquery-wordmark.png')
+    expect(logo.getAttribute('src')).toBe('/brand/logos/flowquery-logo-dark.png')
   })
 
   it('has a footer with the brand and the site links', () => {

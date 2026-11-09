@@ -1,6 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types'
 
-import type { BoardRow, ProfileRow, TaskRow } from '../domain/types'
+import type { BoardRow, ProfileDetailRow, ProfileRow, TaskRow } from '../domain/types'
 
 /**
  * All SQL lives here (docs/ARCHITECTURE.md §3).
@@ -159,6 +159,115 @@ export async function findHumanProfileId(
     .first<{ id: string }>()
 
   return row?.id ?? null
+}
+
+/**
+ * One profile page, including the optional prose.
+ *
+ * Read explicitly rather than reusing `getProfileById`: that function is called
+ * on paths where the text is not needed, and selecting it there would make the
+ * hot path pay for a page nobody opened.
+ */
+export async function getProfileDetailById(
+  db: D1Database,
+  profileId: string,
+): Promise<ProfileDetailRow | null> {
+  return await db
+    .prepare(
+      `SELECT id, display_name, role_title, kind, avatar_path, active,
+              about, skills, development
+         FROM team_profiles
+        WHERE id = ?`,
+    )
+    .bind(profileId)
+    .first<ProfileDetailRow>()
+}
+
+/**
+ * Replaces the editable text on a profile.
+ *
+ * One fixed statement rather than a dynamic SET clause: the service merges the
+ * fields the caller left out with what is already stored, so the SQL never has
+ * to be assembled from strings. Returns false when the profile vanished.
+ */
+export async function updateProfileDetails(
+  db: D1Database,
+  input: {
+    profileId: string
+    roleTitle: string
+    about: string | null
+    skills: string | null
+    development: string | null
+  },
+): Promise<boolean> {
+  const result = await db
+    .prepare(
+      `UPDATE team_profiles
+          SET role_title = ?, about = ?, skills = ?, development = ?
+        WHERE id = ?`,
+    )
+    .bind(input.roleTitle, input.about, input.skills, input.development, input.profileId)
+    .run()
+
+  return (result.meta?.changes ?? 0) > 0
+}
+
+/**
+ * The GitHub picture for one human profile, if that account is known.
+ *
+ * A human's face comes from GitHub until they upload one (DEC-036). The link
+ * is the reverse of `findHumanProfileId`: either the account owns
+ * `prf_user_<id>`, or it adopted a profile created before its first sign-in by
+ * matching display name. Without this the directory would show initials for a
+ * person whose GitHub picture the app already holds.
+ */
+export async function getHumanGithubAvatar(
+  db: D1Database,
+  input: { profileId: string; displayName: string },
+): Promise<string | null> {
+  const row = await db
+    .prepare(
+      `SELECT avatar_url
+         FROM users
+        WHERE ('prf_user_' || id = ? OR display_name = ?)
+          AND avatar_url IS NOT NULL
+        ORDER BY CASE WHEN 'prf_user_' || id = ? THEN 0 ELSE 1 END
+        LIMIT 1`,
+    )
+    .bind(input.profileId, input.displayName, input.profileId)
+    .first<{ avatar_url: string }>()
+
+  return row?.avatar_url ?? null
+}
+
+/**
+ * Every human profile whose GitHub picture is known, keyed by profile id.
+ *
+ * One query rather than one per person: the directory lists everyone, and a
+ * loop of lookups would turn a single page load into a burst of statements.
+ */
+export async function listHumanGithubAvatars(db: D1Database): Promise<Map<string, string>> {
+  const { results } = await db
+    .prepare(
+      `SELECT p.id AS profile_id, u.avatar_url
+         FROM team_profiles p
+         JOIN users u
+           ON u.id = (
+                SELECT u2.id
+                  FROM users u2
+                 WHERE 'prf_user_' || u2.id = p.id OR u2.display_name = p.display_name
+                 ORDER BY CASE WHEN 'prf_user_' || u2.id = p.id THEN 0 ELSE 1 END
+                 LIMIT 1
+              )
+        WHERE p.kind = 'human'
+          AND p.active = 1
+          AND u.avatar_url IS NOT NULL`,
+    )
+    .all<{ profile_id: string; avatar_url: string }>()
+
+  const avatars = new Map<string, string>()
+  for (const row of results ?? []) avatars.set(row.profile_id, row.avatar_url)
+  return avatars
 }
 
 /** Returns false when the profile does not exist, so the route can answer 404. */

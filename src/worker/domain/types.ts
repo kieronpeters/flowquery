@@ -36,3 +36,16 @@ export type ProfileRow = {
   avatar_path: string | null
   active: number
 }
+
+/**
+ * Everything a profile page shows.
+ *
+ * Separate from `ProfileRow` because the list endpoint deliberately does not
+ * select the text columns: profiles are loaded on every board view, and a
+ * page's worth of prose should not ride along with an assignee dropdown.
+ */
+export type ProfileDetailRow = ProfileRow & {
+  about: string | null
+  skills: string | null
+  development: string | null
+}

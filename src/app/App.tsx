@@ -8,7 +8,9 @@ import { BoardsPage } from './BoardsPage'
 import { ErrorBoundary } from './ErrorBoundary'
 import { HomePage } from './HomePage'
 import { LoginPage } from './LoginPage'
+import { PeoplePage } from './PeoplePage'
 import { ProfileMenu } from './ProfileMenu'
+import { ProfilePage } from './ProfilePage'
 import { SignupPage } from './SignupPage'
 
 export function App() {
@@ -16,7 +18,7 @@ export function App() {
     <div className="app">
       <header className="app-header">
         <a className="brand" href="/" aria-label="FlowQuery home">
-          <img src="/brand/flowquery-wordmark.png" alt="FlowQuery" width={131} height={32} />
+          <img src="/brand/logos/flowquery-logo-dark.png" alt="FlowQuery" width={131} height={32} />
         </a>
         <ProfileMenu />
       </header>
@@ -31,17 +33,20 @@ export function App() {
           <Route path="/boards/:boardId" element={<BoardPage />} />
           <Route path="/agent" element={<AgentPage />} />
           <Route path="/agents" element={<AgentsPage />} />
+          <Route path="/people" element={<PeoplePage />} />
+          <Route path="/profiles/:profileId" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ErrorBoundary>
 
       <footer className="app-footer">
         <a className="footer-brand" href="/">
-          <img src="/brand/flowquery-wordmark.png" alt="FlowQuery" height={20} />
+          <img src="/brand/logos/flowquery-logo-dark.png" alt="FlowQuery" width={82} height={20} />
         </a>
 
         <nav aria-label="Footer">
           <a href="/about">About</a>
+          <a href="/people">People</a>
           <a href="/agents">Agents</a>
           <a href="/agent">Test a token</a>
         </nav>

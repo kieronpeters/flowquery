@@ -40,7 +40,14 @@ export function HomePage() {
 
   return (
     <main className="page">
-      <h1>FlowQuery</h1>
+      <h1 className="visually-hidden">FlowQuery</h1>
+      <img
+        className="page-logo"
+        src="/brand/logos/flowquery-logo-dark.png"
+        alt=""
+        width={262}
+        height={64}
+      />
       <p className="lede">
         A small, private Kanban board for planning and tracking real work. Two people, a handful of
         boards, and an AI engineering manager that reads the backlog through an API.
