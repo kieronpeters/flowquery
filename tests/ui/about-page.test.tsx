@@ -32,15 +32,25 @@ describe('app shell', () => {
     expect(logo.getAttribute('src')).toBe('/brand/logos/flowquery-logo-dark.png')
   })
 
-  it('has a footer with the brand and the site links', () => {
+  it('has primary tabs in the header and a minimal footer', () => {
     renderAt('/about')
 
-    const footer = screen.getByRole('contentinfo')
-    expect(footer).toBeTruthy()
+    const header = screen.getByRole('banner')
+    const tabs: Array<[string, string]> = [
+      ['Boards', '/boards'],
+      ['People', '/people'],
+      ['Docs', '/docs'],
+      ['About', '/about'],
+      ['Test a token', '/agent'],
+    ]
 
-    expect(screen.getByRole('link', { name: 'About' }).getAttribute('href')).toBe('/about')
-    expect(screen.getByRole('link', { name: 'Agents' }).getAttribute('href')).toBe('/agents')
-    expect(screen.getByRole('link', { name: 'Test a token' }).getAttribute('href')).toBe('/agent')
+    for (const [name, href] of tabs) {
+      expect(within(header).getByRole('link', { name }).getAttribute('href')).toBe(href)
+    }
+
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByAltText('FlowQuery')).toBeTruthy()
+    expect(screen.queryByRole('navigation', { name: 'Footer' })).toBeNull()
   })
 })
 

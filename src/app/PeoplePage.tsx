@@ -79,13 +79,26 @@ export function PeoplePage() {
   const agents = (profiles ?? []).filter((profile) => profile.kind !== 'human')
 
   return (
-    <main className="page">
+    <main className="page people-page">
       <h1>People</h1>
       <p className="lede">
-        Everyone you can assign work to. Open a profile to see their picture, what they do, and what
-        they want to develop. You can edit your own profile and any agent’s — another person’s is
-        view-only.
+        People and AI agents in one directory. Open a profile to see the picture, what they do and
+        what they want to develop. You can edit your own profile and any agent’s — another person’s
+        is view-only.
       </p>
+
+      <figure className="people-hero">
+        <img
+          className="people-hero-art"
+          src="/brand/flowquery-ai-development-team-overview.png"
+          alt="FlowQuery AI Development Team: the FlowQuery logo and a two-row grid of the 16 FlowQuery agents with their names and roles."
+          width={1536}
+          height={655}
+        />
+        <figcaption className="people-hero-caption">
+          The directory below opens each agent&rsquo;s profile.
+        </figcaption>
+      </figure>
 
       {error && (
         <p className="alert" role="alert">

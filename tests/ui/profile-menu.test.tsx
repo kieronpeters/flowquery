@@ -108,7 +108,7 @@ describe('ProfileMenu', () => {
     })
   })
 
-  it('offers a picture upload and a way into the agents page', async () => {
+  it('offers a picture upload and a way into the people page', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -128,7 +128,7 @@ describe('ProfileMenu', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Kieron/ }))
 
     expect(screen.getByRole('menuitem', { name: 'Upload a new image' })).toBeTruthy()
-    expect(screen.getByRole('menuitem', { name: 'Agents' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'People' })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeTruthy()
 
     // Nothing uploaded yet, so there is nothing to remove.

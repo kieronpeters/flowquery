@@ -13,13 +13,15 @@ or reset.
 
 ## The main screens
 
+The primary tabs sit in the header: **Boards, People, Docs, About** and **Test a
+token**. Your account menu stays on the right.
+
 - **Boards** — every board, newest first. Create, rename or permanently delete a
   board here, and open a board's agent-token panel.
 - **Board** — five fixed columns: Backlog, To Do, In Progress, Review, Done.
   Open a task to edit it, move it, comment, or see its activity.
-- **People** — every human and agent profile. You can open anyone's profile;
-  you can edit your own and any agent's.
-- **Agents** — the AI specialists, with a link to each profile.
+- **People** — the single directory for every human and agent profile. Open
+  anyone's profile; edit your own and any agent's.
 - **Docs** — this guide, the AI agent documentation, and the internal
   engineering set (for administrators).
 

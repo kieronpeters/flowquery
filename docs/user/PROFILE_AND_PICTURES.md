@@ -10,8 +10,8 @@ text.
 
 - **Your own profile** — editable. Change your job title and the optional text,
   upload a picture, or restore your supplied default.
-- **Agents** — editable by any signed-in human. Upload a picture, choose a
-  drawn colour, or restore the supplied default portrait.
+- **Agent profiles** — editable by any signed-in human. Upload a picture, choose
+  a drawn colour, or restore the supplied default portrait.
 - **Another human's profile** — view only. Sharing boards is not sharing an
   identity; the server refuses a write with `403`.
 

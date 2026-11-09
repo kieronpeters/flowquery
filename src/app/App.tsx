@@ -1,9 +1,8 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AboutPage } from './AboutPage'
 import { AgentPage } from './AgentPage'
-import { AgentsPage } from './AgentsPage'
 import { BoardPage } from './BoardPage'
 import { BoardsPage } from './BoardsPage'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -18,13 +17,41 @@ import { SignupPage } from './SignupPage'
 // main bundle and load it when someone opens the documentation.
 const DocsPage = lazy(() => import('./DocsPage').then((module) => ({ default: module.DocsPage })))
 
+function navClass(active: boolean): string {
+  return active ? 'app-nav-link app-nav-link-active' : 'app-nav-link'
+}
+
 export function App() {
+  const { pathname } = useLocation()
+  // A profile page belongs to the People section even though its URL is under
+  // /profiles, so the tab stays highlighted while reading someone's profile.
+  const peopleActive = pathname === '/people' || pathname.startsWith('/profiles/')
+
   return (
     <div className="app">
       <header className="app-header">
         <a className="brand" href="/" aria-label="FlowQuery home">
           <img src="/brand/logos/flowquery-logo-dark.png" alt="FlowQuery" width={131} height={32} />
         </a>
+
+        <nav className="app-nav" aria-label="Primary">
+          <NavLink to="/boards" className={({ isActive }) => navClass(isActive)}>
+            Boards
+          </NavLink>
+          <NavLink to="/people" className={({ isActive }) => navClass(isActive || peopleActive)}>
+            People
+          </NavLink>
+          <NavLink to="/docs" className={({ isActive }) => navClass(isActive)}>
+            Docs
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => navClass(isActive)}>
+            About
+          </NavLink>
+          <NavLink to="/agent" className={({ isActive }) => navClass(isActive)}>
+            Test a token
+          </NavLink>
+        </nav>
+
         <ProfileMenu />
       </header>
 
@@ -44,7 +71,7 @@ export function App() {
             <Route path="/boards" element={<BoardsPage />} />
             <Route path="/boards/:boardId" element={<BoardPage />} />
             <Route path="/agent" element={<AgentPage />} />
-            <Route path="/agents" element={<AgentsPage />} />
+            <Route path="/agents" element={<Navigate to="/people" replace />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/*" element={<DocsPage />} />
             <Route path="/people" element={<PeoplePage />} />
@@ -58,14 +85,7 @@ export function App() {
         <a className="footer-brand" href="/">
           <img src="/brand/logos/flowquery-logo-dark.png" alt="FlowQuery" width={82} height={20} />
         </a>
-
-        <nav aria-label="Footer">
-          <a href="/about">About</a>
-          <a href="/docs">Docs</a>
-          <a href="/people">People</a>
-          <a href="/agents">Agents</a>
-          <a href="/agent">Test a token</a>
-        </nav>
+        <p className="footer-note">Private instance · Workers Free + D1 Free</p>
       </footer>
     </div>
   )
