@@ -46,6 +46,43 @@ there are no loose icon files in `public/` any more.
 - **Landing and sign-in** — a larger standalone mark above the copy.
 - **Browser and home screen** — favicons and the web manifest.
 
+## Agent team artwork
+
+| File | Size | Use |
+|---|---|---|
+| `public/brand/flowquery-ai-development-team-overview.png` | 1536 × 1024 | Full team overview poster at the top of `/agents`, above the directory. Displayed whole, with `object-fit: contain` and the natural aspect ratio preserved. |
+| `public/brand/agents/defaults/prf_*.png` | 512 × 512 | One default portrait per non-human profile, keyed by profile id. |
+
+The full poster is deployed **at the owner's explicit request**. Its lower
+panels show generated names (Alice, Blake, Cora…) that are not the FlowQuery
+roster; the caption under the image says it is illustrative, and the directory
+below is the authoritative list. The earlier banner crop is kept only as a
+reference at `docs/brand/agents/flowquery-ai-team-hero-banner.jpg`, and the
+source original at `docs/brand/agents/flowquery-ai-team-overview-original.png`.
+
+`src/shared/agent-portraits.ts` is the single mapping from profile id to
+default portrait. The UI never hardcodes these paths. An uploaded picture is
+stored in D1 and wins over the default; for an agent, choosing a drawn colour
+is also a customisation, and **Restore default** clears both and returns the
+portrait. Uploads never touch the files here.
+
+The portraits currently in `defaults/` are the repository's existing canonical
+set, copied from `team/portraits/`; the cinematic replacement set could not be
+generated because the image service had insufficient funds. Swapping them is a
+file replacement with the same names — no code or database change.
+
+## Human administrator defaults — `public/brand/humans/`
+
+| File | GitHub id | Account |
+|---|---|---|
+| `kieron-default.png` | `51761129` | Kieron |
+| `abdul-default.png` | `37402145` | Abdul |
+
+The mapping lives in `src/shared/human-default-avatars.ts`, keyed by the
+immutable GitHub numeric id rather than a display name. Abdul's pre-created
+`prf_abdul` profile is a fallback until his identity row exists. An upload in
+D1 wins; removing it restores these files, which are never overwritten.
+
 ## Rules
 
 1. Do not redraw, recolour or crop the supplied artwork in CSS. If a size is

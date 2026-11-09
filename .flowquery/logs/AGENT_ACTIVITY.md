@@ -4,6 +4,66 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Full team overview poster replaces the banner hero
+
+**Requested by the owner:** use the complete `flowquery-ai-development-team-overview.png` as the `/agents` hero, not the cropped banner. The full image must be visible, uncropped, with the whole agent grid.
+
+**Decision:** this overrides the earlier pack guidance to use the banner. The owner explicitly approved showing the full poster, whose lower panels name fictional agents. The page captions it as illustrative and keeps the real roster below.
+
+**Implementation:** copied to `public/brand/flowquery-ai-development-team-overview.png` (1536×1024, hash-identical to the root file); `AgentsPage` references it with `width={1536} height={1024}`; CSS uses `width: 100%; height: auto; object-fit: contain`, so the aspect ratio is preserved and nothing is cropped. The retired banner moved to `docs/brand/agents/` and is no longer referenced or built.
+
+**Verified:** typecheck, lint, **370 tests**, build. The built bundle references only the new image; the dev server serves it as `image/png` and the old banner path no longer resolves to an image.
+
+**Not done:** nothing committed, pushed or deployed.
+
+---
+
+## 2026-11-09 — Human administrator default avatars
+
+**Requested by the owner:** use the two supplied portraits as Kieron's and Abdul's default human avatars, keep them replaceable and restorable, and do not touch AI agent avatars.
+
+**Identity mapping:** keyed by the immutable GitHub numeric id — Kieron `51761129`, Abdul `37402145` — from the approved allowlist and `auth_identities`. Display names are not used. Abdul's `prf_abdul` profile exists before his first sign-in, so the profile id is a documented fallback until his identity row exists; the GitHub id wins once it does.
+
+**Implementation:** images copied to `public/brand/humans/` and mapped in `src/shared/human-default-avatars.ts`. `/auth/me`, the profile list and the profile detail now fall back to the supplied default after an upload, before the GitHub avatar. A human with an upload sees **Restore default**; removing it clears the D1 upload and returns the supplied file. Agent avatars and mappings are untouched.
+
+**Security:** no auth or allowlist changes; uploads remain session-gated and limited to the account's own human profile (another human gets `403`). The mapping is server-side static data; no client-supplied id is trusted.
+
+**Verified:** typecheck, lint, **370 tests**, build. New tests cover Kieron's `/auth/me`, the directory showing both defaults unswapped, Abdul after sign-in, upload-then-restore, and Kieron being refused Abdul's picture. Locally the dev server serves both PNGs with `200`.
+
+**Not done:** nothing committed, pushed or deployed.
+
+---
+
+## 2026-11-09 — Agent visual pack: team hero, default portraits and Restore default
+
+**Requested by the owner:** use the supplied team overview artwork at the top of `/agents`, make each canonical agent's portrait their default avatar, allow replacement and restoration, and keep the roster accurate.
+
+**Artwork decision:** the pack's full overview contains fictional names in its lower panels (Alice, Blake, Cora…). Its supplied banner crop is the same artwork without those panels, so the hero uses the banner (`public/brand/agents/flowquery-ai-team-hero.jpg`) and the full original is archived at `docs/brand/agents/` as a non-deployed reference. No later poster variant is used and no fictional name is presented.
+
+**Portraits:** the image service rejected all 16 generation jobs with "Insufficient account funds", and the supplied zip contains only hero images. With the owner's agreement, the repository's existing canonical portraits in `team/portraits/` are copied to `public/brand/agents/defaults/` as interim defaults; `prf_contractor.png` is still a silhouette. They are 512×512 square, not the requested cinematic set. Replacing them is a file swap with the same names.
+
+**Implementation:** `src/shared/agent-portraits.ts` is the single id-to-portrait map. `ProfileAvatar` precedence is upload → chosen colour → default portrait → drawn SVG → initials, and it now takes a profile id. Board cards and the activity feed use `ProfileAvatar` too, so an upload appears everywhere. `DELETE /profiles/:id/image` now also clears a chosen colour for non-humans; the profile page labels "Default portrait" or "Custom avatar" and offers Restore default.
+
+**Verified:** typecheck, lint, **363 tests**, build. Tests cover the hero path, default portrait rendering, the custom marker, Restore default calling DELETE, and the server clearing `avatar_path`. Locally the dev server serves the hero and all 16 portraits with `200`.
+
+**Not done:** nothing committed, pushed or deployed; migration 0011 still not applied to production. The cinematic portrait set remains outstanding.
+
+---
+
+## 2026-11-09 — Agent profiles: appearance moves to the profile, and every agent gets a purpose
+
+**Requested by the owner:** make the agents obvious — pressing a name opens the profile; remove the picture/colour buttons from `/agents` and put them on the profile picture; the row action becomes “View profile”; fill in each agent’s details and purpose from the defined roles.
+
+**Shipped on branch `agent-profiles`:** `/agents` is a list of links with no appearance controls. Upload, remove and the eight colour swatches now sit under the picture on `/profiles/:id`, shown only when `canEdit` (your own human profile or any agent). The server rules did not change: humans still cannot set a drawn avatar, and only your own profile or an agent’s can be edited.
+
+**Migration `0011_agent_profile_text.sql`:** writes About, Skills and Development for all 16 non-human profiles using `COALESCE`, so text already written by a person is never overwritten. Verified against a fresh SQLite database built from every migration plus the seed: 16 profiles, all three fields populated.
+
+**Verified:** typecheck, lint, tests (**358**, 31 files), build all pass. Tests cover the directory links, the absence of appearance controls on `/agents`, choosing a colour from the profile, no colour on a human profile, and the seeded agent text.
+
+**Not done:** migration not applied to production, nothing committed, deployed or pushed. The wording of the agent descriptions is a first draft for the owner to review.
+
+---
+
 ## 2026-11-09 — Profile pages v2: a full-size picture preview
 
 **Requested by the owner:** the profile picture could not be seen large anywhere; make it viewable at a decent size, keep the list of everyone, and keep other humans view-only.

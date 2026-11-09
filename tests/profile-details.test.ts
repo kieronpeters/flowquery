@@ -34,9 +34,11 @@ type Detail = {
     displayName: string
     roleTitle: string
     kind: 'human' | 'ai' | 'contractor'
+    avatarPath: string | null
     about: string | null
     skills: string | null
     development: string | null
+    hasCustomAvatar: boolean
     canEdit: boolean
   }
 }
@@ -101,6 +103,42 @@ describe('GET /api/v1/profiles/:profileId', () => {
     const { profile } = (await (await get('prf_bob')).json()) as Detail
     expect(profile.kind).toBe('ai')
     expect(profile.canEdit).toBe(true)
+    expect(profile.hasCustomAvatar).toBe(false)
+  })
+
+  it('marks a chosen colour as custom and restores the default on DELETE', async () => {
+    const colour = await app.request(
+      '/api/v1/profiles/prf_bob',
+      {
+        method: 'PATCH',
+        headers: { cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ avatarPath: 'svg:teal' }),
+      },
+      env(db),
+    )
+    expect(colour.status).toBe(200)
+
+    let { profile } = (await (await get('prf_bob')).json()) as Detail
+    expect(profile.avatarPath).toBe('svg:teal')
+    expect(profile.hasCustomAvatar).toBe(true)
+
+    const response = await app.request(
+      '/api/v1/profiles/prf_bob/image',
+      { method: 'DELETE', headers: { cookie } },
+      env(db),
+    )
+    expect(response.status).toBe(204)
+
+    ;({ profile } = (await (await get('prf_bob')).json()) as Detail)
+    expect(profile.avatarPath).toBeNull()
+    expect(profile.hasCustomAvatar).toBe(false)
+  })
+
+  it('ships each agent with a purpose already written', async () => {
+    const { profile } = (await (await get('prf_bob')).json()) as Detail
+    expect(profile.about).toContain('Coordinates the specialist agents')
+    expect(profile.skills).toBeTruthy()
+    expect(profile.development).toBeTruthy()
   })
 
   it('returns 404 for an unknown id', async () => {

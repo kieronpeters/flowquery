@@ -128,7 +128,7 @@ describe('ProfileMenu', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Kieron/ }))
 
     expect(screen.getByRole('menuitem', { name: 'Upload a new image' })).toBeTruthy()
-    expect(screen.getByRole('menuitem', { name: 'Manage agents' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Agents' })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeTruthy()
 
     // Nothing uploaded yet, so there is nothing to remove.

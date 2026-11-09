@@ -93,6 +93,16 @@ export type ProfileDetailDto = ProfileDto & {
    * avatar. Only an upload can be removed from here.
    */
   hasUploadedImage: boolean
+  /**
+   * True when the picture shown is the supplied default for this human, rather
+   * than a GitHub avatar or initials. Agents have a default portrait instead.
+   */
+  hasDefaultAvatar: boolean
+  /**
+   * True when the avatar is anything other than the shipped default: an
+   * uploaded picture or, for an agent, a chosen drawn colour.
+   */
+  hasCustomAvatar: boolean
   /** True when the signed-in human may edit this profile. */
   canEdit: boolean
 }

@@ -141,7 +141,13 @@ export function ProfileMenu() {
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <ProfileAvatar name={me.displayName} avatarUrl={me.avatarUrl} kind="human" size={32} />
+        <ProfileAvatar
+          name={me.displayName}
+          profileId={me.profileId}
+          avatarUrl={me.avatarUrl}
+          kind="human"
+          size={32}
+        />
         <span className="profile-name">{me.displayName}</span>
       </button>
 
@@ -197,7 +203,7 @@ export function ProfileMenu() {
             to="/agents"
             onClick={() => setOpen(false)}
           >
-            Manage agents
+            Agents
           </Link>
 
           <button className="profile-menu-item" type="button" role="menuitem" onClick={signOut}>

@@ -2,6 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 
 import { decodeAvatarImage } from '../lib/image'
 import type { UserRecord } from '../repositories/auth-store'
+import { updateProfileAvatar } from '../repositories/boards'
 import {
   deleteProfileAvatar,
   getProfileAvatar,
@@ -37,7 +38,14 @@ export async function setProfileImage(
   return { kind: 'ok' }
 }
 
-/** Removes an uploaded picture, falling back to the drawn avatar. */
+/**
+ * Restores a profile's default picture.
+ *
+ * For an agent that means two things, not one: the uploaded image and any
+ * chosen drawn colour. Clearing only the upload would leave the colour in
+ * place, and "restore default" would not restore the default. Humans have no
+ * drawn colour, so removing the upload reveals their GitHub picture.
+ */
 export async function clearProfileImage(
   db: D1Database,
   input: { profileId: string; actor: UserRecord },
@@ -46,6 +54,11 @@ export async function clearProfileImage(
   if (permission.kind !== 'allowed') return permission
 
   await deleteProfileAvatar(db, input.profileId)
+
+  if (permission.profile.kind !== 'human') {
+    await updateProfileAvatar(db, input.profileId, null)
+  }
+
   return { kind: 'ok' }
 }
 
