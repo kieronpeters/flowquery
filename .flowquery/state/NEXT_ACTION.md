@@ -6,6 +6,8 @@
 
 **Repository cleanup done in the same release:** the integrated pack ZIP, the superseded fictional poster and banner, and the old extracted packs were removed; `*.zip` is ignored. `team/portraits/`, `design/`, the logo source, all documentation and `.flowquery/` history were retained for the upcoming documentation review.
 
+**New phase implemented locally, awaiting approval:** the Boards page has a universal AI onboarding panel with official tool logos and a copy button for one project-independent prompt; `/docs` renders repository Markdown through a session-gated API, with Agents / User guides / Internal navigation and search. The master entry point is `docs/agents/AI_AGENT_ENTRYPOINT.md`. Nothing is committed, pushed or deployed.
+
 ---
 
 ## What is running

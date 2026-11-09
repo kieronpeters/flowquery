@@ -8,6 +8,7 @@ import { agentRoutes } from './routes/agent'
 import { authRoutes } from './routes/auth'
 import { avatarRoutes } from './routes/avatars'
 import { boardRoutes } from './routes/boards'
+import { docsRoutes } from './routes/docs'
 import { profileRoutes } from './routes/profiles'
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -77,6 +78,9 @@ app.route('/api/v1/boards', boardRoutes)
 
 /** Assignable profiles — session required. */
 app.route('/api/v1/profiles', profileRoutes)
+
+/** Repository documentation — session required, internal docs never in the client bundle. */
+app.route('/api/v1/docs', docsRoutes)
 
 /** Uploaded profile pictures — session required, served same-origin. */
 app.route('/api/v1/avatars', avatarRoutes)

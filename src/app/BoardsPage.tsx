@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import type { ApiError, BoardSummary } from '../shared/api-types'
+import { AiOnboardingPanel } from './AiOnboardingPanel'
 import { TokenPanel } from './TokenPanel'
 
 type LoadState =
@@ -169,6 +170,8 @@ export function BoardsPage() {
 
   return (
     <main className="page">
+      <AiOnboardingPanel />
+
       <div className="page-heading">
         <div>
           <h1>Boards</h1>
