@@ -3,6 +3,14 @@
 **Current product source of truth:** [`MVP_SPECIFICATION.md`](MVP_SPECIFICATION.md)
 **Current technical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
+**AI assistant entry point:** [`agents/AI_AGENT_ENTRYPOINT.md`](agents/AI_AGENT_ENTRYPOINT.md)
+**Human guides:** [`user/README.md`](user/README.md)
+**Internal index:** [`internal/README.md`](internal/README.md)
+
+The `agents/`, `user/` and `internal/` folders are the audience entry points.
+The detailed engineering documents remain at the top level so existing links and
+history stay valid; the internal index groups them.
+
 Read in this order. Each document has exactly one job; where two seem to overlap, the higher one wins.
 
 | # | Document | Job | Authority |

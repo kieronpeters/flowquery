@@ -4,6 +4,22 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Universal AI onboarding panel and documentation browser
+
+**Requested by the owner:** a compact onboarding panel on the Boards page that copies one universal prompt, plus a documentation section that renders repository Markdown, with search, navigation and separated audiences.
+
+**Panel:** first element in the authenticated Boards page, above the `Boards` heading. Dark navy/cyan gradient, 10 official tool marks (Simple Icons and LobeHub icons), and **Copy AI onboarding prompt**. Clipboard success shows a confirmation; failure reveals the prompt in a read-only textarea. The prompt contains the live base URL, the entrypoint URL and the private repository URL, with no token.
+
+**Docs:** `GET /api/v1/docs` and `/api/v1/docs/:slug` are session-gated and read `docs/**` and `team/*.md` at build time. The client never bundles internal docs. `/docs` renders Markdown with `react-markdown` + `remark-gfm`, groups navigation into Agents, User guides and Internal, and filters by title and headings. Repository-relative links are mapped to docs routes.
+
+**Content:** added `docs/agents/AI_AGENT_ENTRYPOINT.md`, three user guides, and an internal index. Existing engineering documents stay in place; the internal index groups them. The canonical roster is unchanged.
+
+**Verified:** typecheck, lint, **381 tests**, build. Local API returns 25 documents, the entrypoint, and 401 without a session; the panel sits above the heading with all 10 logos loaded; the docs page renders the roster table and maps links; search filters correctly.
+
+**Not done:** nothing committed, pushed, merged or deployed.
+
+---
+
 ## 2026-11-09 — Corrected AI team artwork and cleanup released
 
 **Release:** PR #7 (`artwork-final` → `main`), merge `86a0b65`. Release branch deleted locally and on the remote; `main` and `origin/main` match. Local dev servers stopped.

@@ -170,3 +170,64 @@ describe('BoardsPage', () => {
     expect(post.body).toEqual({ name: 'New board' })
   })
 })
+
+describe('AI onboarding panel', () => {
+  function stubClipboard(writeText: ReturnType<typeof vi.fn>) {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+  }
+
+  it('sits above the Boards heading and shows the tool logos', async () => {
+    mockApi()
+    renderDashboard()
+
+    await screen.findByText('FlowQuery Development')
+
+    const panel = screen.getByRole('heading', { name: 'Bring your AI agent into FlowQuery' })
+    const boards = screen.getByRole('heading', { name: 'Boards' })
+    expect(panel.compareDocumentPosition(boards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    for (const name of [
+      'OpenAI',
+      'Claude',
+      'Gemini',
+      'DeepSeek',
+      'Grok',
+      'Meta AI',
+      'GitHub Copilot',
+      'Cursor',
+      'Cline',
+      'OpenCode',
+    ]) {
+      expect(screen.getByAltText(name)).toBeTruthy()
+    }
+  })
+
+  it('copies the universal prompt and confirms', async () => {
+    mockApi()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    stubClipboard(writeText)
+    renderDashboard()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Copy AI onboarding prompt' }))
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+    const prompt = writeText.mock.calls[0]![0] as string
+    expect(prompt).toContain('/docs/agents/ai-agent-entrypoint')
+    expect(prompt).toContain('Do not implement')
+    expect(screen.getByText('Prompt copied to clipboard.')).toBeTruthy()
+  })
+
+  it('offers the prompt for manual copy when the clipboard fails', async () => {
+    mockApi()
+    stubClipboard(vi.fn().mockRejectedValue(new Error('no clipboard')))
+    renderDashboard()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Copy AI onboarding prompt' }))
+
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByLabelText('AI onboarding prompt')).toBeTruthy()
+  })
+})

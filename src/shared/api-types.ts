@@ -144,3 +144,19 @@ export type ApiError = {
     message: string
   }
 }
+
+/** Documentation audiences, rendered as separate navigation sections. */
+export type DocAudience = 'agents' | 'user' | 'internal'
+
+export type DocSummary = {
+  slug: string
+  path: string
+  audience: DocAudience
+  title: string
+  description: string
+  headings: string[]
+}
+
+export type DocDetail = DocSummary & {
+  markdown: string
+}
