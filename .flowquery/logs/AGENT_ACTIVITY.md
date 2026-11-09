@@ -4,6 +4,22 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Profile pages v2: a full-size picture preview
+
+**Requested by the owner:** the profile picture could not be seen large anywhere; make it viewable at a decent size, keep the list of everyone, and keep other humans view-only.
+
+**Clarified with the owner:** view every profile, edit only your own or an agent's (the LinkedIn/Facebook model). Point 1 of the request said “own profile only”, but points 2 and 3 said view-only for other humans; the owner confirmed the latter.
+
+**Shipped on branch `profile-pages-v2`, version `1ae37931`:** the picture is 240px on the page and opens a dimmed overlay sized to 72% of the smaller viewport edge (220–560px), closed by Close, Escape or a click on the backdrop. Focus moves to the close button and returns to the picture. Initials-only profiles get no “View larger” affordance. People was added to the account menu. No schema or server change; the branch is built from `profile-pages`.
+
+**Verified:** typecheck, lint, tests (**358**, 31 files), build and preflight all pass. After deploy: health `200`, CSP present, `/about` `200`, `/auth/start` `302`, anonymous `401` on `/profiles` and `/profiles/prf_abdul`, and the 240px picture, “View larger” trigger and `.picture-preview` overlay all present in the deployed bundle.
+
+**Not verified:** the overlay in a real signed-in browser and on a phone.
+
+**Git:** committed locally on `profile-pages-v2`. **Not merged and not pushed.**
+
+---
+
 ## 2026-11-09 — Profile pages, the people directory and the new brand pack
 
 **Requested by the owner:** dedicated profile pages with a large picture and optional About/Skills/Development text, editable only for your own profile and for agents; the new art pack integrated across the site; and the production allowlist updated for Abdul.

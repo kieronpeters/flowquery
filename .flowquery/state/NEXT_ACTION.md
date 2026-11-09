@@ -1,6 +1,6 @@
 # Next Action
 
-**Profile pages are live on `profile-pages`.** https://flowquery.workstack.workers.dev — version `bdf11702`. Branch **not merged and not pushed**, as the owner instructed. Free plans, $0 recurring.
+**Profile pages v2 are live on `profile-pages-v2`.** https://flowquery.workstack.workers.dev — version `1ae37931`. Branch **not merged and not pushed**. Free plans, $0 recurring.
 
 ---
 
@@ -23,10 +23,10 @@
 - Anonymous `401` on `/api/v1/profiles` and `/api/v1/profiles/prf_bob`.
 - Logo, favicons and PWA icons `200` under `/brand/`; `index.html` and the manifest carry the new paths.
 - Logo renders at 131×32 in the header and 82×20 in the footer against a 1435×350 source — same ratio, no distortion.
-- Every new UI marker present in the deployed bundle.
-- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run preflight` all pass — **355 tests**, 31 files.
+- Every new UI marker present in the deployed bundle, including the 240px picture, the “View larger” trigger, the `.picture-preview` overlay and the People menu item.
+- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run preflight` all pass — **358 tests**, 31 files.
 
-**Not verified:** the signed-in profile pages in a real browser (local preview has no OAuth session), the OS file-picker, and any flow on a phone.
+**Not verified:** the signed-in profile pages and the preview overlay in a real browser (local preview has no OAuth session), the OS file-picker, and any flow on a phone.
 
 ## Worth doing next, none urgent
 
