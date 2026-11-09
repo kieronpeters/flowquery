@@ -19,7 +19,7 @@ const ABDUL: ProfileDetailDto = {
   roleTitle: 'Administrator',
   kind: 'human',
   avatarPath: null,
-  avatarUrl: null,
+  avatarUrl: 'https://avatars.githubusercontent.com/u/37402145?v=4',
   about: 'Runs the boards.',
   skills: 'SQL, TypeScript',
   development: null,
@@ -86,11 +86,46 @@ describe('ProfilePage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Abdul' })).toBeTruthy()
 
     const picture = document.querySelector('.profile-hero .avatar') as HTMLElement | null
-    expect(picture?.style.width).toBe('192px')
+    expect(picture?.style.width).toBe('240px')
 
     expect(screen.getByText('Runs the boards.')).toBeTruthy()
     expect(screen.getByText('SQL, TypeScript')).toBeTruthy()
     expect(screen.getByText('Not filled in yet.')).toBeTruthy()
+  })
+
+  it('opens the picture at a much larger size, and closes it again', async () => {
+    renderProfile(ABDUL)
+
+    const trigger = await screen.findByRole('button', { name: /View Abdul.s picture larger/ })
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog')
+
+    await userEvent.click(trigger)
+
+    const dialog = screen.getByRole('dialog')
+    const large = dialog.querySelector('.avatar') as HTMLElement
+    expect(parseInt(large.style.width, 10)).toBeGreaterThan(240)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('closes the preview with Escape', async () => {
+    renderProfile(ABDUL)
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /View Abdul.s picture larger/ }),
+    )
+    expect(screen.getByRole('dialog')).toBeTruthy()
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('does not offer a preview when the only picture is initials', async () => {
+    renderProfile({ ...SELF, canEdit: false })
+
+    await screen.findByRole('heading', { level: 1, name: 'Kieron' })
+    expect(screen.queryByRole('button', { name: /picture larger/ })).toBeNull()
   })
 
   it('does not offer an edit button on another human’s page', async () => {

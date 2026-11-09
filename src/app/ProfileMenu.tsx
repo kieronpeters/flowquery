@@ -160,6 +160,15 @@ export function ProfileMenu() {
             </Link>
           )}
 
+          <Link
+            className="profile-menu-item"
+            role="menuitem"
+            to="/people"
+            onClick={() => setOpen(false)}
+          >
+            People
+          </Link>
+
           <button
             className="profile-menu-item"
             type="button"

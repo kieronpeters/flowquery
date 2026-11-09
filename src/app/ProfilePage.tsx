@@ -50,7 +50,10 @@ export function ProfilePage() {
   const [pictureBusy, setPictureBusy] = useState(false)
   const [pictureError, setPictureError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement | null>(null)
+  const previewTrigger = useRef<HTMLButtonElement | null>(null)
+  const previewClose = useRef<HTMLButtonElement | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -85,6 +88,26 @@ export function ProfilePage() {
       cancelled = true
     }
   }, [navigate, profileId, reloadKey])
+
+  // The preview is a small modal, so it has to behave like one: Escape closes
+  // it, focus moves to the close button, and closing returns focus to the
+  // picture that opened it. Without the last part a keyboard user is dropped
+  // at the top of the document.
+  useEffect(() => {
+    if (!previewOpen) return
+
+    previewClose.current?.focus()
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setPreviewOpen(false)
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previewTrigger.current?.focus()
+    }
+  }, [previewOpen])
 
   function startEditing() {
     if (!profile) return
@@ -223,16 +246,48 @@ export function ProfilePage() {
     { key: 'development', label: developmentLabel, value: profile.development },
   ] as const
 
+  // Big enough to recognise a face, small enough to leave the page behind it
+  // visible. Recomputed on each render; the preview is opened rarely enough
+  // that a resize listener would be more machinery than it is worth.
+  const previewSize = Math.max(
+    220,
+    Math.round(Math.min(560, Math.min(window.innerWidth, window.innerHeight) * 0.72)),
+  )
+
+  // Initials scale, but they are not a picture: only a real image (an upload or
+  // a GitHub avatar) or a drawn agent avatar is worth opening full size.
+  const canPreview = Boolean(profile.avatarUrl) || profile.kind !== 'human'
+
   return (
     <main className="page profile-page">
       <header className="profile-hero">
-        <ProfileAvatar
-          name={profile.displayName}
-          avatarPath={profile.avatarPath}
-          avatarUrl={profile.avatarUrl}
-          kind={profile.kind}
-          size={192}
-        />
+        {canPreview ? (
+          <button
+            ref={previewTrigger}
+            className="profile-picture-button"
+            type="button"
+            aria-haspopup="dialog"
+            aria-label={`View ${profile.displayName}’s picture larger`}
+            onClick={() => setPreviewOpen(true)}
+          >
+            <ProfileAvatar
+              name={profile.displayName}
+              avatarPath={profile.avatarPath}
+              avatarUrl={profile.avatarUrl}
+              kind={profile.kind}
+              size={240}
+            />
+            <span className="profile-picture-hint">View larger</span>
+          </button>
+        ) : (
+          <ProfileAvatar
+            name={profile.displayName}
+            avatarPath={profile.avatarPath}
+            avatarUrl={profile.avatarUrl}
+            kind={profile.kind}
+            size={240}
+          />
+        )}
 
         <div className="profile-hero-text">
           <p className="profile-eyebrow">
@@ -298,6 +353,40 @@ export function ProfilePage() {
           if (file) void uploadPicture(file)
         }}
       />
+
+      {previewOpen && (
+        <div
+          className="picture-preview"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${profile.displayName}’s profile picture`}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setPreviewOpen(false)
+          }}
+        >
+          <div className="picture-preview-panel">
+            <ProfileAvatar
+              name={profile.displayName}
+              avatarPath={profile.avatarPath}
+              avatarUrl={profile.avatarUrl}
+              kind={profile.kind}
+              size={previewSize}
+            />
+
+            <div className="picture-preview-caption">
+              <span>{profile.displayName}</span>
+              <button
+                ref={previewClose}
+                className="button button-quiet inline"
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editing && form ? (
         <form className="profile-edit" onSubmit={save}>
