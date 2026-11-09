@@ -4,6 +4,10 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+**Release:** PR #10 (`feature/bob-manager-operating-model` → `main`), merge `10aa71a`; branch deleted locally and remotely. `main` and `origin/main` match. Deployed from `main` as version `d3d09443`. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries `drawer-breadcrumb`, `drawer-ticket-link` and `Copy ticket link` with no private-instance footer note. 393 tests pass.
+
+---
+
 ## 2026-11-09 — Bob operating model and direct ticket links (local)
 
 **Requested by the owner:** make Bob the platform-independent AI manager, document the single-token recommended model, and add direct ticket URLs.
@@ -14,7 +18,7 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Follow-up:** the four move arrows were removed from the ticket drawer. Dragging, in-column ordering and the **Status** selector remain; the selector was verified moving a ticket from Review to Done. The board-page tests now use the status selector instead of the arrows. A **Copy ticket link** button was added to the drawer header; it copies the absolute ticket URL and shows a read-only fallback if the clipboard is blocked. Card titles are now real links to the ticket URL, so they can be opened in a new tab or copied. The ticket sidebar header now shows Task > title as a link; saving an existing ticket keeps it open and updates that link. **393 tests pass.** The footer's private-instance note was also removed; the footer now carries only the wordmark.
 
-**Not done:** nothing pushed, merged or deployed. The test board and its tickets remain in local D1 for owner review.
+**Not done:** nothing further outstanding. The test board and its tickets remain in local D1 for owner review.
 
 ---
 

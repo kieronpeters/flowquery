@@ -2,10 +2,10 @@
 
 ## Repository
 
-- Branch: `feature/bob-manager-operating-model`
+- Branch: `feature/bob-manager-operating-model` (deleted after merge)
 - Base: `main` at `2354cd4`
-- Working tree: uncommitted changes for this phase
-- Nothing pushed, merged or deployed
+- Released: PR #10 merged as `10aa71a`; deployed from `main` as version `d3d09443`
+- `main` and `origin/main` match
 
 ## Completed
 
@@ -29,8 +29,8 @@
 ## Outstanding
 
 - Mobile-width visual verification was limited to the responsive CSS; no physical phone test.
-- The branch is not committed, pushed or deployed. Await owner approval.
+- Post-deploy checks passed: health `200`, `/boards`, `/people`, `/docs/...` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries the breadcrumb and copy-link markers with no footer note.
 
 ## Next action
 
-Owner review of the local branch and the test board. On approval, commit, open a PR, merge and deploy.
+Owner review of the test board. The release is complete; no further action is required for this phase.
