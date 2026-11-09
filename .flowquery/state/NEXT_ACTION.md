@@ -1,10 +1,10 @@
 # Next Action
 
-**Agent profiles and the visual pack are live on `main`.** https://flowquery.workstack.workers.dev — PR #6 merged as `bf13f63`; branch `agent-profiles` deleted locally and on the remote. Free plans, $0 recurring.
+**Corrected AI team artwork is merged into `main`.** PR #7 merged as `86a0b65`; branch `artwork-final` deleted locally and on the remote. Free plans, $0 recurring.
 
-**Deployed from `main` as version `08fffc21`.** Migration `0011` applied to production before the deploy; all 16 non-human profiles now carry About, Skills and Development. The `/agents` hero is the full team overview poster, and the agent and human default avatars are live.
+**Production is still on version `08fffc21` from the previous release.** The corrected 1536×655 banner and all 16 illustrated portraits are in `main` but have **not been deployed**. Run `npm run deploy` from `main` when the owner approves; no migration is required for this change.
 
-**Local, uncommitted:** the corrected AI team pack is integrated. All 16 portraits from `FlowQuery_Corrected_AI_Team_Art_Pack/agents/` are copied to `public/brand/agents/defaults/prf_*.png` (512×512, hash-identical), and the corrected 1536×655 banner replaces the previous poster at `public/brand/flowquery-ai-development-team-overview.png`. The central map already pointed at these filenames, so only the banner dimensions changed in code.
+**Repository cleanup done in the same release:** the integrated pack ZIP, the superseded fictional poster and banner, and the old extracted packs were removed; `*.zip` is ignored. `team/portraits/`, `design/`, the logo source, all documentation and `.flowquery/` history were retained for the upcoming documentation review.
 
 ---
 

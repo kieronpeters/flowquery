@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Corrected AI team artwork and cleanup released
+
+**Release:** PR #7 (`artwork-final` → `main`), merge `86a0b65`. Release branch deleted locally and on the remote; `main` and `origin/main` match. Local dev servers stopped.
+
+**Contents:** the corrected 1536×655 team banner and 16 illustrated portraits (512×512) for the canonical roster, mapped by profile id. The superseded fictional poster and banner were deleted, the integrated pack ZIP removed, and `*.zip` added to `.gitignore`. Original team portraits, design concepts, logo source, documentation and `.flowquery/` history retained.
+
+**Verification:** typecheck, lint, format check, **370 tests**, build; built assets hash-match the pack; local DOM showed 16 correct portraits and the full banner.
+
+**Deployment:** **pending.** Production remains on version `08fffc21`; no CI runs on merge. Run `npm run deploy` from `main` when approved.
+
+---
+
 ## 2026-11-09 — Corrected AI team pack: banner and all 16 portraits
 
 **Requested by the owner:** replace the previous poster and the Bob-only crop with the corrected pack, whose banner and portraits use the real 16-agent roster.
