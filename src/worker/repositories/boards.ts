@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import type { BoardRow, ProfileDetailRow, ProfileRow, TaskRow } from '../domain/types'
 
 /**
- * All SQL lives here (docs/ARCHITECTURE.md §3).
+ * All SQL lives here (docs/internal/ARCHITECTURE.md §3).
  *
  * Every function that returns board data takes `boardId` as its first
  * parameter. That is deliberate: there is no signature that can return tenant

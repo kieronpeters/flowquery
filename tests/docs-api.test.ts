@@ -62,6 +62,23 @@ describe('GET /api/v1/docs', () => {
     expect(body.docs.some((doc) => doc.audience === 'internal')).toBe(true)
   })
 
+  it('discovers the consolidated docs tree and nothing outside docs/', async () => {
+    const response = await app.request('/api/v1/docs', { headers: { cookie } }, env(db))
+    const body = (await response.json()) as DocList
+
+    const bySlug = new Map(body.docs.map((doc) => [doc.slug, doc.path]))
+
+    expect(bySlug.get('agents/team-directory')).toBe('docs/agents/TEAM_DIRECTORY.md')
+    expect(bySlug.get('agents/agent-operating-model')).toBe('docs/agents/AGENT_OPERATING_MODEL.md')
+    expect(bySlug.get('internal/architecture')).toBe('docs/internal/ARCHITECTURE.md')
+    expect(bySlug.get('internal/docs-index')).toBe('docs/README.md')
+    expect(bySlug.get('internal/decisions')).toBe('docs/internal/DECISIONS.md')
+
+    for (const doc of body.docs) {
+      expect(doc.path.startsWith('docs/')).toBe(true)
+    }
+  })
+
   it('returns the Markdown for one document', async () => {
     const response = await app.request(
       '/api/v1/docs/agents/ai-agent-entrypoint',

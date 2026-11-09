@@ -7,7 +7,7 @@ import { requireSession } from '../middleware/session'
 /**
  * Repository documentation, served to signed-in humans.
  *
- * The Markdown is imported at build time from `docs/` and `team/`; the browser
+ * The Markdown is imported at build time from `docs/`; the browser
  * receives only the document it requests, so internal engineering material is
  * never part of the client bundle.
  *

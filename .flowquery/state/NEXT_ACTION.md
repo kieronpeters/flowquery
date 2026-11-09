@@ -1,12 +1,10 @@
 # Next Action
 
-**Header tabs and the single People directory are live.** PR #9 merged as `97d44ff`; production deployed as version `4dfb09c7`. The onboarding panel, docs browser and corrected AI team artwork are included. Free plans, $0 recurring.
+**Repository simplification is on branch `refactor/repository-simplification`, awaiting owner review.** It is not pushed, merged or deployed.
 
-Production: https://flowquery.workstack.workers.dev. No migration was required for this release.
+The live release is the Bob operating model and direct ticket links: PR #10 merged as `10aa71a`, deployed from `main` as version `d3d09443`. Production: <https://flowquery.workstack.workers.dev>. Free plans, $0 recurring.
 
-The header tabs are Boards, People, Docs, About and Test a token; the account menu stays on the right. `/people` is the only directory and carries the team banner; `/agents` redirects there. The footer is the brand plus a private-instance note. The docs browser and master entry point are unchanged.
-
-**Bob operating model and ticket links released 2026-11-09:** PR #10 merged as `10aa71a`; `main` and `origin/main` match and the release branch is deleted. Deployed from `main` as version `d3d09443`. Bob is documented and prompted as the platform-independent AI manager with one board-scoped token; specialists are delegated through Bob and hold no credentials. Tickets have direct URLs at `/boards/:boardId/tickets/:ticketId`; board and ticket ids are opaque `brd_`/`tsk_` values. Board card titles are real links to those URLs. The ticket drawer header is a `Task › title` breadcrumb whose title links to the ticket and updates live and after save; saving an existing ticket keeps the drawer open. The four move arrows were removed in favour of dragging and the Status selector; a Copy ticket link button was added; the footer note was removed. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries the breadcrumb and copy-link markers with no footer note. 393 tests pass.
+The cleanup branch removes obsolete and duplicated material, moves the engineering documents into `docs/internal/`, moves the team roster and operating model into `docs/agents/`, and consolidates development instructions into root `AGENTS.md`. It adds migrations `0012` (clear legacy avatar paths) and `0013` (correct Bob's profile text); neither has been applied to production.
 
 ---
 
@@ -16,29 +14,29 @@ The header tabs are Boards, People, Docs, About and Test a token; the account me
 |---|---|
 | Worker | `flowquery`, Free plan |
 | Database | D1 `flowquery-db`, APAC — 2 humans (Kieron, Abdul), 15 AI agents, 1 contractor |
-| Agent access | one live token per agent per board; `Bob` active and linked to `prf_bob` |
-| Pictures | uploaded ones in `profile_avatars`; drawn avatars for agents |
+| Agent access | one board-scoped token for Bob; specialists hold no credentials |
 | Allowlist | `51761129:Kieron,37402145:Abdul` |
 | Cost | $0. No payment method, no paid plan, no domain |
 
-## Verified after this deploy
+## Verified after the last deploy
 
-- Migration `0010_profile_details.sql` applied **before** the deploy; `about`, `skills` and `development` confirmed on `team_profiles` with `pragma_table_info`.
-- `AUTH_ALLOWLIST` uploaded as a Worker secret and parsed locally to both ids.
-- Health `200`; CSP present; `/about` and `/login` `200`; `/auth/start` `302`.
-- Anonymous `401` on `/api/v1/profiles` and `/api/v1/profiles/prf_bob`.
-- Logo, favicons and PWA icons `200` under `/brand/`; `index.html` and the manifest carry the new paths.
-- Logo renders at 131×32 in the header and 82×20 in the footer against a 1435×350 source — same ratio, no distortion.
-- Every new UI marker present in the deployed bundle, including the 240px picture, the “View larger” trigger, the `.picture-preview` overlay and the People menu item.
-- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run preflight` all pass — **358 tests**, 31 files.
-
-**Not verified:** the signed-in profile pages and the preview overlay in a real browser (local preview has no OAuth session), the OS file-picker, and any flow on a phone.
+- Health `200`; `/boards`, `/people`, `/docs/...` and a direct ticket route `200`; anonymous docs API `401`.
+- The deployed bundle carries the ticket breadcrumb and copy-link markers, with no private-instance footer note.
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (393 tests) and `npm run build` pass on `main` and on the cleanup branch.
 
 ## Worth doing next, none urgent
 
-1. **Sign in as Abdul** to confirm the new allowlist entry works end to end; his pre-created `prf_abdul` profile should be adopted, not duplicated.
-2. **Open `/people` on a phone** and check the profile layout at narrow widths.
-3. **A real backup.** `docs/RUNBOOK.md` has the export procedure; production has no backup beyond Cloudflare's Time Travel window.
-4. **The product name.** "FlowQuery" is still a working title, and it is in the URL.
+1. **Review the cleanup branch** and decide whether to merge and deploy it.
+2. **Apply migrations `0012` and `0013`** to production before or with the next deploy.
+3. **Sign in as Abdul** to confirm the allowlist entry works end to end.
+4. **A real backup.** `docs/internal/RUNBOOK.md` has the export procedure; production has no backup beyond Cloudflare's Time Travel window.
+5. **The product name.** "FlowQuery" is still a working title, and it is in the URL.
 
 ## Rules that have not changed
+
+- Zero recurring cost: Workers Free and D1 Free only.
+- Authenticated humans only; no public board links.
+- Boards are the only container; five fixed columns.
+- Bob is the only AI writer, using one board-scoped token.
+- No secrets in the repository, logs, URLs or browser code.
+- Do not merge, push or deploy without the owner's explicit approval.

@@ -12,12 +12,11 @@ Read it at the start of every session. Update it after every meaningful piece of
 | `state/PHASE_STATUS.md` | Milestone history and what is blocked |
 | `state/NEXT_ACTION.md` | The single next thing to do, and who it is waiting on |
 | `state/BACKLOG.md` | Prioritised work, including deferred items |
-| `decisions/DECISIONS.md` | **Pointer only.** The register is `docs/DECISIONS.md` |
-| `agents/TEAM_DIRECTORY.md` | Pointer only. The roster is `team/TEAM_DIRECTORY.md` |
-| `agents/contact/` | One file per specialist, recording only real invocations |
+| `decisions/DECISIONS.md` | **Pointer only.** The register is `docs/internal/DECISIONS.md` |
+| `agents/TEAM_DIRECTORY.md` | Pointer only. The roster is `docs/agents/TEAM_DIRECTORY.md` |
 | `handoffs/` | Session and milestone handovers |
 | `logs/AGENT_ACTIVITY.md` | Chronological log of significant actions and verified outcomes |
-| `templates/` | Handoff, phase closeout, ADR and contact templates |
+| `templates/` | Handoff, phase closeout and ADR templates |
 
 ## Rules
 

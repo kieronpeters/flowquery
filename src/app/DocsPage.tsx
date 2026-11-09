@@ -31,8 +31,8 @@ function matches(doc: DocSummary, query: string): boolean {
 /**
  * Resolve a repository-relative Markdown link to a docs route.
  *
- * The source documents use links such as `../ARCHITECTURE.md` and
- * `../../team/TEAM_DIRECTORY.md`, which work on GitHub and in an editor. The
+ * The source documents use repository-relative links such as
+ * `../internal/ARCHITECTURE.md`, which work on GitHub and in an editor. The
  * website translates them to its own slugs instead of maintaining a second set
  * of links.
  */
@@ -54,14 +54,8 @@ function resolveDocHref(
   }
   const path = resolved.join('/')
 
-  if (path.startsWith('team/')) {
-    const name = path.slice('team/'.length).replace(/\.md$/, '').toLowerCase().replace(/_/g, '-')
-    return { external: false, href: `/docs/agents/${name}` }
-  }
-
   if (path.startsWith('docs/')) {
     const slug = path.slice('docs/'.length).replace(/\.md$/, '').toLowerCase().replace(/_/g, '-')
-    if (slug === 'agents') return { external: false, href: '/docs/internal/engineering-rules' }
     if (slug === 'readme') return { external: false, href: '/docs/internal/docs-index' }
     return { external: false, href: `/docs/${slug}` }
   }

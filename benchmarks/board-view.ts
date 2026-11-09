@@ -3,7 +3,7 @@
  * serialising it to JSON.
  *
  * Why this and not end-to-end timing: D1 query time is I/O and is explicitly
- * excluded from the Workers CPU budget (docs/TECHNICAL_RESEARCH.md §2). What
+ * excluded from the Workers CPU budget (docs/internal/TECHNICAL_RESEARCH.md §2). What
  * the 10 ms limit actually constrains is our own computation — this.
  *
  * Caveat, stated plainly: this runs in Node/V8 on the developer machine, not in

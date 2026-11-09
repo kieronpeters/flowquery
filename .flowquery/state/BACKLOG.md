@@ -78,8 +78,8 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 - [x] Callback rate limit checked before contacting GitHub
 - [x] Restore drill on the final schema, including agent tokens
 - [x] Performance pass: board view, agent task list and auth path measured
-- [x] `docs/SECURITY_REVIEW.md`: 20 checks with results and accepted risks
-- [x] `docs/RUNBOOK.md`: setup, backup, restore, incidents, deployment checklist
+- [x] `docs/internal/SECURITY_REVIEW.md`: 20 checks with results and accepted risks
+- [x] `docs/internal/RUNBOOK.md`: setup, backup, restore, incidents, deployment checklist
 
 ## Not yet authorised
 
@@ -87,10 +87,10 @@ Ordered by priority. M5b onward requires owner approval per milestone.
 
 ## Technical debt
 
-- [x] Trimmed `design/DESIGN_DIRECTION.md`: visual language kept, unbuilt features listed explicitly
-- [x] Reconcile `repository/SETUP_QUESTIONS.md`: what is settled vs what still needs the owner
+- [x] Trimmed `docs/internal/DESIGN_DIRECTION.md`: visual language kept, unbuilt features listed explicitly
+- [x] Reconcile the repository setup notes: what is settled vs what still needs the owner
 - [x] Task list endpoint with filters — delivered in M7 as `/agent/tasks`
+- [x] `memory/` mirror — removed 2026-11-09 (DEC-027); `.flowquery/` is the only project memory
 - [ ] Seeded placeholder user (`usr_dev_owner`) must not exist in a production database; the preflight and the no-seed deploy path cover this
 - [ ] Replace the placeholder D1 `database_id` at deployment (the preflight refuses to deploy without it)
 - [ ] Signed-in user's name in the app header — deliberately not done: the dashboard already says "Signed in as X", and a header fetch would add a request to every page for no functional gain
-- [ ] `memory/` mirror — deliberately kept rather than deleted: it is neutralised with a "SUPERSEDED" banner in every file, it is Git-tracked so it costs nothing, and deleting package history has no functional benefit

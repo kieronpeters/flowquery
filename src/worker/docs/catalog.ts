@@ -17,12 +17,6 @@ const docModules = import.meta.glob('/docs/**/*.md', {
   eager: true,
 }) as Record<string, string>
 
-const teamModules = import.meta.glob('/team/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
 type RawDoc = DocDetail
 
 function normalisePath(key: string): string {
@@ -30,11 +24,7 @@ function normalisePath(key: string): string {
 }
 
 function slugFor(path: string): string {
-  if (path === 'docs/AGENTS.md') return 'internal/engineering-rules'
   if (path === 'docs/README.md') return 'internal/docs-index'
-  if (path.startsWith('team/')) {
-    return `agents/${path.slice('team/'.length).replace(/\.md$/, '').toLowerCase().replace(/_/g, '-')}`
-  }
   return path
     .replace(/^docs\//, '')
     .replace(/\.md$/, '')
@@ -43,7 +33,7 @@ function slugFor(path: string): string {
 }
 
 function audienceFor(path: string): DocAudience {
-  if (path.startsWith('docs/agents/') || path.startsWith('team/')) return 'agents'
+  if (path.startsWith('docs/agents/')) return 'agents'
   if (path.startsWith('docs/user/')) return 'user'
   return 'internal'
 }
@@ -85,12 +75,7 @@ function headingsFor(markdown: string): string[] {
 }
 
 function build(): RawDoc[] {
-  const raw: Array<[string, string]> = [
-    ...Object.entries(docModules),
-    ...Object.entries(teamModules),
-  ]
-
-  return raw
+  return Object.entries(docModules)
     .map(([key, markdown]) => {
       const path = normalisePath(key)
       const slug = slugFor(path)
