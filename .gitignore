@@ -6,6 +6,9 @@ dist/
 .vite/
 *.tsbuildinfo
 
+# Installation archives: extract, integrate and remove; never commit the pack
+*.zip
+
 # Wrangler local state
 .wrangler/
 

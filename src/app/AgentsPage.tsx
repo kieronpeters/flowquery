@@ -59,13 +59,12 @@ export function AgentsPage() {
           <img
             className="agents-hero-art"
             src="/brand/flowquery-ai-development-team-overview.png"
-            alt="FlowQuery AI Development Task Force overview poster: the FlowQuery logo, Bob as coordinator, and an illustrated grid of agents."
+            alt="FlowQuery AI Development Team: the FlowQuery logo and a two-row grid of the 16 FlowQuery agents with their names and roles."
             width={1536}
-            height={1024}
+            height={655}
           />
           <figcaption className="agents-hero-caption">
-            Illustrative team artwork. The directory below lists the actual FlowQuery agents and
-            roles.
+            The directory below opens each agent&rsquo;s profile.
           </figcaption>
         </figure>
       </section>
