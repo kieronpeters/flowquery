@@ -37,4 +37,4 @@ deleting a board is permanent and requires typing its name. No email
 notifications. No public or anonymous board links.
 
 For the full product definition see
-[the specification](../MVP_SPECIFICATION.md).
+[the specification](../internal/MVP_SPECIFICATION.md).

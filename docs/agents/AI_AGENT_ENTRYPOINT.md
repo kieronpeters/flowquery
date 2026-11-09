@@ -29,31 +29,29 @@ product, not a multi-tenant SaaS, and not an organisation/project hierarchy.
 
 Live application: <https://flowquery.workstack.workers.dev>
 
-Repository: <https://github.com/kieronpeters/flowquery> (private; access is
-required and must not be assumed).
+Repository: <https://github.com/kieronpeters/flowquery> (public).
 
 ## 2. How to establish context
 
 Read in this order, skipping only what is genuinely irrelevant:
 
 1. This document.
-2. [The product specification](../MVP_SPECIFICATION.md) — what the product is
+2. [The product specification](../internal/MVP_SPECIFICATION.md) — what the product is
    and, importantly, what it deliberately is not.
-3. [Requirements](../REQUIREMENTS.md) — testable requirements and acceptance
+3. [Requirements](../internal/REQUIREMENTS.md) — testable requirements and acceptance
    criteria.
-4. [Architecture](../ARCHITECTURE.md) — layering, the two API doors, and the
+4. [Architecture](../internal/ARCHITECTURE.md) — layering, the two API doors, and the
    free-tier CPU budget.
-5. [API specification](../API_SPECIFICATION.md) — the exact HTTP contract for
+5. [API specification](../internal/API_SPECIFICATION.md) — the exact HTTP contract for
    humans and agents.
-6. [Security and authentication](../SECURITY_AND_AUTH.md) — threat model,
+6. [Security and authentication](../internal/SECURITY_AND_AUTH.md) — threat model,
    sessions, tokens and board isolation.
-7. [Decisions](../DECISIONS.md) — the single register of settled decisions.
-8. [Database design](../DATABASE_DESIGN.md) and
-   [technical research](../TECHNICAL_RESEARCH.md) when the task touches data or
+7. [Decisions](../internal/DECISIONS.md) — the single register of settled decisions.
+8. [Database design](../internal/DATABASE_DESIGN.md) and
+   [technical research](../internal/TECHNICAL_RESEARCH.md) when the task touches data or
    platform limits.
 9. [User guides](../user/README.md) for the human-facing workflows.
-10. [Internal documentation index](../internal/README.md) for the engineering
-    set.
+10. [Documentation index](../README.md) for the full engineering set.
 
 Do not duplicate these documents into your own notes. Link to them.
 
@@ -61,7 +59,7 @@ Do not duplicate these documents into your own notes. Link to them.
 
 The roster below is authoritative. Do not invent, rename, add, remove or
 reassign agents. The full directory, including the team ids used outside the
-application, is in [the team directory](../../team/TEAM_DIRECTORY.md).
+application, is in [the team directory](TEAM_DIRECTORY.md).
 
 | Name | Role |
 |---|---|
@@ -84,7 +82,7 @@ application, is in [the team directory](../../team/TEAM_DIRECTORY.md).
 
 Bob is the only member who is also the orchestrator. Specialists are sub-agents
 Bob may launch for bounded work; they hold no FlowQuery credentials. The
-[operating model](../../team/AGENT_OPERATING_MODEL.md) explains delegation,
+[operating model](AGENT_OPERATING_MODEL.md) explains delegation,
 nesting and concurrency limits.
 
 ### Recommended operating model
@@ -115,7 +113,7 @@ instructions, token arrangements or permissions later.
   source of truth for the open drawer, so refresh and browser back/forward work.
   An unknown ticket id shows a not-found message on the board.
 
-Read [the API specification](../API_SPECIFICATION.md) before calling anything.
+Read [the API specification](../internal/API_SPECIFICATION.md) before calling anything.
 The live contract is also served at `/api/v1/openapi.json`.
 
 ## 5. Working rules
@@ -159,8 +157,8 @@ The live contract is also served at `/api/v1/openapi.json`.
 
 - The live site is private and requires GitHub sign-in. An external assistant
   may not be able to open it; report that instead of guessing.
-- The GitHub repository is private. Without access, ask the owner for the
-  relevant documents or an export.
+- The GitHub repository is public at <https://github.com/kieronpeters/flowquery>.
+  If you cannot reach it, ask the owner for the relevant documents or an export.
 - A board-scoped API token must be supplied separately and securely. Never put
   a token in this prompt, a URL, documentation, source code or a public channel.
 - The recommended setup is **one board-scoped token for Bob**. Multiple tokens
@@ -169,7 +167,7 @@ The live contract is also served at `/api/v1/openapi.json`.
 - A token label is descriptive only. It is never proof of identity, and a token
   can never reach another board.
 - Internal engineering documentation is for the project's administrators. Do
-  not republish it.
+  not republish it outside the repository.
 
 ## 8. Before starting a new project
 

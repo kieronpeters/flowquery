@@ -4,7 +4,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_allowed: 'This FlowQuery instance is private. That GitHub account is not on the allowlist.',
   provider: 'GitHub could not complete the sign-in. Please try again.',
   configuration:
-    'Sign-in is not configured yet. Put your GitHub OAuth client id and secret in .dev.vars (see docs/RUNBOOK.md), then restart the dev server.',
+    'Sign-in is not configured yet. Put your GitHub OAuth client id and secret in .dev.vars (see docs/internal/RUNBOOK.md), then restart the dev server.',
   rate_limited: 'Too many sign-in attempts. Wait a minute and try again.',
   unknown: 'Sign-in failed. Please try again.',
 }

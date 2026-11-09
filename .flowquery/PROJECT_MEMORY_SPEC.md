@@ -14,10 +14,9 @@
 │   ├── NEXT_ACTION.md            the single next step
 │   └── BACKLOG.md                prioritised work
 ├── decisions/
-│   └── DECISIONS.md              pointer to docs/DECISIONS.md
+│   └── DECISIONS.md              pointer to docs/internal/DECISIONS.md
 ├── agents/
-│   ├── TEAM_DIRECTORY.md         pointer to team/TEAM_DIRECTORY.md
-│   └── contact/                  one file per agent, real invocations only
+│   └── TEAM_DIRECTORY.md         pointer to docs/agents/TEAM_DIRECTORY.md
 ├── handoffs/
 │   └── YYYY-MM-DD-topic.md
 ├── logs/
@@ -29,7 +28,7 @@ Two directories from an earlier draft — `decisions/adr/` and `artifacts/` — 
 
 ## Cadence
 
-**Session start** — read `state/PROJECT_STATE.md`, `PHASE_STATUS.md`, `NEXT_ACTION.md`, `BACKLOG.md`, the open decisions in `docs/DECISIONS.md`, and the latest handoff. Compare with the actual repository and report discrepancies.
+**Session start** — read `state/PROJECT_STATE.md`, `PHASE_STATUS.md`, `NEXT_ACTION.md`, `BACKLOG.md`, the open decisions in `docs/internal/DECISIONS.md`, and the latest handoff. Compare with the actual repository and report discrepancies.
 
 **After meaningful work** — update state, next action and backlog; append to the activity log; write or update the handoff if the session ends.
 
@@ -45,7 +44,7 @@ Two directories from an earlier draft — `decisions/adr/` and `artifacts/` — 
 
 ## Identity note
 
-Bob is the current OpenCode session. When Bob does work, record it as Bob's work in `logs/AGENT_ACTIVITY.md`. When a specialist is genuinely invoked, record a contact entry for that specialist — and only then.
+Bob is the running AI agent, whatever environment runs it. When Bob does work, record it as Bob's work in `logs/AGENT_ACTIVITY.md`. When a specialist is genuinely invoked, record that invocation in the same activity log — and only then.
 
 ## Integrity
 

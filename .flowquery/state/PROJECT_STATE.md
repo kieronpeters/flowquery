@@ -1,10 +1,10 @@
 # FlowQuery Project State
 
 **Application:** FlowQuery (working name; clearance not pursued)
-**Primary coordinator:** Bob — the current OpenCode session
+**Primary coordinator:** Bob — the running AI Engineering Manager
 **Current phase:** M1–M9 complete. Deployed to Cloudflare Workers Free with D1 Free on 2026-11-03, at https://flowquery.workstack.workers.dev.
-**Implementation authorised:** M1–M8 (complete). M9 deployment: authorised by the owner and executed 2026-11-03.
-**Git repository:** `C:\Users\Asus\source\repos\FlowQuery`, branch `main`, remote `https://github.com/kieronpeters/flowquery` (private).
+**Implementation authorised:** M1–M8 (complete). M9 deployment: authorised by the owner and executed 2026-11-03. Ongoing development proceeds on branches with owner approval for merges and deployments.
+**Git repository:** `C:\Users\Asus\source\repos\FlowQuery`, branch `main`, public remote `https://github.com/kieronpeters/flowquery`.
 **Cloud resources:** one D1 database `flowquery-db` (`d4c07e7e-7f4b-4ac6-81e8-d5f46e026f6a`, APAC) and one Worker `flowquery`.
 **Deployment:** live, Free plan, $0 recurring. Sign-in verified end to end against the remote database.
 **Last updated:** 2026-11-09
@@ -20,26 +20,26 @@ A small, private Kanban application for managing development work by the owner a
 - **Five fixed columns** per board, in fixed order: Backlog, To Do, In Progress, Review, Done. Not configurable.
 - **Tasks** carry title, description, priority (None/Low/Medium/High/Urgent), assignee profile, due date, comments and append-only activity history.
 - **Board deletion is permanent** with explicit typed confirmation; no archive, no recycle bin.
-- **Bob** is the current OpenCode session, using a **board-scoped bearer token** to manage tasks and comments on exactly one board. Bob cannot create, rename or delete boards.
+- **Bob** is the running AI Engineering Manager, using a **board-scoped bearer token** to manage tasks and comments on exactly one board. Bob cannot create, rename or delete boards.
 - **Specialist agents** are **assignee profiles only** — never accounts, never credentials.
 - **Routes:** `/`, `/login`, `/signup`, `/agent`, `/boards`, `/boards/:boardId`.
 - **Zero recurring cost is a firm requirement.** Workers Free + D1 Free, `*.workers.dev` address, no domain.
 
-Full scope: `docs/MVP_SPECIFICATION.md`. That document contains the authoritative list of superseded assumptions.
+Full scope: `docs/internal/MVP_SPECIFICATION.md`. That document contains the authoritative list of superseded assumptions.
 
 ## Decisions in force
 
 **Approved (owner, 2026-11-03):** flat board model; two equal human administrators; restricted registration; five fixed columns; permanent board deletion; board-scoped labelled revocable tokens; Bob as sole AI writer with task-level permissions only; zero recurring cost; React/TypeScript on Workers + D1 + static assets; GitHub source control; `*.workers.dev` acceptable; GitHub OAuth with a server-side allowlist (AUTH-01); both administrators use GitHub accounts (AUTH-02); identity keyed on immutable GitHub numeric user ID (DEC-031); notifications dropped (SCOPE-01); local path confirmed (DEC-029); local git init authorised, no remote (DEC-030).
 
-**Proposed by Bob:** status-as-enum schema (DEC-019), integer positions (DEC-020), optimistic concurrency (DEC-021), SHA-256 token hashing (DEC-022), no ORM (DEC-023), Hono (DEC-024), description truncation (DEC-025), `apac` hint (DEC-026), remove `memory/` mirror (DEC-027).
+**Proposed by Bob:** status-as-enum schema (DEC-019), integer positions (DEC-020), optimistic concurrency (DEC-021), SHA-256 token hashing (DEC-022), no ORM (DEC-023), Hono (DEC-024), description truncation (DEC-025), `apac` hint (DEC-026), `memory/` mirror removed (DEC-027).
 
 **Open:** none.
 
-Register: `docs/DECISIONS.md`.
+Register: `docs/internal/DECISIONS.md`.
 
 ## Current repository state (verified 2026-11-03)
 
-- Git on `main`, remote `origin` → `github.com/kieronpeters/flowquery` (private).
+- Git on `main`, public remote `origin` → `github.com/kieronpeters/flowquery`.
 - Toolchain verified: TypeScript 6.0.3, Vite 8.3.5, Vitest 5.1.0, Wrangler 4.156.2, React 19, Hono 4.
 - `typecheck`, `lint`, `test` (**233 tests**), `build`, `format:check` all pass.
 - D1 bound locally and remotely; `0001_init.sql`, `0002_auth_attempts.sql` and `0003_board_theme.sql` applied to both. Local seed loads 18 profiles, 1 board, 9 tasks, 1 placeholder user; the remote database was migrated empty and has never been seeded.
@@ -57,8 +57,8 @@ Register: `docs/DECISIONS.md`.
 - Hardened (M8): CSP and security headers on API responses *and* on the static SPA document via `public/_headers`, with a test that the two policies cannot drift; `X-Request-Id` on every response; an error handler that logs detail and returns none.
 - Restore drill repeated on the final schema: export → delete all local state → import → identical counts, no FK violations, and **an existing agent token still authenticated**.
 - `npm run bench` now covers the agent task list: 50 tasks map + serialise in 0.137 ms.
-- `docs/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
-- `docs/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
+- `docs/internal/SECURITY_REVIEW.md` records 20 checks, the four issues fixed during the build, and the accepted risks.
+- `docs/internal/RUNBOOK.md` covers setup, backup, restore, incidents and the deployment checklist.
 - **Documentation reconciled against the build (M8+ pass):** `ARCHITECTURE.md` no longer claims TanStack Query, Tailwind or Zod; `MVP_SPECIFICATION.md` no longer calls AUTH-01 open; `DESIGN_DIRECTION.md` lists the eleven unbuilt features from the concept images; `repository/SETUP_QUESTIONS.md` no longer points at a path that does not exist.
 - **Accessibility audited (M8+ pass):** Lighthouse scores 100 for accessibility and best practices on the board, dashboard and task dialog. A real defect was found by testing rather than by the audit: the `aria-modal` drawer let Tab escape into the page and did not return focus on close. Both fixed and verified (20 Tab presses, zero escapes; Escape returns focus to the card).
 - **UI component tests added (M8+ pass):** jsdom + Testing Library cover the task dialog, the dashboard and the board page — 15 tests. The board page tests exercise the keyboard move path end to end (same endpoint, optimistic update, server reconciliation) and the `409` refetch.
@@ -93,6 +93,7 @@ Register: `docs/DECISIONS.md`.
 - **Universal AI onboarding and docs released 2026-11-09:** PR #8 merged as `d0512aa`; `main` and `origin/main` match and the release branch is deleted. Deployed from `main` as version `64e2433e`. Post-deploy: health `200`, `/boards` and `/docs/...` `200`, anonymous `/api/v1/docs` `401`, all 10 logo SVGs `200`, the DocsPage chunk present, and no documentation text in the client bundle. 381 tests pass.
 - **Header tabs and single People directory released 2026-11-09:** PR #9 merged as `97d44ff`; deployed as version `4dfb09c7`. The header now carries Boards, People, Docs, About and Test a token; the footer is the brand plus a note. The separate Agents page was removed, its banner moved to People, and `/agents` redirects to `/people`. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and `/agents` `200`, anonymous docs API `401`, and the tab/footer/banner markers present. 377 tests pass.
 - **Bob operating model and ticket links released 2026-11-09:** PR #10 merged as `10aa71a`; `main` and `origin/main` match and the release branch is deleted. Deployed from `main` as version `d3d09443`. Bob is the platform-independent AI manager with one board-scoped token; specialists are delegated through Bob and hold no credentials. Tickets open directly at `/boards/:boardId/tickets/:ticketId`, with opaque `brd_`/`tsk_` ids. Board card titles are real links to those URLs. The ticket drawer header is a `Task › title` breadcrumb whose title links to the ticket and updates live and after save; saving an existing ticket keeps the drawer open. The four move arrows were removed in favour of dragging and the Status selector; a Copy ticket link button was added; the footer note was removed. The prompt, entry point, team model, Bob instructions, API/security/user docs and decisions were updated. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries the breadcrumb and copy-link markers with no footer note. 393 tests pass.
+- **Repository simplification 2026-11-09 (branch `refactor/repository-simplification`):** removed the deprecated `memory/` mirror, historical `repository/` research, unused root `templates/`, `design/` concept images, `team/profiles/` and `team/portraits/`; moved the team roster and operating model into `docs/agents/`; moved the engineering documents into `docs/internal/` and made `docs/README.md` the single index; deleted superseded `IMPLEMENTATION_KICKOFF_PROMPT.md`, `PACKAGE_CONTENTS.md`, `SECURITY_AND_QUALITY.md` and the executed `DEPLOYMENT_PLAN.md`; consolidated development instructions into root `AGENTS.md`; added migration `0012` to clear legacy `team/portraits/` avatar paths. Not pushed or merged.
 - Ordering logic lives in `src/shared/ordering.ts` and is unit tested in isolation (13 cases including clamps, round-trips and invariant sequences).
 - Tests run the actual migration SQL through `node:sqlite`, so cascades and constraints are exercised rather than assumed.
 - Browser-verified: board rendering, task create/reopen/move/delete; drawer move buttons moved a task within a column and across columns with positions staying contiguous.
@@ -115,7 +116,7 @@ Proven running locally:
 - Agent API namespace (M7) still to come; it will reuse the same service layer with the board taken from the token.
 - **Not yet verified:** a live GitHub round trip — needs the owner's OAuth app credentials and two GitHub accounts.
 
-Details: `docs/ARCHITECTURE.md`, `docs/DATABASE_DESIGN.md`, `docs/API_SPECIFICATION.md`.
+Details: `docs/internal/ARCHITECTURE.md`, `docs/internal/DATABASE_DESIGN.md`, `docs/internal/API_SPECIFICATION.md`.
 
 ## Open decisions
 
@@ -123,7 +124,7 @@ None.
 
 ## Platform facts relied on
 
-Verified 2026-11-03; sources and dates in `docs/TECHNICAL_RESEARCH.md`.
+Verified 2026-11-03; sources and dates in `docs/internal/TECHNICAL_RESEARCH.md`.
 
 - Workers Free: 100,000 requests/day, **10 ms CPU**/request, 50 subrequests, 128 MB.
 - Static asset requests are **free and unlimited**; only `/api/*` invokes the Worker.
@@ -147,6 +148,5 @@ Workflow from 2026-11-03: the visual-improvement round was reviewed through **PR
 - Real Workers CPU figures only come from a deployed Worker; local tooling exposes duration only.
 - Activity writes are best-effort by design.
 - Seeded placeholder user (`usr_dev_owner`) must not exist in a production database.
-- `design/DESIGN_DIRECTION.md` describes the visual language and lists what was **not** built, so it cannot be mistaken for scope.
-- `repository/SETUP_QUESTIONS.md` records what is settled and what still needs the owner.
-- `memory/` mirror is neutralised but still present; kept deliberately (Git-tracked, costs nothing, deletion has no functional benefit).
+- `docs/internal/DESIGN_DIRECTION.md` describes the visual language and lists what was **not** built, so it cannot be mistaken for scope.
+- The deprecated `memory/` mirror and the `repository/` setup research have been removed; `.flowquery/` is the only project memory.

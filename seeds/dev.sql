@@ -1,6 +1,6 @@
 -- Local development seed data.
 --
--- Separate from migrations on purpose (docs/DATABASE_DESIGN.md §7): applying
+-- Separate from migrations on purpose (docs/internal/DATABASE_DESIGN.md §7): applying
 -- seed data to a real environment must always be an explicit choice.
 --
 -- Idempotent: fixed IDs with INSERT OR IGNORE, so re-running does not duplicate.
@@ -22,22 +22,22 @@ VALUES ('usr_dev_owner', 'owner@flowquery.invalid', 'Owner', 1793664000000);
 
 INSERT OR IGNORE INTO team_profiles (id, display_name, role_title, kind, avatar_path) VALUES
   ('prf_abdul',      'Abdul',      'Administrator',                        'human',      NULL),
-  ('prf_bob',        'Bob',        'Engineering Manager',                  'ai',         'team/portraits/bob.png'),
-  ('prf_alex',       'Alex',       'Senior Software Engineer',              'ai',         'team/portraits/alex.png'),
-  ('prf_sarah',      'Sarah',      'QA & Test Automation Engineer',        'ai',         'team/portraits/sarah.png'),
-  ('prf_olivia',     'Olivia',     'Business Analyst',                     'ai',         'team/portraits/olivia.png'),
-  ('prf_daniel',     'Daniel',     'Backlog & Delivery Planner',           'ai',         'team/portraits/daniel.png'),
-  ('prf_marcus',     'Marcus',     'DevOps & CI/CD Engineer',              'ai',         'team/portraits/marcus.png'),
-  ('prf_james',      'James',      'Release & Deployment Engineer',        'ai',         'team/portraits/james.png'),
-  ('prf_victoria',   'Victoria',   'Security & Code Review',               'ai',         'team/portraits/victoria.png'),
-  ('prf_chris',      'Chris',      'Database Architect',                   'ai',         'team/portraits/chris.png'),
-  ('prf_emma',       'Emma',       'UX/UI Designer',                       'ai',         'team/portraits/emma.png'),
-  ('prf_liam',       'Liam',       'Product Manager',                      'ai',         'team/portraits/liam.png'),
-  ('prf_priya',      'Priya',      'Technical Writer',                     'ai',         'team/portraits/priya.png'),
-  ('prf_ethan',      'Ethan',      'Data & Analytics Engineer',            'ai',         'team/portraits/ethan.png'),
-  ('prf_rebecca',    'Rebecca',    'Customer Success & Support',           'ai',         'team/portraits/rebecca.png'),
-  ('prf_noah',       'Noah',       'IT Operations & Developer Tooling',    'ai',         'team/portraits/noah.png'),
-  ('prf_contractor', 'Contractor', 'External Specialist',                  'contractor', 'team/portraits/contractor.png');
+  ('prf_bob',        'Bob',        'Engineering Manager',                  'ai',         NULL),
+  ('prf_alex',       'Alex',       'Senior Software Engineer',              'ai',         NULL),
+  ('prf_sarah',      'Sarah',      'QA & Test Automation Engineer',        'ai',         NULL),
+  ('prf_olivia',     'Olivia',     'Business Analyst',                     'ai',         NULL),
+  ('prf_daniel',     'Daniel',     'Backlog & Delivery Planner',           'ai',         NULL),
+  ('prf_marcus',     'Marcus',     'DevOps & CI/CD Engineer',              'ai',         NULL),
+  ('prf_james',      'James',      'Release & Deployment Engineer',        'ai',         NULL),
+  ('prf_victoria',   'Victoria',   'Security & Code Review',               'ai',         NULL),
+  ('prf_chris',      'Chris',      'Database Architect',                   'ai',         NULL),
+  ('prf_emma',       'Emma',       'UX/UI Designer',                       'ai',         NULL),
+  ('prf_liam',       'Liam',       'Product Manager',                      'ai',         NULL),
+  ('prf_priya',      'Priya',      'Technical Writer',                     'ai',         NULL),
+  ('prf_ethan',      'Ethan',      'Data & Analytics Engineer',            'ai',         NULL),
+  ('prf_rebecca',    'Rebecca',    'Customer Success & Support',           'ai',         NULL),
+  ('prf_noah',       'Noah',       'IT Operations & Developer Tooling',    'ai',         NULL),
+  ('prf_contractor', 'Contractor', 'External Specialist',                  'contractor', NULL);
 
 -- ---------------------------------------------------------------------------
 -- One demo board so the read path has something to render.

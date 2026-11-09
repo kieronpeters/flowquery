@@ -4,6 +4,28 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Repository simplification (local)
+
+**Requested by the owner:** simplify the repository, remove obsolete and duplicated material, consolidate documentation and AI instructions, and point everything at the public repository.
+
+**Removed:** `memory/` (deprecated mirror), `repository/` (historical setup research), root `templates/`, `design/` concept images (6.4 MB), `team/profiles/`, `team/portraits/`, the 11 completed M1–M8 handoffs, the empty per-agent contact files, `IMPLEMENTATION_KICKOFF_PROMPT.md`, `PACKAGE_CONTENTS.md`, `SECURITY_AND_QUALITY.md`, and the executed `DEPLOYMENT_PLAN.md`.
+
+**Consolidated:** `team/TEAM_DIRECTORY.md` and `team/AGENT_OPERATING_MODEL.md` moved to `docs/agents/`; the engineering documents moved to `docs/internal/`; `docs/README.md` is the single index; `DESIGN_DIRECTION.md` moved to `docs/internal/`. Root `AGENTS.md` is now the single source of development instructions, with the engineering rules folded in; `docs/AGENTS.md` was removed. The Worker catalogue now imports only `docs/**/*.md`; `DocsPage` no longer special-cases `team/`.
+
+**References:** repository-wide path rewrite for the moved documents; the public repository URL is used throughout; `AI_AGENT_ENTRYPOINT.md`, the onboarding prompt and project state now describe the repository as public.
+
+**Migrations:** `0012_clear_legacy_avatar_paths.sql` clears the `team/portraits/` values from `team_profiles`; `0013_bob_profile_text.sql` corrects Bob's About text. Neither applied to production.
+
+**Verification:** typecheck, lint, format:check, **394 tests**, build. A Markdown link checker found 0 broken relative links in `docs/`. The built worker bundle contains all 22 documents under `docs/` and no `team/` or `docs/AGENTS.md` path.
+
+**Exposure note:** the repository is already public. `docs/internal/TECHNICAL_RESEARCH.md` records the owner's real email address as the local Git identity. It is already in Git history and on `main`; it was left in place for owner review rather than silently rewritten.
+
+**Not done:** nothing pushed, merged or deployed. The branch is `refactor/repository-simplification`.
+
+---
+
+## 2026-11-09 — Bob operating model and direct ticket links released
+
 **Release:** PR #10 (`feature/bob-manager-operating-model` → `main`), merge `10aa71a`; branch deleted locally and remotely. `main` and `origin/main` match. Deployed from `main` as version `d3d09443`. Post-deploy: health `200`, `/boards`, `/people`, `/docs/...` and a direct ticket route `200`, anonymous docs API `401`, and the deployed bundle carries `drawer-breadcrumb`, `drawer-ticket-link` and `Copy ticket link` with no private-instance footer note. 393 tests pass.
 
 ---
@@ -202,7 +224,7 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 **Schema — migration `0010_profile_details.sql`:** nullable `about`, `skills`, `development` on `team_profiles`, with length CHECKs. Applied to production before the deploy; all three columns confirmed present.
 
-**Shipped on branch `profile-pages`, version `bdf11702`:** `/people` and `/profiles/:profileId`, a 192px picture with upload/remove, a read-only notice on another human's page, "View my profile" in the account menu, and profile links from `/agents` and the footer. Authorisation is one shared function (`services/profile-access.ts`) used by both the picture and text endpoints, so a human cannot edit another human (403) while agents remain editable. The art pack's 1435×350 wordmark replaces the old 480×117 one in the header, footer, landing and sign-in pages; all browser and PWA icons moved under `public/brand/icons/` with the old root duplicates removed; the full original composition is archived at `docs/brand/` (not deployed); and `docs/BRAND.md` records paths, sizes and rules.
+**Shipped on branch `profile-pages`, version `bdf11702`:** `/people` and `/profiles/:profileId`, a 192px picture with upload/remove, a read-only notice on another human's page, "View my profile" in the account menu, and profile links from `/agents` and the footer. Authorisation is one shared function (`services/profile-access.ts`) used by both the picture and text endpoints, so a human cannot edit another human (403) while agents remain editable. The art pack's 1435×350 wordmark replaces the old 480×117 one in the header, footer, landing and sign-in pages; all browser and PWA icons moved under `public/brand/icons/` with the old root duplicates removed; the full original composition is archived at `docs/brand/` (not deployed); and `docs/internal/BRAND.md` records paths, sizes and rules.
 
 **Allowlist:** production `AUTH_ALLOWLIST` set to `51761129:Kieron,37402145:Abdul`; the exact string parses to both numeric ids, and Kieron's existing `github:51761129` identity is unchanged, so his account is not recreated. Abdul still needs to complete a first sign-in.
 
@@ -588,7 +610,7 @@ Both were reachable only through an unexpected response, but a page that white-s
 - Request-id middleware (`X-Request-Id`), `onError` returning a generic 500 with the id, and the catch-all 404 carrying it too.
 - Callback rate limit now checked *before* the GitHub exchange rather than only counted.
 - `benchmarks/board-view.ts` extended with the agent task list.
-- `docs/SECURITY_REVIEW.md` and `docs/RUNBOOK.md`.
+- `docs/internal/SECURITY_REVIEW.md` and `docs/internal/RUNBOOK.md`.
 
 **Verified (actual output):**
 - 149 tests, 12 files; typecheck, lint, build clean.
@@ -853,13 +875,13 @@ Both were reachable only through an unexpected response, but a page that white-s
 
 **Inspected:** all 60+ files in the package — root prompts and rules, 12 documents in `docs/`, 15 team profiles and the roster, 16 OpenCode agent definitions, the full `.flowquery/` tree, `design/`, `repository/`, `templates/`. Verified the toolchain (git 2.55.0, node 24.21.0, opencode 2.2.1, gh 2.103.3). Confirmed no Git repository and no application code existed.
 
-**Identified contradictions:** nine, including a `docs/AGENTS.md` line instructing agents not to reintroduce the hierarchy that the spec mandated; human accounts marked MUST in requirements while deferred in the roadmap and backlog; the README asserting public editable board links while the security documents left it open; and Bob's token scope described three different ways.
+**Identified contradictions:** nine, including a `AGENTS.md` line instructing agents not to reintroduce the hierarchy that the spec mandated; human accounts marked MUST in requirements while deferred in the roadmap and backlog; the README asserting public editable board links while the security documents left it open; and Bob's token scope described three different ways.
 
-**Researched:** Cloudflare Workers and D1 limits, pricing, static-asset billing, SPA routing, D1 foreign keys, batch semantics, Time Travel, and the absence of a hard spending cap — all against official documentation on 2026-11-03. Sources recorded in `docs/TECHNICAL_RESEARCH.md`.
+**Researched:** Cloudflare Workers and D1 limits, pricing, static-asset billing, SPA routing, D1 foreign keys, batch semantics, Time Travel, and the absence of a hard spending cap — all against official documentation on 2026-11-03. Sources recorded in `docs/internal/TECHNICAL_RESEARCH.md`.
 
-**Measured:** PBKDF2-SHA256 CPU cost in the local V8/WebCrypto stack — 2.6 ms at 10k iterations, 25.9 ms at 100k, 162.6 ms at 600k. Against a 10 ms Workers Free budget this excludes server-side password hashing. Command and output recorded in `docs/TECHNICAL_RESEARCH.md`.
+**Measured:** PBKDF2-SHA256 CPU cost in the local V8/WebCrypto stack — 2.6 ms at 10k iterations, 25.9 ms at 100k, 162.6 ms at 600k. Against a 10 ms Workers Free budget this excludes server-side password hashing. Command and output recorded in `docs/internal/TECHNICAL_RESEARCH.md`.
 
-**Rewrote:** `MASTER_PROMPT.md`, `AGENTS.md`, `README.md`, `IMPLEMENTATION_KICKOFF_PROMPT.md` (marked superseded), `docs/MVP_SPECIFICATION.md`, `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE_DESIGN.md`, `docs/API_SPECIFICATION.md`, `docs/SECURITY_AND_AUTH.md`, `docs/TECHNICAL_RESEARCH.md`, `docs/DECISIONS.md`, `docs/MVP_ROADMAP.md`, `docs/PROJECT_BRIEF.md`, `docs/README.md`, `docs/AGENTS.md`, `docs/IMPLEMENTATION_GUIDE.md`, `docs/SECURITY_AND_QUALITY.md` (superseded pointer), `team/TEAM_DIRECTORY.md`, `team/AGENT_OPERATING_MODEL.md`, and the `.flowquery/` state, backlog, next action, phase status, decisions pointer and handoff.
+**Rewrote:** `MASTER_PROMPT.md`, `AGENTS.md`, `README.md`, `IMPLEMENTATION_KICKOFF_PROMPT.md` (marked superseded), `docs/internal/MVP_SPECIFICATION.md`, `docs/internal/REQUIREMENTS.md`, `docs/internal/ARCHITECTURE.md`, `docs/internal/DATABASE_DESIGN.md`, `docs/internal/API_SPECIFICATION.md`, `docs/internal/SECURITY_AND_AUTH.md`, `docs/internal/TECHNICAL_RESEARCH.md`, `docs/internal/DECISIONS.md`, `docs/internal/MVP_ROADMAP.md`, `docs/internal/PROJECT_BRIEF.md`, `docs/README.md`, `AGENTS.md`, `docs/internal/IMPLEMENTATION_GUIDE.md`, `docs/SECURITY_AND_QUALITY.md` (superseded pointer), `docs/agents/TEAM_DIRECTORY.md`, `docs/agents/AGENT_OPERATING_MODEL.md`, and the `.flowquery/` state, backlog, next action, phase status, decisions pointer and handoff.
 
 **Not done, deliberately:** no code, no dependencies, no migrations, no Git repository, no cloud resources, no deployment, no paid service, no domain.
 
@@ -869,7 +891,7 @@ Both were reachable only through an unexpected response, but a page that white-s
 
 ## 2026-11-02 — Requirements consolidation (previous session)
 
-- Consolidated the owner's questionnaire and clarifications into the then-current `docs/MVP_SPECIFICATION.md`.
+- Consolidated the owner's questionnaire and clarifications into the then-current `docs/internal/MVP_SPECIFICATION.md`.
 - Updated the brief, requirements, architecture candidate, API outline, data model, security/quality, roadmap, decision register, README, AGENTS and master prompt.
 - No application code, repository creation, cloud resource creation or deployment performed.
 - **Status now:** superseded by 2026-11-03. That specification described the organisation → project → board hierarchy, which has been removed from the product.

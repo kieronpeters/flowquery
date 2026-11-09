@@ -22,8 +22,8 @@ const LIST: DocSummary[] = [
     headings: ['Canonical AI roster', 'Working rules'],
   },
   {
-    slug: 'architecture',
-    path: 'docs/ARCHITECTURE.md',
+    slug: 'internal/architecture',
+    path: 'docs/internal/ARCHITECTURE.md',
     audience: 'internal',
     title: 'Architecture',
     description: 'How the application is built.',
@@ -43,7 +43,7 @@ const DETAIL: DocDetail = {
   ...LIST[0]!,
   markdown: `# FlowQuery — AI Agent Entry Point
 
-Read the [architecture](../ARCHITECTURE.md) first.
+Read the [architecture](../internal/ARCHITECTURE.md) first.
 
 ## Canonical AI roster
 
@@ -105,7 +105,7 @@ describe('DocsPage', () => {
     renderDocs()
 
     const link = (await screen.findByRole('link', { name: 'architecture' })) as HTMLAnchorElement
-    expect(link.getAttribute('href')).toBe('/docs/architecture')
+    expect(link.getAttribute('href')).toBe('/docs/internal/architecture')
   })
 
   it('filters the navigation by title and headings', async () => {

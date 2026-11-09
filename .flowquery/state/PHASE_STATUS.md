@@ -1,8 +1,8 @@
 # Phase Status
 
-**Current phase:** M8 complete — hardened and release-ready.
-**Next gate:** owner approval for M9 (deployment). Nothing is deployed.
-**Last updated:** 2026-11-03.
+**Current phase:** M9 complete and deployed. Current work: repository simplification on branch `refactor/repository-simplification`, awaiting owner review.
+**Next gate:** owner review of the cleanup branch; merging and deploying require explicit approval.
+**Last updated:** 2026-11-09.
 
 ## Phase history
 
@@ -18,7 +18,9 @@
 | M6 Comments and activity | Complete | Append-only comments and a board activity feed |
 | M7 Agent API and tokens | Complete | Board-scoped tokens, `/agent` namespace, OpenAPI, isolation suite |
 | **M8 Hardening** | **Complete 2026-11-03** | Headers, request ids, restore drill, perf pass, review, runbook |
-| M9 Deployment | Not started | Requires explicit owner approval |
+| M9 Deployment | **Complete 2026-11-03** | Worker and D1 live at `flowquery.workstack.workers.dev`; sign-in verified end to end |
+| Post-M9 releases | Complete | Onboarding and docs, People directory, Bob operating model, direct ticket links |
+| Repository simplification | In review | Branch `refactor/repository-simplification`; not pushed, merged or deployed |
 
 ## M8 completion evidence
 
@@ -35,8 +37,8 @@
 | Restore drill (final schema) | Export 12.7 KB → delete all state → import → 1 board / 9 tasks / 1 token / 18 profiles, zero FK violations |
 | Agent token after restore | **Still authenticates** — the board returned 9 tasks with the correct distribution |
 | Performance | Board view 0.033 ms @ 9 tasks, 0.578 ms @ 200; agent task list 50 tasks 0.137 ms; auth path ~0.04 ms |
-| Security review | `docs/SECURITY_REVIEW.md` — 20 checks, 4 fixes, 8 accepted risks |
-| Runbook | `docs/RUNBOOK.md` — setup, backup, restore, incidents, deployment checklist |
+| Security review | `docs/internal/SECURITY_REVIEW.md` — 20 checks, 4 fixes, 8 accepted risks |
+| Runbook | `docs/internal/RUNBOOK.md` — setup, backup, restore, incidents, deployment checklist |
 
 ## Notable finding this milestone
 

@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "description": "A small, private Kanban board for the owner and an AI-assisted development team.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kieronpeters/flowquery.git"
+  },
+  "homepage": "https://flowquery.workstack.workers.dev",
+  "bugs": {
+    "url": "https://github.com/kieronpeters/flowquery/issues"
+  },
   "engines": {
     "node": ">=22"
   },
