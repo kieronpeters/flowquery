@@ -4,13 +4,13 @@
 **Application:** FlowQuery
 **Permanent members:** 15
 **External contractor:** one anonymous on-demand profile
-**Default model:** DeepSeek V4.1 Flash. The verified OpenCode model ID on this machine is `opencode-go/deepseek-v4.1-flash` (alternate provider: `opencode/deepseek-v4.1-flash`). Earlier references to `deepseek-flash` are outdated.
+**Default model:** DeepSeek V4.1 Flash. The verified OpenCode model ID on this machine is `opencode-go/deepseek-v4.1-flash` (alternate provider: `opencode/deepseek-v4.1-flash`). Another environment may use another model; the identity and roles do not depend on it. Earlier references to `deepseek-flash` are outdated.
 
 All names and faces are fictional AI-generated identities. They are not representations of real people, and they hold no FlowQuery credentials of any kind.
 
 | ID | Name | Role |
 |---|---|---|
-| `agent-bob` | Bob | Engineering Manager / Orchestrator — **the current OpenCode session, not a sub-agent** |
+| `agent-bob` | Bob | Engineering Manager / Orchestrator - **the running AI agent, not a sub-agent** |
 | `agent-alex` | Alex | Senior Software Engineer / Tech Lead |
 | `agent-sarah` | Sarah | QA & Test Automation Engineer |
 | `agent-olivia` | Olivia | Business Analyst |
@@ -32,7 +32,7 @@ All names and faces are fictional AI-generated identities. They are not represen
 - Keep each name, role and portrait filename stable across projects.
 - Portraits are visual assets only; they imply no real-world identity.
 - The contractor is one reusable anonymous profile (`team/portraits/contractor.png`), not a pool of numbered contractors.
-- Bob is the only member who is also the orchestrator. Bob is the running session; the others are sub-agents Bob may launch.
+- Bob is the only member who is also the orchestrator. Bob is the running AI agent; the others are sub-agents Bob may launch.
 - The application serves copies from `public/brand/agents/defaults/`, keyed by `team_profiles.id` and mapped in `src/shared/agent-portraits.ts`. The files here are the originals and are never modified by the app.
 
 ## Application identity: settled

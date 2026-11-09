@@ -110,6 +110,8 @@ Plaintext token format: `fq_` + 32 CSPRNG bytes, base32. Displayed once with a c
 | `POST` | `/boards/{boardId}/tasks/{taskId}/comments` | Add comment. `201`. |
 | `GET` | `/boards/{boardId}/activity` | Board activity, newest first, paginated. Query: `limit` (1-50), `before` (cursor from `nextBefore`), `since` (inclusive lower bound in milliseconds), `actors` (comma-separated names, at most 20). The response also carries `actors`: everyone who has acted on the board, with an event count — the filter list, unaffected by the filter itself. |
 | `GET` | `/boards/{boardId}/profiles` | Superseded: profiles are global, not board-scoped. Use `GET /profiles`. |
+
+**Identifiers and ticket links.** Board ids are opaque `brd_…` values and task ids are opaque `tsk_…` values, both generated from 16 random bytes. The UI opens a ticket at `/boards/{boardId}/tickets/{ticketId}`; the API path uses `{taskId}`. A ticket URL is a navigation aid, not authentication: the board API still requires a session and enforces board scope.
 | `GET` | `/profiles` | Assignable team profiles (id, display name, role, kind). |
 | `GET` | `/columns` | The five fixed columns (constant, same for every board). |
 

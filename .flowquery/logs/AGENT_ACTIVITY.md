@@ -4,6 +4,20 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Bob operating model and direct ticket links (local)
+
+**Requested by the owner:** make Bob the platform-independent AI manager, document the single-token recommended model, and add direct ticket URLs.
+
+**Implementation:** `/boards/:boardId/tickets/:ticketId` opens the task drawer from the URL; refresh and back/forward work; an unknown id shows a not-found message. Board and ticket ids were already opaque `brd_`/`tsk_` values from 16 random bytes, so no data migration was needed. The universal prompt, master entry point, team operating model, Bob's instructions, API/security/user docs, decisions and project brief now describe Bob as the running AI manager, not an OpenCode session. Specialists remain profiles and are delegated through Bob.
+
+**Verification:** typecheck, lint, format, **393 tests**, build. Manual browser test on `Agent Bob Test Board` (`brd_WJX7KBV7YMD26548FS790KSZE0`): five tasks across the five columns, card opened a direct ticket URL, refresh preserved it, back/forward worked, an invalid id showed the not-found message, a comment was added, a move changed columns, and activity recorded the events. Bob's board token added a comment and moved a ticket; activity attributed both to Bob, then the token was revoked.
+
+**Follow-up:** the four move arrows were removed from the ticket drawer. Dragging, in-column ordering and the **Status** selector remain; the selector was verified moving a ticket from Review to Done. The board-page tests now use the status selector instead of the arrows. A **Copy ticket link** button was added to the drawer header; it copies the absolute ticket URL and shows a read-only fallback if the clipboard is blocked. Card titles are now real links to the ticket URL, so they can be opened in a new tab or copied. The ticket sidebar header now shows Task > title as a link; saving an existing ticket keeps it open and updates that link. **393 tests pass.** The footer's private-instance note was also removed; the footer now carries only the wordmark.
+
+**Not done:** nothing pushed, merged or deployed. The test board and its tickets remain in local D1 for owner review.
+
+---
+
 ## 2026-11-09 — Header tabs and one People directory released
 
 **Release:** PR #9 (`people-nav` → `main`), merge `97d44ff`; branch deleted locally and remotely. `main` and `origin/main` match.

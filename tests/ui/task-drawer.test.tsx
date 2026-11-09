@@ -57,7 +57,7 @@ function mockApi(options: { comments?: unknown[] } = {}) {
 
     if (method === 'DELETE') return new Response(null, { status: 204 })
     if (method === 'PATCH') {
-      return new Response(JSON.stringify({ task: { ...task, version: 4 } }), {
+      return new Response(JSON.stringify({ task: { ...task, ...body, version: 4 } }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       })
@@ -165,6 +165,37 @@ describe('TaskDrawer', () => {
     expect(patch.body).toMatchObject({ title: 'Renamed task', expectedVersion: 3 })
 
     await waitFor(() => expect(onChanged).toHaveBeenCalled())
+  })
+
+  it('shows the ticket title as a link and keeps it after saving', async () => {
+    mockApi()
+    const { onClose } = renderDrawer()
+
+    await screen.findByDisplayValue('Ship the board')
+    await waitFor(() => {
+      expect(document.querySelector('.drawer-ticket-link')?.textContent).toBe('Ship the board')
+    })
+    const link = document.querySelector('.drawer-ticket-link') as HTMLAnchorElement
+    expect(link.tagName).toBe('A')
+    expect(link.href).toContain('/boards/brd_demo/tickets/tsk_1')
+
+    const title = screen.getByDisplayValue('Ship the board')
+    await userEvent.clear(title)
+    await userEvent.type(title, 'Renamed task')
+
+    await waitFor(() => {
+      expect(document.querySelector('.drawer-ticket-link')?.textContent).toBe('Renamed task')
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => {
+      expect(document.querySelector('.drawer-ticket-link')?.textContent).toBe('Renamed task')
+    })
+    expect((document.querySelector('.drawer-ticket-link') as HTMLAnchorElement).href).toContain(
+      '/boards/brd_demo/tickets/tsk_1',
+    )
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('requires a second, deliberate click to delete', async () => {

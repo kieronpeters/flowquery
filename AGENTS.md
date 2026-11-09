@@ -9,7 +9,7 @@ Specification consolidated on **3 November 2026**. Awaiting the owner's review a
 
 ## The product in one paragraph
 
-FlowQuery is a small, private Kanban app. Two human administrators share a dashboard of boards. Each board has five fixed columns — Backlog, To Do, In Progress, Review, Done. Tasks carry title, description, priority, assignee profile, due date, comments and activity history. Bob — the OpenCode session itself — reaches exactly one board through a board-scoped bearer token and may only manage tasks and comments there.
+FlowQuery is a small, private Kanban app. Two human administrators share a dashboard of boards. Each board has five fixed columns - Backlog, To Do, In Progress, Review, Done. Tasks carry title, description, priority, assignee profile, due date, comments and activity history. Bob - the running AI Engineering Manager - reaches exactly one board through a board-scoped bearer token and may only manage tasks and comments there.
 
 ## Rules that must not be broken
 
@@ -17,7 +17,7 @@ FlowQuery is a small, private Kanban app. Two human administrators share a dashb
 2. **Authenticated humans only.** There are no public board links, no anonymous access, and no organisation directory.
 3. **No organisation, project or workspace hierarchy.** Boards are the only container. Do not reintroduce the old hierarchy.
 4. **Five fixed columns.** Columns cannot be created, renamed, reordered or deleted, by humans or by Bob.
-5. **Bob is this OpenCode session.** Do not spawn a "Bob" sub-agent. Specialists are sub-agents that report to Bob.
+5. **Bob is the running AI agent.** Do not spawn a "Bob" sub-agent. Specialists are sub-agents that report to Bob. Bob may run in OpenCode, Cursor, Cline, GitHub Copilot, Codex, ChatGPT, Claude, Gemini, DeepSeek or another compatible environment; the tool is not the identity.
 6. **The agent namespace never trusts a client-supplied board identifier.** The board comes from the token.
 7. **Every tenant query is scoped by board**, in one repository layer. No SQL outside `repositories/`; no business rules in route handlers.
 8. **No secrets in the repository, logs, URLs or browser code.** Agent tokens are stored hashed and shown once. `.dev.vars` is never committed.

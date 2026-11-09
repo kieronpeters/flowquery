@@ -70,6 +70,7 @@ export function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/boards" element={<BoardsPage />} />
             <Route path="/boards/:boardId" element={<BoardPage />} />
+            <Route path="/boards/:boardId/tickets/:ticketId" element={<BoardPage />} />
             <Route path="/agent" element={<AgentPage />} />
             <Route path="/agents" element={<Navigate to="/people" replace />} />
             <Route path="/docs" element={<DocsPage />} />
@@ -85,7 +86,6 @@ export function App() {
         <a className="footer-brand" href="/">
           <img src="/brand/logos/flowquery-logo-dark.png" alt="FlowQuery" width={82} height={20} />
         </a>
-        <p className="footer-note">Private instance · Workers Free + D1 Free</p>
       </footer>
     </div>
   )

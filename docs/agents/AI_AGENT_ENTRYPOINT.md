@@ -22,9 +22,10 @@ product, not a multi-tenant SaaS, and not an organisation/project hierarchy.
   comments and append-only activity history.
 - Humans sign in with GitHub OAuth against a server-side allowlist of immutable
   numeric ids. There is no public sign-up and no password.
-- AI agents are **assignee profiles**, never application accounts. Bob is the
-  current OpenCode session and the only AI writer, using a board-scoped bearer
-  token.
+- AI agents are **assignee profiles**, never application accounts. Bob is the AI
+  Engineering Manager and the recommended single AI identity that authenticates
+  to FlowQuery, using a board-scoped bearer token. Specialists are delegated work
+  through Bob's environment and need no FlowQuery accounts or tokens.
 
 Live application: <https://flowquery.workstack.workers.dev>
 
@@ -64,7 +65,7 @@ application, is in [the team directory](../../team/TEAM_DIRECTORY.md).
 
 | Name | Role |
 |---|---|
-| Bob | Engineering Manager / Orchestrator — the current OpenCode session |
+| Bob | Engineering Manager / Orchestrator — the running AI agent, whatever environment runs it |
 | Alex | Senior Software Engineer |
 | Sarah | QA & Test Automation Engineer |
 | Olivia | Business Analyst |
@@ -86,6 +87,17 @@ Bob may launch for bounded work; they hold no FlowQuery credentials. The
 [operating model](../../team/AGENT_OPERATING_MODEL.md) explains delegation,
 nesting and concurrency limits.
 
+### Recommended operating model
+
+Bob is the single AI manager. He may run in OpenCode, Cursor, Cline, GitHub
+Copilot, Codex, ChatGPT, Claude, Gemini, DeepSeek or another compatible
+environment; the tool is not the identity. Bob uses one board-scoped token,
+grooms the Backlog, assigns one active task per specialist by default, delegates
+through his environment, reviews the result, updates the ticket and escalates
+unresolved questions to the owner. Specialists are assignees and report through
+Bob; they do not authenticate to FlowQuery. The owner may customise agent
+instructions, token arrangements or permissions later.
+
 ## 4. Board, task and API model
 
 - A board is addressed by its id in the human API: `/api/v1/boards/:boardId`.
@@ -97,6 +109,11 @@ nesting and concurrency limits.
   They are separate doors with separate middleware.
 - Task moves stay inside the five columns. Position is contiguous within a
   column.
+- Board ids are opaque and non-sequential (`brd_…`); ticket ids are stable and
+  opaque (`tsk_…`).
+- A ticket has a direct URL: `/boards/:boardId/tickets/:ticketId`. The URL is the
+  source of truth for the open drawer, so refresh and browser back/forward work.
+  An unknown ticket id shows a not-found message on the board.
 
 Read [the API specification](../API_SPECIFICATION.md) before calling anything.
 The live contract is also served at `/api/v1/openapi.json`.
@@ -118,6 +135,13 @@ The live contract is also served at `/api/v1/openapi.json`.
 6. **Ask when a decision affects cost, security, scope or architecture.** An
    honest unknown is better than a confident guess.
 7. **Do not commit, push, merge or deploy without explicit owner approval.**
+8. **Manage the full lifecycle.** Do not create tasks and forget them. Follow up,
+   review the specialist's result, update the ticket and escalate when blocked.
+9. **Respect workload.** The default is one active task per specialist; check
+   before assigning another, and record any justified exception.
+10. **Attribute truthfully.** Bob is the authenticated actor. A specialist's
+    report is recorded by Bob in a comment or description; never claim the
+    specialist wrote it or authenticated directly.
 
 ## 6. Communication and handover
 
@@ -139,6 +163,11 @@ The live contract is also served at `/api/v1/openapi.json`.
   relevant documents or an export.
 - A board-scoped API token must be supplied separately and securely. Never put
   a token in this prompt, a URL, documentation, source code or a public channel.
+- The recommended setup is **one board-scoped token for Bob**. Multiple tokens
+  and configurable permissions remain supported for custom setups; they are not
+  the default recommendation.
+- A token label is descriptive only. It is never proof of identity, and a token
+  can never reach another board.
 - Internal engineering documentation is for the project's administrators. Do
   not republish it.
 

@@ -70,7 +70,7 @@ Update `PHASE_STATUS.md`, `NEXT_ACTION.md`, `BACKLOG.md`, append to `logs/AGENT_
 
 ## 4. Working with Bob and the specialist team
 
-- Bob is the current OpenCode session. Bob does not spawn a Bob agent.
+- Bob is the running AI agent and Engineering Manager, whatever environment runs it. Bob does not spawn a Bob agent.
 - Specialists are subagents used for bounded, genuinely parallelisable work: an independent security review, a UX critique, a test-plan review, a research task against official docs.
 - Do not spawn a specialist to write a document Bob could write, and never spawn the whole roster to look thorough.
 - Maximum two or three concurrent specialists; never let two edit the same file.

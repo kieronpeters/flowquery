@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BoardPage } from '../../src/app/BoardPage'
@@ -89,7 +89,14 @@ const movedBoard: BoardView = {
 
 type Call = { url: string; method: string; body: unknown }
 
-function mockApi(overrides: { moveStatus?: number; theme?: BoardTheme } = {}) {
+function mockApi(
+  overrides: {
+    moveStatus?: number
+    patchStatus?: number
+    theme?: BoardTheme
+    boardStatus?: number
+  } = {},
+) {
   const calls: Call[] = []
   const initial = { ...boardWith([cardOne], [cardTwo]), theme: overrides.theme ?? {} }
 
@@ -115,11 +122,25 @@ function mockApi(overrides: { moveStatus?: number; theme?: BoardTheme } = {}) {
         })
       }
 
+      if (overrides.boardStatus === 401 && method === 'GET' && url.endsWith('/brd_demo')) {
+        return Response.json(
+          { error: { code: 'UNAUTHENTICATED', message: 'Sign in required.' } },
+          { status: 401 },
+        )
+      }
+
       if (url.endsWith('/move')) {
         if (overrides.moveStatus === 409) {
           return Response.json({ error: { code: 'CONFLICT', message: 'stale' } }, { status: 409 })
         }
         return Response.json({ board: movedBoard, task: movedBoard.columns[1]!.tasks[0]! })
+      }
+
+      if (overrides.patchStatus === 409 && method === 'PATCH' && url.includes('/tasks/')) {
+        return Response.json(
+          { error: { code: 'CONFLICT', message: 'Someone changed that task first.' } },
+          { status: 409 },
+        )
       }
 
       if (url.endsWith('/comments')) {
@@ -140,11 +161,29 @@ function mockApi(overrides: { moveStatus?: number; theme?: BoardTheme } = {}) {
   return { calls }
 }
 
+function LocationProbe() {
+  const location = useLocation()
+  return <p data-testid="path">{location.pathname}</p>
+}
+
 function renderBoard() {
   render(
     <MemoryRouter initialEntries={['/boards/brd_demo']}>
+      <LocationProbe />
       <Routes>
         <Route path="/boards/:boardId" element={<BoardPage />} />
+        <Route path="/boards/:boardId/tickets/:ticketId" element={<BoardPage />} />
+        <Route path="/login" element={<p>sign in page</p>} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+function renderTicket(ticketId: string) {
+  render(
+    <MemoryRouter initialEntries={[`/boards/brd_demo/tickets/${ticketId}`]}>
+      <Routes>
+        <Route path="/boards/:boardId/tickets/:ticketId" element={<BoardPage />} />
         <Route path="/login" element={<p>sign in page</p>} />
       </Routes>
     </MemoryRouter>,
@@ -179,39 +218,39 @@ describe('BoardPage', () => {
     expect(await screen.findByDisplayValue('Card one')).toBeTruthy()
   })
 
-  it('moves a task to the next column with the keyboard path', async () => {
+  it('moves a task between columns with the status selector', async () => {
     const { calls } = mockApi()
     renderBoard()
 
     await userEvent.click(await screen.findByText('Card one'))
     const dialog = await screen.findByRole('dialog')
 
-    const nextColumn = within(dialog).getByRole('button', {
-      name: 'Move to the next column',
-    })
-    await userEvent.click(nextColumn)
+    await userEvent.selectOptions(within(dialog).getByLabelText('Status'), 'todo')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 
     await waitFor(() => {
-      const move = calls.find((call) => call.url.endsWith('/move'))
-      expect(move).toBeTruthy()
+      const patch = calls.find(
+        (call) => call.method === 'PATCH' && call.url.endsWith('/tasks/tsk_1'),
+      )
+      expect(patch).toBeTruthy()
+      expect(patch!.body).toMatchObject({ status: 'todo' })
     })
+  })
 
-    const move = calls.find((call) => call.url.endsWith('/move'))!
-    expect(move.url).toContain('/api/v1/boards/brd_demo/tasks/tsk_1/move')
-    expect(move.body).toEqual({ status: 'todo', position: 0, expectedVersion: 1 })
+  it('makes the card title a direct ticket link', async () => {
+    mockApi()
+    renderBoard()
 
-    // The server's board replaces the optimistic one.
-    const todo = await screen.findByRole('region', { name: 'To Do' })
-    expect(await within(todo).findByText('Card one')).toBeTruthy()
+    const link = (await screen.findByText('Card one')).closest('a') as HTMLAnchorElement
+    expect(link.getAttribute('href')).toBe('/boards/brd_demo/tickets/tsk_1')
   })
 
   it('keeps the dragged card on screen while it is outside its column', async () => {
     mockApi()
     renderBoard()
 
-    const card = await screen.findByText('Card one')
-    const button = card.closest('button')!
-    button.focus()
+    const handle = await screen.findByRole('button', { name: 'Drag Card one' })
+    handle.focus()
 
     // dnd-kit's keyboard sensor: space picks the item up.
     await userEvent.keyboard(' ')
@@ -227,21 +266,20 @@ describe('BoardPage', () => {
     await userEvent.keyboard('{Escape}')
   })
 
-  it('says so and refetches when the move conflicts', async () => {
-    const { calls } = mockApi({ moveStatus: 409 })
+  it('shows the server error when a status save conflicts', async () => {
+    const { calls } = mockApi({ patchStatus: 409 })
     renderBoard()
 
     await userEvent.click(await screen.findByText('Card one'))
     const dialog = await screen.findByRole('dialog')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Move to the next column' }))
+
+    await userEvent.selectOptions(within(dialog).getByLabelText('Status'), 'todo')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 
     expect(await screen.findByText(/Someone changed that task first/i)).toBeTruthy()
 
-    // A refetch happened: more than one board read.
-    const boardReads = calls.filter(
-      (call) => call.method === 'GET' && call.url.endsWith('/api/v1/boards/brd_demo'),
-    )
-    expect(boardReads.length).toBeGreaterThan(1)
+    const patch = calls.find((call) => call.method === 'PATCH' && call.url.endsWith('/tasks/tsk_1'))
+    expect(patch).toBeTruthy()
   })
 
   it('applies a board ticket colour to every card', async () => {
@@ -373,5 +411,72 @@ describe('BoardPage', () => {
     const feed = await screen.findByRole('region', { name: 'Activity' })
     expect(feed.getAttribute('data-custom')).toBe('true')
     expect(feed.style.getPropertyValue('--activity-fg')).toBe('#e6e9f2')
+  })
+
+  it('opens a ticket from a direct URL', async () => {
+    mockApi()
+    renderTicket('tsk_1')
+
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+    expect(await screen.findByDisplayValue('Card one')).toBeTruthy()
+  })
+
+  it('puts the ticket id in the URL when a card is opened', async () => {
+    mockApi()
+    renderBoard()
+
+    await userEvent.click(await screen.findByText('Card one'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('path').textContent).toBe('/boards/brd_demo/tickets/tsk_1')
+    })
+  })
+
+  it('copies a direct ticket link from the drawer', async () => {
+    mockApi()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+
+    renderTicket('tsk_1')
+    await screen.findByRole('dialog')
+    await userEvent.click(screen.getByRole('button', { name: 'Copy ticket link' }))
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+    expect(writeText.mock.calls[0]![0]).toContain('/boards/brd_demo/tickets/tsk_1')
+    expect(await screen.findByText('Ticket link copied.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Link copied' })).toBeTruthy()
+  })
+
+  it('shows the ticket link when the clipboard is unavailable', async () => {
+    mockApi()
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('no clipboard')) },
+      configurable: true,
+    })
+
+    renderTicket('tsk_1')
+    await screen.findByRole('dialog')
+    await userEvent.click(screen.getByRole('button', { name: 'Copy ticket link' }))
+
+    const input = (await screen.findByLabelText('Ticket link')) as HTMLInputElement
+    expect(input.value).toContain('/boards/brd_demo/tickets/tsk_1')
+  })
+
+  it('reports a ticket that is not on the board', async () => {
+    mockApi()
+    renderTicket('tsk_missing')
+
+    expect(await screen.findByText(/does not exist on this board/i)).toBeTruthy()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('sends an unauthenticated direct ticket link to sign in', async () => {
+    mockApi({ boardStatus: 401 })
+    renderTicket('tsk_1')
+
+    expect(await screen.findByText('sign in page')).toBeTruthy()
   })
 })

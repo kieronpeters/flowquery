@@ -22,11 +22,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import type { ApiError, BoardTheme, BoardView, ProfileDto, TaskDto } from '../shared/api-types'
-import { COLUMNS, type ColumnKey } from '../shared/columns'
+import type { ColumnKey } from '../shared/columns'
 import { ActivityFeed } from './ActivityFeed'
 import { ProfileAvatar } from './ProfileAvatar'
-import { applyMove, locate, withoutTask } from './board-state'
-import { TaskDrawer, type MoveDirection } from './TaskDrawer'
+import { applyMove, withoutTask } from './board-state'
+import { TaskDrawer } from './TaskDrawer'
 import { ThemePanel } from './ThemePanel'
 import { cardBackground, inkFor } from './theme'
 
@@ -137,11 +137,13 @@ function CardBody({ task, profiles }: { task: TaskDto; profiles: ProfileDto[] })
 
 function SortableCard({
   task,
+  boardId,
   profiles,
   draggable = true,
   onOpen,
 }: {
   task: TaskDto
+  boardId: string
   profiles: ProfileDto[]
   draggable?: boolean
   onOpen: () => void
@@ -151,15 +153,31 @@ function SortableCard({
     disabled: !draggable,
   })
 
+  const ticketHref = `/boards/${encodeURIComponent(boardId)}/tickets/${encodeURIComponent(task.id)}`
+
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={isDragging ? 'card-item dragging' : 'card-item'}
     >
-      <button className="card" type="button" onClick={onOpen} {...attributes} {...listeners}>
+      {/*
+        The card is a real link, as in Jira and Trello: the title is clickable,
+        the URL can be copied or opened in a new tab, and the SPA intercepts a
+        plain click so the drawer opens without a full page load.
+      */}
+      <a
+        className="card"
+        href={ticketHref}
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+          event.preventDefault()
+          onOpen()
+        }}
+        {...listeners}
+      >
         <CardBody task={task} profiles={profiles} />
-      </button>
+      </a>
 
       {/*
         Touch drag handle. On a phone, dragging has to start somewhere the
@@ -170,8 +188,9 @@ function SortableCard({
       <button
         className="card-handle"
         type="button"
-        aria-label={`Drag ${task.title}`}
+        {...attributes}
         {...listeners}
+        aria-label={`Drag ${task.title}`}
       >
         ⠿
       </button>
@@ -180,11 +199,17 @@ function SortableCard({
 }
 
 export function BoardPage() {
-  const { boardId } = useParams<{ boardId: string }>()
+  const { boardId, ticketId } = useParams<{ boardId: string; ticketId?: string }>()
   const navigate = useNavigate()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [profiles, setProfiles] = useState<ProfileDto[]>([])
   const [drawer, setDrawer] = useState<DrawerState>(null)
+  const [ticketMissing, setTicketMissing] = useState(false)
+  // Read by `load` without making the loader depend on the ticket route: a
+  // delete closes the ticket URL, and a refetch at that moment would bring the
+  // optimistically removed card back.
+  const ticketIdRef = useRef(ticketId)
+  ticketIdRef.current = ticketId
   const [notice, setNotice] = useState<string | null>(null)
   // The card being dragged, rendered in a portal so it follows the cursor
   // instead of being clipped by the column or board scroll container.
@@ -231,7 +256,11 @@ export function BoardPage() {
       const response = await fetch(`/api/v1/boards/${encodeURIComponent(boardId)}`)
 
       if (response.status === 401) {
-        navigate(`/login?next=${encodeURIComponent(`/boards/${boardId}`)}`, { replace: true })
+        const currentTicket = ticketIdRef.current
+        const next = currentTicket
+          ? `/boards/${boardId}/tickets/${currentTicket}`
+          : `/boards/${boardId}`
+        navigate(`/login?next=${encodeURIComponent(next)}`, { replace: true })
         return
       }
       if (response.status === 404) {
@@ -268,6 +297,48 @@ export function BoardPage() {
       cancelled = true
     }
   }, [])
+
+  /**
+   * The URL is the source of truth for an open ticket.
+   *
+   * A direct link opens the drawer once the board has loaded. Closing the drawer
+   * returns to the board route, so refresh and back/forward always agree with
+   * what is on screen. An unknown id is reported instead of opening a blank
+   * drawer.
+   */
+  useEffect(() => {
+    if (state.kind !== 'ok') return
+
+    if (!ticketId) {
+      setTicketMissing(false)
+      setDrawer((current) => (current?.kind === 'edit' ? null : current))
+      return
+    }
+
+    // While a delete is in its undo window the card is deliberately absent from
+    // the optimistic view; do not turn that into a "ticket not found" error.
+    if (pendingDelete?.taskId === ticketId) {
+      setTicketMissing(false)
+      setDrawer(null)
+      return
+    }
+
+    const exists = state.view.columns.some((column) =>
+      column.tasks.some((task) => task.id === ticketId),
+    )
+
+    if (exists) {
+      setTicketMissing(false)
+      setDrawer((current) =>
+        current?.kind === 'edit' && current.taskId === ticketId
+          ? current
+          : { kind: 'edit', taskId: ticketId },
+      )
+    } else {
+      setTicketMissing(true)
+      setDrawer(null)
+    }
+  }, [pendingDelete, state, ticketId])
 
   /**
    * Optimistic move: show the result immediately, then replace the board with
@@ -373,40 +444,6 @@ export function BoardPage() {
     void performMove(activeId, overColumn.key, position, task.version)
   }
 
-  /** Keyboard alternative to dragging (TASK-008). */
-  const moveRelative = useCallback(
-    async (taskId: string, direction: MoveDirection): Promise<string | null> => {
-      if (state.kind !== 'ok') return 'The board is still loading.'
-
-      const view = state.view
-      const task = view.columns.flatMap((column) => column.tasks).find((item) => item.id === taskId)
-      const here = locate(view, taskId)
-      if (!task || !here) return 'That task is no longer on the board.'
-
-      const columnIndex = COLUMNS.findIndex((column) => column.key === here.status)
-
-      if (direction === 'up' || direction === 'down') {
-        const position = direction === 'up' ? here.index - 1 : here.index + 1
-        if (position < 0) return 'Already at the top of this column.'
-        if (position >= here.count) return 'Already at the bottom of this column.'
-        await performMove(taskId, here.status, position, task.version)
-        return null
-      }
-
-      const targetIndex = direction === 'left' ? columnIndex - 1 : columnIndex + 1
-      if (targetIndex < 0) return 'Already in the first column.'
-      if (targetIndex >= COLUMNS.length) return 'Already in the last column.'
-
-      const targetKey = COLUMNS[targetIndex]!.key
-      const targetColumn = view.columns.find((column) => column.key === targetKey)
-      if (!targetColumn) return 'That column could not be found.'
-
-      await performMove(taskId, targetKey, targetColumn.tasks.length, task.version)
-      return null
-    },
-    [performMove, state],
-  )
-
   // Shortcuts that work anywhere on the board, but never while typing.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -496,6 +533,28 @@ export function BoardPage() {
     setPriority(null)
   }
 
+  /** Open a ticket by putting its id in the URL, so the link is copyable. */
+  function openTicket(taskId: string) {
+    if (!boardId) return
+    navigate(`/boards/${encodeURIComponent(boardId)}/tickets/${encodeURIComponent(taskId)}`)
+  }
+
+  /** Closing the drawer returns to the board route, not a stale ticket URL. */
+  function closeDrawer() {
+    setDrawer(null)
+    if (ticketId && boardId) {
+      navigate(`/boards/${encodeURIComponent(boardId)}`, { replace: true })
+    }
+  }
+
+  /** A new task has no ticket id yet, so leave any open ticket route first. */
+  function openCreate(status: ColumnKey) {
+    if (ticketId && boardId) {
+      navigate(`/boards/${encodeURIComponent(boardId)}`, { replace: true })
+    }
+    setDrawer({ kind: 'create', status })
+  }
+
   /** Removes the card at once, then deletes it for real when the window closes. */
   function requestDelete(taskId: string, title: string) {
     setDrawer(null)
@@ -515,6 +574,9 @@ export function BoardPage() {
         method: 'DELETE',
       })
     } finally {
+      if (ticketIdRef.current === taskId && boardId) {
+        navigate(`/boards/${encodeURIComponent(boardId)}`, { replace: true })
+      }
       await load({ silent: true })
     }
   }
@@ -639,6 +701,13 @@ export function BoardPage() {
         </button>
       </div>
 
+      {ticketMissing && (
+        <p className="alert alert-neutral" role="alert">
+          That ticket does not exist on this board.{' '}
+          <Link to={`/boards/${boardId}`}>Back to the board</Link>
+        </p>
+      )}
+
       <div className="board-tools">
         <input
           ref={searchRef}
@@ -743,14 +812,15 @@ export function BoardPage() {
             <Column
               key={column.key}
               column={column}
+              boardId={boardId ?? ''}
               active={column.key === activeColumn}
               profiles={profiles}
               background={theme.columns?.[column.key]}
               ticket={theme.tickets}
               tasks={visibleTasks(column.tasks)}
               filtering={filtering}
-              onOpen={(taskId) => setDrawer({ kind: 'edit', taskId })}
-              onAdd={() => setDrawer({ kind: 'create', status: column.key })}
+              onOpen={openTicket}
+              onAdd={() => openCreate(column.key)}
             />
           ))}
         </div>
@@ -792,11 +862,8 @@ export function BoardPage() {
           boardId={boardId}
           mode={drawer}
           profiles={profiles}
-          onClose={() => setDrawer(null)}
+          onClose={closeDrawer}
           onChanged={() => load({ silent: true })}
-          onMoveRelative={(direction) =>
-            drawer.kind === 'edit' ? moveRelative(drawer.taskId, direction) : Promise.resolve(null)
-          }
           onRequestDelete={
             editingTaskId ? () => requestDelete(editingTaskId, taskTitle(editingTaskId)) : undefined
           }
@@ -808,6 +875,7 @@ export function BoardPage() {
 
 function Column({
   column,
+  boardId,
   active,
   profiles,
   background,
@@ -818,6 +886,7 @@ function Column({
   onAdd,
 }: {
   column: BoardView['columns'][number]
+  boardId: string
   active?: boolean
   profiles: ProfileDto[]
   background?: string
@@ -861,6 +930,7 @@ function Column({
               <SortableCard
                 key={task.id}
                 task={task}
+                boardId={boardId}
                 profiles={profiles}
                 draggable={!filtering}
                 onOpen={() => onOpen(task.id)}

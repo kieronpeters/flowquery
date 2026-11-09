@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { ApiError, CommentDto, ProfileDto, TaskDto } from '../shared/api-types'
+import { copyText } from './clipboard'
 import { COLUMNS, type ColumnKey } from '../shared/columns'
 
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const
@@ -24,8 +25,6 @@ const KIND_LABEL: Record<ProfileDto['kind'], string> = {
 }
 
 type Mode = { kind: 'create'; status: ColumnKey } | { kind: 'edit'; taskId: string }
-
-export type MoveDirection = 'up' | 'down' | 'left' | 'right'
 
 type Form = {
   title: string
@@ -57,14 +56,13 @@ export function TaskDrawer(props: {
   profiles: ProfileDto[]
   onClose: () => void
   onChanged: () => Promise<void> | void
-  onMoveRelative?: (direction: MoveDirection) => Promise<string | null>
   /**
    * When provided, deletion is handed to the caller instead of being sent here.
    * The board uses it to hold the request for a few seconds so it can be undone.
    */
   onRequestDelete?: () => void
 }) {
-  const { boardId, mode, profiles, onClose, onChanged, onMoveRelative, onRequestDelete } = props
+  const { boardId, mode, profiles, onClose, onChanged, onRequestDelete } = props
 
   const [form, setForm] = useState<Form>(
     mode.kind === 'create' ? { ...EMPTY, status: mode.status } : EMPTY,
@@ -73,10 +71,8 @@ export function TaskDrawer(props: {
   const [loading, setLoading] = useState(mode.kind === 'edit')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [moveError, setMoveError] = useState<string | null>(null)
+  const [linkState, setLinkState] = useState<'idle' | 'copied' | 'error'>('idle')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
-  // Bumped after a move so the drawer reloads the task's new position and version.
-  const [reloadToken, setReloadToken] = useState(0)
   const [comments, setComments] = useState<CommentDto[]>([])
   const [commentsLoading, setCommentsLoading] = useState(mode.kind === 'edit')
   const [commentText, setCommentText] = useState('')
@@ -160,7 +156,7 @@ export function TaskDrawer(props: {
     return () => {
       cancelled = true
     }
-  }, [boardId, mode, reloadToken])
+  }, [boardId, mode])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -200,7 +196,7 @@ export function TaskDrawer(props: {
     return () => {
       cancelled = true
     }
-  }, [boardId, mode, reloadToken])
+  }, [boardId, mode])
 
   async function postComment() {
     if (mode.kind !== 'edit' || postingComment) return
@@ -235,6 +231,22 @@ export function TaskDrawer(props: {
 
   function update<K extends keyof Form>(key: K, value: Form[K]) {
     setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  const ticketUrl =
+    mode.kind === 'edit'
+      ? `${window.location.origin}/boards/${encodeURIComponent(boardId)}/tickets/${encodeURIComponent(mode.taskId)}`
+      : ''
+
+  async function copyTicketLink() {
+    if (!ticketUrl) return
+
+    try {
+      await copyText(ticketUrl)
+      setLinkState('copied')
+    } catch {
+      setLinkState('error')
+    }
   }
 
   async function save(event: React.FormEvent) {
@@ -272,27 +284,26 @@ export function TaskDrawer(props: {
         return
       }
 
-      await onChanged()
-      onClose()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function move(direction: MoveDirection) {
-    if (!onMoveRelative || busy) return
-
-    setBusy(true)
-    setMoveError(null)
-
-    try {
-      const message = await onMoveRelative(direction)
-      if (message) {
-        setMoveError(message)
-        return
+      const body = (await response.json().catch(() => null)) as { task?: TaskDto } | null
+      if (body?.task) {
+        // Reflect what the server actually stored, and take its new version so
+        // the next save does not conflict with this one.
+        setVersion(body.task.version)
+        setForm({
+          title: body.task.title,
+          description: body.task.description,
+          priority: body.task.priority,
+          assigneeProfileId: body.task.assignee?.id ?? '',
+          dueDate: body.task.dueDate ?? '',
+          status: body.task.status,
+        })
       }
-      // The task's column, position and version all changed; reload it.
-      setReloadToken((token) => token + 1)
+
+      await onChanged()
+
+      // A new task closes after creation. An existing ticket stays open so the
+      // breadcrumb shows the saved title and remains a link to the ticket.
+      if (mode.kind === 'create') onClose()
     } finally {
       setBusy(false)
     }
@@ -333,11 +344,62 @@ export function TaskDrawer(props: {
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="drawer-header">
-          <h2 id="drawer-title">{mode.kind === 'create' ? 'New task' : 'Task'}</h2>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <h2 id="drawer-title" className="drawer-breadcrumb">
+            <span className="drawer-crumb-root">
+              {mode.kind === 'create' ? 'New task' : 'Task'}
+            </span>
+            {mode.kind === 'edit' && (
+              <>
+                <span className="drawer-crumb-separator" aria-hidden="true">
+                  ›
+                </span>
+                <a
+                  className="drawer-ticket-link"
+                  href={ticketUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open this ticket in a new tab"
+                >
+                  {form.title || 'Untitled ticket'}
+                </a>
+              </>
+            )}
+          </h2>
+          <div className="drawer-header-actions">
+            {mode.kind === 'edit' && (
+              <button
+                className="button button-quiet inline"
+                type="button"
+                onClick={() => void copyTicketLink()}
+              >
+                {linkState === 'copied' ? 'Link copied' : 'Copy ticket link'}
+              </button>
+            )}
+            <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          </div>
         </header>
+
+        {linkState === 'copied' && (
+          <span className="visually-hidden" role="status">
+            Ticket link copied.
+          </span>
+        )}
+        {linkState === 'error' && (
+          <div className="drawer-link-fallback">
+            <p className="alert" role="alert">
+              Could not copy the ticket link. Copy it manually:
+            </p>
+            <input
+              className="input"
+              readOnly
+              value={ticketUrl}
+              aria-label="Ticket link"
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </div>
+        )}
 
         {loading ? (
           <p role="status">Loading…</p>
@@ -425,60 +487,6 @@ export function TaskDrawer(props: {
                 />
               </label>
             </div>
-
-            {mode.kind === 'edit' && onMoveRelative && (
-              <div className="move-row">
-                <span className="field-label">Move</span>
-                <div className="move-buttons">
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => void move('left')}
-                    disabled={busy}
-                    aria-label="Move to the previous column"
-                    title="Previous column"
-                  >
-                    ←
-                  </button>
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => void move('up')}
-                    disabled={busy}
-                    aria-label="Move up one place"
-                    title="Move up"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => void move('down')}
-                    disabled={busy}
-                    aria-label="Move down one place"
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => void move('right')}
-                    disabled={busy}
-                    aria-label="Move to the next column"
-                    title="Next column"
-                  >
-                    →
-                  </button>
-                  <span className="move-hint">column · order</span>
-                </div>
-                {moveError && (
-                  <p className="alert" role="alert">
-                    {moveError}
-                  </p>
-                )}
-              </div>
-            )}
 
             {error && (
               <p className="alert" role="alert">
