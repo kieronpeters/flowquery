@@ -4,6 +4,18 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Universal AI onboarding and docs released
+
+**Release:** PR #8 (`ai-onboarding-docs` → `main`), merge `d0512aa`; release branch deleted locally and remotely. `main` and `origin/main` match. Local dev servers stopped.
+
+**Deployed:** version `64e2433e` from `main`; no migration required. Post-deploy: health `200`, `/boards` and `/docs/agents/ai-agent-entrypoint` `200`, anonymous `/api/v1/docs` and the document endpoint `401`, all 10 logo SVGs `200`, the DocsPage chunk present, and no documentation text in the client bundle.
+
+**Contents:** the Boards onboarding panel with one universal prompt, the repository Markdown docs browser, the master entry point, user guides and internal index, and the 10 official tool marks.
+
+**Verified before release:** typecheck, lint, format check, **381 tests**, build.
+
+---
+
 ## 2026-11-09 — Universal AI onboarding panel and documentation browser
 
 **Requested by the owner:** a compact onboarding panel on the Boards page that copies one universal prompt, plus a documentation section that renders repository Markdown, with search, navigation and separated audiences.

@@ -1,12 +1,10 @@
 # Next Action
 
-**Corrected AI team artwork is merged into `main`.** PR #7 merged as `86a0b65`; branch `artwork-final` deleted locally and on the remote. Free plans, $0 recurring.
+**Universal AI onboarding and the documentation browser are live.** PR #8 merged as `d0512aa`; production deployed as version `64e2433e`. The corrected AI team artwork from PR #7 is included in that deploy. Free plans, $0 recurring.
 
-**Production is still on version `08fffc21` from the previous release.** The corrected 1536×655 banner and all 16 illustrated portraits are in `main` but have **not been deployed**. Run `npm run deploy` from `main` when the owner approves; no migration is required for this change.
+Production: https://flowquery.workstack.workers.dev. No migration was required for this release.
 
-**Repository cleanup done in the same release:** the integrated pack ZIP, the superseded fictional poster and banner, and the old extracted packs were removed; `*.zip` is ignored. `team/portraits/`, `design/`, the logo source, all documentation and `.flowquery/` history were retained for the upcoming documentation review.
-
-**New phase implemented locally, awaiting approval:** the Boards page has a universal AI onboarding panel with official tool logos and a copy button for one project-independent prompt; `/docs` renders repository Markdown through a session-gated API, with Agents / User guides / Internal navigation and search. The master entry point is `docs/agents/AI_AGENT_ENTRYPOINT.md`. Nothing is committed, pushed or deployed.
+The Boards page has the onboarding panel and copy button; `/docs` renders repository Markdown through a session-gated API; the master entry point is `docs/agents/AI_AGENT_ENTRYPOINT.md`. The repository cleanup from the previous release is retained and `*.zip` is ignored.
 
 ---
 
