@@ -4,6 +4,36 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Corrected AI team pack: banner and all 16 portraits
+
+**Requested by the owner:** replace the previous poster and the Bob-only crop with the corrected pack, whose banner and portraits use the real 16-agent roster.
+
+**Mapping:** all 16 supplied files match the canonical names exactly and were copied to `public/brand/agents/defaults/prf_<name>.png` (512×512, SHA-256 identical): alex, bob, chris, contractor, daniel, emma, ethan, james, liam, marcus, noah, olivia, priya, rebecca, sarah, victoria. No fictional poster names, no Rex, no human avatars, no renaming.
+
+**Banner:** the corrected 1536×655 image is now `public/brand/flowquery-ai-development-team-overview.png`; `AgentsPage` uses `width={1536} height={655}` and the existing `object-fit: contain`/`height: auto` CSS, so it is shown whole. The caption now says the directory opens each profile.
+
+**Replacement/restore:** unchanged. The central map already pointed at these filenames, so Restore default returns the matching corrected portrait; uploads remain in D1 and never touch the files.
+
+**Verified:** typecheck, lint, **370 tests**, build; every copied file hash-matches the pack, and the local page renders the new banner and portraits.
+
+**Not done:** nothing committed, pushed or deployed.
+
+---
+
+## 2026-11-09 — Poster profile crops: Bob matched, 18 unmatched
+
+**Requested by the owner:** use the individual poster crops as agent profile pictures, matching only exact canonical names and reporting anything unmatched.
+
+**Mapping:** of 19 crops, only `bob.png` matches a canonical name. It is now `public/brand/agents/defaults/prf_bob.png` (285×285, SHA-256 identical to the supplied crop). The other 18 — alice, blake, cora, dex, elara, finn, gina, hux, ivy, jax, kai, lena, milo, nora, orion, pax, quinn, rex — have no exact application profile. They are deliberately unused; no role-similarity mapping, no renaming, and Rex is not assigned to a person. The other 15 canonical agents keep their existing defaults.
+
+**Implementation:** no code change. The central map already points `prf_bob` at the file, and upload/replace/restore continue to work; restoring Bob returns this poster crop.
+
+**Verified:** typecheck, lint, **370 tests**, build. The local dev server serves the new crop at 285×285 and the Bob row renders it.
+
+**Not done:** nothing committed, pushed or deployed.
+
+---
+
 ## 2026-11-09 — Agent profiles and visual pack released
 
 **Release:** PR #6 (`agent-profiles` → `main`), merge `bf13f63`. Branch deleted locally and on the remote; every branch is contained in `main`. Local dev servers stopped.

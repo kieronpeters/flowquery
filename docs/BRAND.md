@@ -50,15 +50,13 @@ there are no loose icon files in `public/` any more.
 
 | File | Size | Use |
 |---|---|---|
-| `public/brand/flowquery-ai-development-team-overview.png` | 1536 × 1024 | Full team overview poster at the top of `/agents`, above the directory. Displayed whole, with `object-fit: contain` and the natural aspect ratio preserved. |
-| `public/brand/agents/defaults/prf_*.png` | 512 × 512 | One default portrait per non-human profile, keyed by profile id. |
+| `public/brand/flowquery-ai-development-team-overview.png` | 1536 × 655 | Corrected team overview banner at the top of `/agents`, above the directory. Displayed whole, with `object-fit: contain` and the natural aspect ratio preserved. |
+| `public/brand/agents/defaults/prf_*.png` | 512 × 512 | One approved default portrait per non-human profile, keyed by profile id. |
 
-The full poster is deployed **at the owner's explicit request**. Its lower
-panels show generated names (Alice, Blake, Cora…) that are not the FlowQuery
-roster; the caption under the image says it is illustrative, and the directory
-below is the authoritative list. The earlier banner crop is kept only as a
-reference at `docs/brand/agents/flowquery-ai-team-hero-banner.jpg`, and the
-source original at `docs/brand/agents/flowquery-ai-team-overview-original.png`.
+The banner lists the real 16-agent roster and its roles. It is the corrected
+artwork from `FlowQuery_Corrected_AI_Team_Art_Pack/`. The older fictional
+poster and its 19 crops were superseded and removed during the repository
+cleanup; they are not part of the application or its history.
 
 `src/shared/agent-portraits.ts` is the single mapping from profile id to
 default portrait. The UI never hardcodes these paths. An uploaded picture is
@@ -66,10 +64,10 @@ stored in D1 and wins over the default; for an agent, choosing a drawn colour
 is also a customisation, and **Restore default** clears both and returns the
 portrait. Uploads never touch the files here.
 
-The portraits currently in `defaults/` are the repository's existing canonical
-set, copied from `team/portraits/`; the cinematic replacement set could not be
-generated because the image service had insufficient funds. Swapping them is a
-file replacement with the same names — no code or database change.
+The portraits in `defaults/` are the approved illustrated set from
+`FlowQuery_Corrected_AI_Team_Art_Pack/agents/`, one per canonical agent,
+512 × 512 and hash-identical to the supplied files. The mapping is recorded in
+`public/brand/agents/defaults/README.md`.
 
 ## Human administrator defaults — `public/brand/humans/`
 

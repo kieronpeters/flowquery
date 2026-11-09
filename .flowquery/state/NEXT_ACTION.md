@@ -4,6 +4,8 @@
 
 **Deployed from `main` as version `08fffc21`.** Migration `0011` applied to production before the deploy; all 16 non-human profiles now carry About, Skills and Development. The `/agents` hero is the full team overview poster, and the agent and human default avatars are live.
 
+**Local, uncommitted:** the corrected AI team pack is integrated. All 16 portraits from `FlowQuery_Corrected_AI_Team_Art_Pack/agents/` are copied to `public/brand/agents/defaults/prf_*.png` (512×512, hash-identical), and the corrected 1536×655 banner replaces the previous poster at `public/brand/flowquery-ai-development-team-overview.png`. The central map already pointed at these filenames, so only the banner dimensions changed in code.
+
 ---
 
 ## What is running

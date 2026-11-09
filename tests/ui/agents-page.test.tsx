@@ -72,8 +72,8 @@ describe('AgentsPage', () => {
     const art = document.querySelector('.agents-hero-art') as HTMLImageElement
     expect(art.getAttribute('src')).toBe('/brand/flowquery-ai-development-team-overview.png')
     expect(art.getAttribute('width')).toBe('1536')
-    expect(art.getAttribute('height')).toBe('1024')
-    expect(screen.getByText(/Illustrative team artwork/)).toBeTruthy()
+    expect(art.getAttribute('height')).toBe('655')
+    expect(screen.getByText(/directory below opens each agent/)).toBeTruthy()
   })
 
   it('lists the agents but not the humans', async () => {
