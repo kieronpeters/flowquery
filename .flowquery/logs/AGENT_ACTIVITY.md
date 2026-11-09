@@ -4,6 +4,26 @@ Significant actions and their verified outcomes. Newest first. Facts only — no
 
 ---
 
+## 2026-11-09 — Profile pages, the people directory and the new brand pack
+
+**Requested by the owner:** dedicated profile pages with a large picture and optional About/Skills/Development text, editable only for your own profile and for agents; the new art pack integrated across the site; and the production allowlist updated for Abdul.
+
+**Decided with the owner:** every signed-in human may view every profile, LinkedIn-style, but only your own or an agent's may be edited; agents get the same prose fields as humans; `/people` is the directory and `/agents` stays the appearance editor.
+
+**Schema — migration `0010_profile_details.sql`:** nullable `about`, `skills`, `development` on `team_profiles`, with length CHECKs. Applied to production before the deploy; all three columns confirmed present.
+
+**Shipped on branch `profile-pages`, version `bdf11702`:** `/people` and `/profiles/:profileId`, a 192px picture with upload/remove, a read-only notice on another human's page, "View my profile" in the account menu, and profile links from `/agents` and the footer. Authorisation is one shared function (`services/profile-access.ts`) used by both the picture and text endpoints, so a human cannot edit another human (403) while agents remain editable. The art pack's 1435×350 wordmark replaces the old 480×117 one in the header, footer, landing and sign-in pages; all browser and PWA icons moved under `public/brand/icons/` with the old root duplicates removed; the full original composition is archived at `docs/brand/` (not deployed); and `docs/BRAND.md` records paths, sizes and rules.
+
+**Allowlist:** production `AUTH_ALLOWLIST` set to `51761129:Kieron,37402145:Abdul`; the exact string parses to both numeric ids, and Kieron's existing `github:51761129` identity is unchanged, so his account is not recreated. Abdul still needs to complete a first sign-in.
+
+**Verified:** `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` and `npm run preflight` all pass — **355 tests**, 31 files. After deploy: health `200`; CSP present; `/about` and `/login` `200`; `/auth/start` `302`; anonymous `401` on `/api/v1/profiles` and `/api/v1/profiles/prf_bob`; logo, favicon and PWA icon assets `200`; `index.html` and the manifest carry the new `/brand/` paths; every new UI marker present in the deployed bundle. In a local preview the logo measured 131×32 in the header and 82×20 in the footer against a 1435×350 source — the same ratio, so no distortion.
+
+**Not verified:** the signed-in profile pages in a real browser (the local preview has no OAuth session), the OS file-picker, and any flow on a phone.
+
+**Git:** committed locally on `profile-pages`. **Not merged and not pushed**, as instructed.
+
+---
+
 ## 2026-11-04 — Improvements v3: profile pictures, and tokens chosen by agent
 
 **Requested by the owner:** a picture upload in the profile menu, per-agent pictures on the agents page (a drawn default or a custom upload), and token creation simplified to choosing an agent from a list with one token each, rotatable in one press.

@@ -1,6 +1,6 @@
 # Next Action
 
-**Improvements v3 is live.** https://flowquery.workstack.workers.dev — version `11046318`, PR #4 merged as `7ebf06a`. Free plans, $0 recurring.
+**Profile pages are live on `profile-pages`.** https://flowquery.workstack.workers.dev — version `bdf11702`. Branch **not merged and not pushed**, as the owner instructed. Free plans, $0 recurring.
 
 ---
 
@@ -12,22 +12,26 @@
 | Database | D1 `flowquery-db`, APAC — 2 humans (Kieron, Abdul), 15 AI agents, 1 contractor |
 | Agent access | one live token per agent per board; `Bob` active and linked to `prf_bob` |
 | Pictures | uploaded ones in `profile_avatars`; drawn avatars for agents |
+| Allowlist | `51761129:Kieron,37402145:Abdul` |
 | Cost | $0. No payment method, no paid plan, no domain |
 
-## Verified after the v3 deploy
+## Verified after this deploy
 
-- Migration `0009` applied **before** the deploy; `profile_avatars` and `idx_tokens_one_live_per_profile` both present, and Bob's token backfilled to `prf_bob`.
-- Health `200`; CSP present; `/about` `200`; `/auth/start` `302`.
-- Anonymous `401` on `/avatars/prf_bob`, `/profiles` and `/boards`.
-- An agent token gets `401` on a picture and `404` trying to issue a token; `/agent/board` and `/agent/tasks` still `200`.
+- Migration `0010_profile_details.sql` applied **before** the deploy; `about`, `skills` and `development` confirmed on `team_profiles` with `pragma_table_info`.
+- `AUTH_ALLOWLIST` uploaded as a Worker secret and parsed locally to both ids.
+- Health `200`; CSP present; `/about` and `/login` `200`; `/auth/start` `302`.
+- Anonymous `401` on `/api/v1/profiles` and `/api/v1/profiles/prf_bob`.
+- Logo, favicons and PWA icons `200` under `/brand/`; `index.html` and the manifest carry the new paths.
+- Logo renders at 131×32 in the header and 82×20 in the footer against a 1435×350 source — same ratio, no distortion.
 - Every new UI marker present in the deployed bundle.
+- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run preflight` all pass — **355 tests**, 31 files.
 
-**Not verified:** the OS file-picker itself, and any of the picture or token flows on a phone.
+**Not verified:** the signed-in profile pages in a real browser (local preview has no OAuth session), the OS file-picker, and any flow on a phone.
 
 ## Worth doing next, none urgent
 
-1. **Try the board on your phone.** Touch gestures, plus the new picture upload from a phone camera roll, are the things no tool here can verify.
-2. **Add Abdul to `AUTH_ALLOWLIST`** — `github-id:Abdul`, spelled exactly, so his sign-in adopts the pre-created profile instead of creating a second one.
+1. **Sign in as Abdul** to confirm the new allowlist entry works end to end; his pre-created `prf_abdul` profile should be adopted, not duplicated.
+2. **Open `/people` on a phone** and check the profile layout at narrow widths.
 3. **A real backup.** `docs/RUNBOOK.md` has the export procedure; production has no backup beyond Cloudflare's Time Travel window.
 4. **The product name.** "FlowQuery" is still a working title, and it is in the URL.
 
